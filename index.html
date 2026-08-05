@@ -1,4 +1,4 @@
-<title>형식이의 모험 — 수지구 내집마련 통장</title>
+<title>형식이의 모험 — 내집마련 갈아타기 통장</title>
 <style>
   :root{
     color-scheme: light dark;
@@ -276,16 +276,49 @@
   }
   .deed button:focus-visible, .stamp-btn:focus-visible, .buy-btn:focus-visible,
   .stock-btns button:focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
+
+  /* ---- Toast ---- */
+  .toast{
+    position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-12px);
+    max-width:min(420px, calc(100vw - 32px));
+    display:flex; align-items:center; gap:8px;
+    padding:12px 16px; border-radius:10px; z-index:80;
+    font-size:13px; font-weight:700; color:#fff;
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.warn{ background:linear-gradient(135deg,#a53a32,#7d2b25); }
+  .toast.gain{ background:linear-gradient(135deg,#2e6b48,#1f4d34); }
+  .toast.move{ background:linear-gradient(135deg,var(--brass),#8f6a1f); color:var(--ink-900); }
+  @media (prefers-reduced-motion: reduce){ .toast{ transition:opacity .01s linear; } }
+
+  /* ---- Lotto ---- */
+  .lotto-btn{
+    width:100%; padding:14px; border-radius:10px; border:2px dashed var(--brass);
+    background:repeating-linear-gradient(135deg, rgba(177,135,47,.08) 0 8px, rgba(177,135,47,.03) 8px 16px);
+    color:var(--ink-900); font-weight:800; font-size:14px; cursor:pointer; font-family:inherit;
+  }
+  .lotto-btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .lotto-btn:active{ transform:scale(.98); }
+  .lotto-result{
+    margin-top:10px; font-size:12.5px; font-weight:600; text-align:center; color:var(--text-sub);
+    min-height:1.4em;
+  }
+  .lotto-result.win{ color:var(--ink-green); font-weight:800; }
+  .lotto-odds{ margin-top:8px; font-size:10px; color:var(--text-sub); text-align:center; line-height:1.6; }
 </style>
+
+<div class="toast" id="toast"><span id="toastText"></span></div>
 
 <div class="book">
   <div class="cover">
     <div class="cover-top">
       <span class="bank-mark">형식저축은행 <button class="refresh-btn" id="refreshBtn" title="최신 버전 새로 불러오기" aria-label="최신 버전 새로 불러오기">⟳</button></span>
-      <span class="passbook-no mono">No. 30-SUJI</span>
+      <span class="passbook-no mono">No. HS-2026</span>
     </div>
     <h1 class="title">형식이의 모험</h1>
-    <p class="subtitle">경기도 용인시 수지구 30평대 내집마련 적립통장</p>
+    <p class="subtitle">노원 10평 → 동대문 20평 → 수지 30평 → 잠실 40평, 갈아타기 적립통장</p>
     <div class="holder-row">
       <div class="holder">
         <span class="holder-avatar">🧑‍💼</span>
@@ -347,6 +380,13 @@
   </div>
 
   <div class="ledger">
+    <div class="ledger-head">복권방 · 인생 한 방</div>
+    <button class="lotto-btn" id="lottoBtn">🎟️ 로또 한 장 사기 (1,000원)</button>
+    <div class="lotto-result" id="lottoResult">긁지 않은 복권...</div>
+    <div class="lotto-odds">1등 20억원 (1/8,145,060) · 2등 3천만원 · 3등 150만원 · 4등 5만원 · 5등 5천원</div>
+  </div>
+
+  <div class="ledger">
     <div class="ledger-head">자동이체 등록 · 업그레이드</div>
     <div id="upgradeList"></div>
   </div>
@@ -363,11 +403,11 @@
 
 <div class="modal-bg" id="endingModal">
   <div class="deed">
-    <div class="seal">완료</div>
-    <h2>내집마련 완료!</h2>
-    <p>형식이는 마침내 <b>경기도 용인시 수지구</b>의<br>30평대 아파트 주인이 되었습니다.</p>
-    <p>강동구 빌라에서 시작해 저축, 부업, 주식 투자를 거쳐<br>이룬 소중한 결실입니다. 축하합니다.</p>
-    <button id="continueBtn">계속 적립하기 (다음 목표: 40평대)</button>
+    <div class="seal" id="modalSeal">이사</div>
+    <h2 id="modalTitle">이사 완료!</h2>
+    <p id="modalDesc1"></p>
+    <p id="modalDesc2"></p>
+    <button id="continueBtn">계속하기</button>
   </div>
 </div>
 
@@ -379,7 +419,7 @@
 
   const state = {
     money: 0,
-    clickBase: 10000,
+    clickBase: 2000,
     clickMult: 1,
     cps: 0,
     stockPrice: 10000,
@@ -387,18 +427,21 @@
     stockAvgPrice: 0,
     stockDir: 1,
     stockHistory: [],
-    goal: 850000000,
+    stageIndex: 0,
+    currentHome: "서울 강동구 빌라 거주 · 기혼",
+    postGoal: null,
     upgrades: {
-      overtime:   { name:"야근 수당",   desc:"클릭당 수입 +10,000원",     baseCost:100000,    cost:0, level:0, scale:1.15, type:"click", value:10000 },
-      autoclick:  { name:"자동 출납기", desc:"1.2초마다 자동으로 일합니다 (클릭 1회와 동일)", baseCost:3000000, cost:0, level:0, scale:1, type:"auto", value:1, maxLevel:1 },
-      delivery:   { name:"배달 부업",   desc:"자동 수입 +5,000원/초",      baseCost:500000,    cost:0, level:0, scale:1.15, type:"cps",   value:5000 },
-      savings:    { name:"예금 이자",   desc:"자동 수입 +20,000원/초",     baseCost:2000000,   cost:0, level:0, scale:1.15, type:"cps",   value:20000 },
-      lecture:    { name:"재테크 강의", desc:"모든 수입 x1.3배",           baseCost:10000000,  cost:0, level:0, scale:1.6,  type:"mult",  value:0.3, maxLevel:6 },
-      promotion:  { name:"승진",       desc:"자동 수입 +200,000원/초",     baseCost:50000000,  cost:0, level:0, scale:1.15, type:"cps",   value:200000 },
-      realestate: { name:"부동산 스터디", desc:"자동 수입 +1,000,000원/초", baseCost:200000000, cost:0, level:0, scale:1.15, type:"cps",   value:1000000 }
+      overtime:   { name:"야근 수당",   desc:"클릭당 수입 +3,000원",      baseCost:100000,    cost:0, level:0, scale:1.18, type:"click", value:3000 },
+      autoclick:  { name:"자동 출납기", desc:"1.5초마다 자동으로 일합니다 (클릭 1회와 동일)", baseCost:5000000, cost:0, level:0, scale:1, type:"auto", value:1, maxLevel:1 },
+      delivery:   { name:"배달 부업",   desc:"자동 수입 +5,000원/초",      baseCost:600000,    cost:0, level:0, scale:1.2,  type:"cps",   value:5000 },
+      savings:    { name:"예금 이자",   desc:"자동 수입 +20,000원/초",     baseCost:2500000,   cost:0, level:0, scale:1.2,  type:"cps",   value:20000 },
+      lecture:    { name:"재테크 강의", desc:"모든 수입 x1.3배",           baseCost:15000000,  cost:0, level:0, scale:1.8,  type:"mult",  value:0.3, maxLevel:6 },
+      promotion:  { name:"승진",       desc:"자동 수입 +200,000원/초",     baseCost:70000000,  cost:0, level:0, scale:1.22, type:"cps",   value:200000 },
+      realestate: { name:"부동산 스터디", desc:"자동 수입 +1,000,000원/초", baseCost:300000000, cost:0, level:0, scale:1.22, type:"cps",   value:1000000 }
     },
     autoClick:false,
-    endingShown:false
+    modalOpen:false,
+    lottoCooldownUntil:0
   };
 
   Object.values(state.upgrades).forEach(u => u.cost = u.baseCost);
@@ -407,6 +450,16 @@
   function fmt(n){
     n = Math.floor(n);
     return n.toLocaleString("ko-KR") + "원";
+  }
+
+  let toastTimer = null;
+  function showToast(msg, type, duration){
+    const toast = document.getElementById("toast");
+    const text = document.getElementById("toastText");
+    text.textContent = msg;
+    toast.className = "toast show" + (type ? " " + type : "");
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ toast.classList.remove("show"); }, duration || 3500);
   }
 
   function log(msg, type){
@@ -418,20 +471,38 @@
     while(list.children.length > 8) list.removeChild(list.lastChild);
   }
 
-  const stages = [
-    {p:0,   text:"월세 탈출 자금을 모으는 중...", sub:"서울 강동구 빌라 거주 · 기혼"},
-    {p:0.1, text:"전세자금을 모으는 중...", sub:"서울 강동구 빌라 거주 · 기혼"},
-    {p:0.3, text:"청약통장을 열심히 채우는 중...", sub:"서울 강동구 빌라 거주 · 기혼 · 주식투자 중"},
-    {p:0.55,text:"수지구 아파트 시세를 알아보는 중...", sub:"서울 강동구 빌라 거주 · 기혼 · 주식투자 중"},
-    {p:0.8, text:"드디어 계약금이 보이기 시작한다!", sub:"서울 강동구 빌라 거주 · 기혼 · 이사 준비중"},
-    {p:0.97,text:"거의 다 왔다! 잔금만 남았다!", sub:"서울 강동구 빌라 거주 · 기혼 · 잔금 준비중"}
+  const STORY_STAGES = [
+    { home:"노원구 10평대 아파트",       goal:250000000,   sub:"서울 노원구 10평대 아파트 거주 · 기혼",
+      moveMsg:"노원구 10평대 아파트로 첫 내 집 마련에 성공했다!" },
+    { home:"동대문구 20평대 아파트",     goal:450000000,   sub:"서울 동대문구 20평대 아파트 거주 · 기혼",
+      moveMsg:"동대문구 20평대 아파트로 갈아탔다!" },
+    { home:"용인 수지구 30평대 아파트", goal:850000000,   sub:"경기 용인시 수지구 30평대 아파트 거주 · 기혼",
+      moveMsg:"드디어 용인 수지구 30평대 아파트로 갈아탔다!" },
+    { home:"잠실 40평대 아파트",         goal:2500000000,  sub:"서울 송파구 잠실 40평대 아파트 거주 · 기혼",
+      moveMsg:"잠실 40평대 아파트 입성! 형식이의 모험을 완주했다!" }
+  ];
+
+  function currentGoal(){
+    if(state.stageIndex < STORY_STAGES.length) return STORY_STAGES[state.stageIndex].goal;
+    if(state.postGoal == null) state.postGoal = Math.floor(STORY_STAGES[STORY_STAGES.length-1].goal * 2.6);
+    return state.postGoal;
+  }
+
+  const flavorPhrases = [
+    {p:0,   text:"자금을 모으는 중..."},
+    {p:0.1, text:"조금씩 목돈이 쌓이는 중..."},
+    {p:0.3, text:"청약통장을 열심히 채우는 중..."},
+    {p:0.55,text:"시세를 알아보는 중..."},
+    {p:0.8, text:"드디어 계약금이 보이기 시작한다!"},
+    {p:0.97,text:"거의 다 왔다! 잔금만 남았다!"}
   ];
 
   function updateStageText(progress){
-    let cur = stages[0];
-    for(const s of stages){ if(progress >= s.p) cur = s; }
-    document.getElementById("stageText").textContent = cur.text;
-    document.getElementById("statusSub").textContent = cur.sub;
+    let cur = flavorPhrases[0];
+    for(const s of flavorPhrases){ if(progress >= s.p) cur = s; }
+    const nextHome = state.stageIndex < STORY_STAGES.length ? STORY_STAGES[state.stageIndex].home : "더 넓은 집";
+    document.getElementById("stageText").textContent = cur.text + " · 다음 목표: " + nextHome;
+    document.getElementById("statusSub").textContent = state.currentHome;
   }
 
   function currentClickValue(){ return state.clickBase * state.clickMult; }
@@ -441,9 +512,10 @@
     document.getElementById("moneyDisplay").textContent = Math.floor(state.money).toLocaleString("ko-KR");
     document.getElementById("incomeDisplay").textContent = "+" + fmt(currentCps()) + " / 초";
     document.getElementById("clickValueText").textContent = "클릭당 +" + fmt(currentClickValue());
-    document.getElementById("goalText").textContent = fmt(state.goal);
+    const goal = currentGoal();
+    document.getElementById("goalText").textContent = fmt(goal);
 
-    const progress = Math.min(1, state.money / state.goal);
+    const progress = Math.min(1, state.money / goal);
     document.getElementById("progressFill").style.width = (progress*100).toFixed(1) + "%";
     document.getElementById("progressText").textContent = (progress*100).toFixed(1) + "%";
     updateStageText(progress);
@@ -474,10 +546,11 @@
     document.getElementById("autoBadge").classList.toggle("on", !!state.autoClick);
 
     renderUpgrades();
+    updateLottoButton();
 
-    if(!state.endingShown && state.money >= state.goal){
-      state.endingShown = true;
-      showEnding();
+    if(!state.modalOpen && state.money >= goal){
+      state.modalOpen = true;
+      triggerStageComplete();
     }
   }
 
@@ -547,7 +620,7 @@
   const STOCK_HISTORY_MAX = 40;
 
   function stockTick(){
-    const changePct = (Math.random() * 10 - 4.5) / 100;
+    const changePct = (Math.random() * 11 - 5.5) / 100;
     state.stockDir = changePct >= 0 ? 1 : -1;
     state.stockPrice = Math.max(1000, Math.round(state.stockPrice * (1 + changePct)));
     state.stockHistory.push(state.stockPrice);
@@ -703,30 +776,126 @@
 
   document.getElementById("workBtn").addEventListener("click", doWork);
 
+  // ---- Lotto ---- (real Lotto 6/45 price & odds)
+  const LOTTO_COST = 1000;
+  const LOTTO_COOLDOWN_MS = 1500;
+  const LOTTO_TIERS = [
+    { label:"1등", prize:2000000000, p:1/8145060 },
+    { label:"2등", prize:30000000,   p:1/1357510 },
+    { label:"3등", prize:1500000,    p:1/35724 },
+    { label:"4등", prize:50000,      p:1/733 },
+    { label:"5등", prize:5000,       p:1/45 }
+  ];
+
+  function drawLotto(){
+    if(state.money < LOTTO_COST) return;
+    if(Date.now() < state.lottoCooldownUntil) return;
+    state.lottoCooldownUntil = Date.now() + LOTTO_COOLDOWN_MS;
+    state.money -= LOTTO_COST;
+
+    const r = Math.random();
+    let acc = 0, hit = null;
+    for(const tier of LOTTO_TIERS){
+      acc += tier.p;
+      if(r < acc){ hit = tier; break; }
+    }
+
+    const resultEl = document.getElementById("lottoResult");
+    if(hit){
+      state.money += hit.prize;
+      resultEl.textContent = `🎉 ${hit.label} 당첨! +${fmt(hit.prize)}`;
+      resultEl.className = "lotto-result win";
+      if(hit.prize >= LOTTO_TIERS[2].prize){
+        log(`로또 ${hit.label} 당첨! +${fmt(hit.prize)}`, "gain");
+        showToast(`🎉 로또 ${hit.label} 당첨! +${fmt(hit.prize)}`, "gain", 5000);
+      } else {
+        log(`로또 ${hit.label} 당첨 (+${fmt(hit.prize)})`, "gain");
+      }
+    } else {
+      resultEl.textContent = "꽝... 다음 기회에 😢";
+      resultEl.className = "lotto-result";
+    }
+    render();
+  }
+
+  function updateLottoButton(){
+    const btn = document.getElementById("lottoBtn");
+    const remainMs = state.lottoCooldownUntil - Date.now();
+    if(remainMs > 0){
+      btn.disabled = true;
+      btn.textContent = `잠시만요... (${(remainMs/1000).toFixed(1)}초)`;
+    } else {
+      btn.disabled = state.money < LOTTO_COST;
+      btn.textContent = "🎟️ 로또 한 장 사기 (1,000원)";
+    }
+  }
+  document.getElementById("lottoBtn").addEventListener("click", drawLotto);
+  setInterval(updateLottoButton, 150);
+
   const events = [
     { text:"명절 상여금이 들어왔다", type:"gain", fn: s => s.money += Math.max(50000, s.money*0.02) },
     { text:"아내와 데이트 비용이 나갔다", type:"loss", fn: s => s.money = Math.max(0, s.money - Math.max(20000, s.money*0.01)) },
     { text:"경조사비를 지출했다", type:"loss", fn: s => s.money = Math.max(0, s.money - Math.max(30000, s.money*0.015)) },
     { text:"형식전자 주식이 급등했다", type:"gain", fn: s => { s.stockPrice = Math.round(s.stockPrice*1.15); } },
     { text:"형식전자 주식이 급락했다", type:"loss", fn: s => { s.stockPrice = Math.max(1000, Math.round(s.stockPrice*0.85)); } },
-    { text:"부모님이 용돈을 주셨다", type:"gain", fn: s => s.money += Math.max(30000, s.money*0.01) }
+    { text:"부모님이 용돈을 주셨다", type:"gain", fn: s => s.money += Math.max(30000, s.money*0.01) },
+    { text:"회사에서 특별 상여금이 나왔다", type:"gain", toast:true, fn: s => s.money += Math.max(200000, s.money*0.04) },
+    { text:"뜻밖의 보너스를 받았다", type:"gain", toast:true, fn: s => s.money += Math.max(150000, s.money*0.035) },
+    { text:"⚠️ 부모님이 편찮으셔서 병원비를 보냈다", type:"loss", toast:true, fn: s => s.money = Math.max(0, s.money - Math.max(200000, s.money*0.05)) },
+    { text:"⚠️ 형식이가 몸살로 병원비를 지출했다", type:"loss", toast:true, fn: s => s.money = Math.max(0, s.money - Math.max(100000, s.money*0.03)) },
+    { text:"⚠️ 교통사고를 당해 치료비가 나갔다", type:"loss", toast:true, fn: s => s.money = Math.max(0, s.money - Math.max(300000, s.money*0.06)) }
   ];
   function randomEvent(){
     const ev = events[Math.floor(Math.random()*events.length)];
     ev.fn(state);
     log(ev.text, ev.type);
+    if(ev.toast) showToast(ev.text, ev.type === "loss" ? "warn" : "gain");
     render();
   }
 
-  function showEnding(){
+  function openModal(cfg){
+    document.getElementById("modalSeal").textContent = cfg.seal;
+    document.getElementById("modalTitle").textContent = cfg.title;
+    document.getElementById("modalDesc1").innerHTML = cfg.desc1;
+    document.getElementById("modalDesc2").innerHTML = cfg.desc2;
+    document.getElementById("continueBtn").textContent = cfg.btnText;
     document.getElementById("endingModal").classList.add("show");
-    log("내집마련 완료! 수지구 30평대 아파트 매수", "gain");
   }
+
+  function triggerStageComplete(){
+    if(state.stageIndex < STORY_STAGES.length){
+      const s = STORY_STAGES[state.stageIndex];
+      const isFinal = state.stageIndex === STORY_STAGES.length - 1;
+      state.currentHome = s.sub;
+      log(s.moveMsg, "gain");
+      showToast(s.moveMsg, "move");
+      openModal({
+        seal: isFinal ? "완료" : "이사",
+        title: isFinal ? "형식이의 모험, 완주!" : "이사 완료!",
+        desc1: isFinal
+          ? `형식이는 마침내 <b>${s.home}</b>의 주인이 되었습니다.`
+          : `이제 <b>${s.home}</b>에 삽니다.`,
+        desc2: isFinal
+          ? "강동구 빌라에서 시작해 노원, 동대문, 수지를 거쳐 잠실까지 — 형식이의 내 집 마련 대장정이 여기서 마무리됩니다. 축하합니다."
+          : "다음 목표를 향해 계속 나아가볼까요?",
+        btnText: isFinal ? "계속 플레이하기 (더 큰 집으로)" : "계속하기"
+      });
+      state.stageIndex += 1;
+    } else {
+      openModal({
+        seal:"경신",
+        title:"자산 신기록!",
+        desc1:`순자산 <b>${fmt(state.postGoal)}</b>을 달성했습니다.`,
+        desc2:"형식이의 자산은 계속 불어나는 중입니다.",
+        btnText:"계속하기"
+      });
+      state.postGoal = Math.floor(state.postGoal * 1.8);
+    }
+  }
+
   document.getElementById("continueBtn").addEventListener("click", ()=>{
     document.getElementById("endingModal").classList.remove("show");
-    state.goal = Math.floor(state.goal * 2.2);
-    state.endingShown = false;
-    log(`새 목표 등록: ${fmt(state.goal)} (더 넓은 집으로 이사)`, "event");
+    state.modalOpen = false;
     render();
   });
 
@@ -739,7 +908,7 @@
 
   setInterval(stockTick, STOCK_TICK_MS);
   setInterval(()=>{ if(Math.random() < 0.35) randomEvent(); }, 9000);
-  setInterval(()=>{ if(state.autoClick) doWork(); }, 1200);
+  setInterval(()=>{ if(state.autoClick) doWork(); }, 1500);
 
   function save(){
     try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
@@ -783,6 +952,7 @@
 
   load();
   if(state.stockHistory.length < 2){ state.stockHistory = [state.stockPrice, state.stockPrice]; }
+  state.modalOpen = false;
   render();
   setupStockChartHover();
   drawStockChart();
