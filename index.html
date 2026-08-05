@@ -433,7 +433,7 @@
     <div class="ledger-head">복권방 · 인생 한 방</div>
     <button class="lotto-btn" id="lottoBtn">🎟️ 로또 한 장 사기 (1,000원)</button>
     <div class="lotto-result" id="lottoResult">긁지 않은 복권...</div>
-    <div class="lotto-odds">1등 20억원 (1/8,145,060) · 2등 3천만원 · 3등 150만원 · 4등 5만원 · 5등 5천원</div>
+    <div class="lotto-odds">1등 20억원 (1/1,000,000) · 2등 3천만원 (1/100,000) · 3등 150만원 (1/5,000) · 4등 5만원 (1/300) · 5등 5천원 (1/20)</div>
   </div>
 
   <div class="ledger">
@@ -831,11 +831,11 @@
   const LOTTO_COST = 1000;
   const LOTTO_COOLDOWN_MS = 1500;
   const LOTTO_TIERS = [
-    { label:"1등", prize:2000000000, p:1/8145060 },
-    { label:"2등", prize:30000000,   p:1/1357510 },
-    { label:"3등", prize:1500000,    p:1/35724 },
-    { label:"4등", prize:50000,      p:1/733 },
-    { label:"5등", prize:5000,       p:1/45 }
+    { label:"1등", prize:2000000000, p:1/1000000 },
+    { label:"2등", prize:30000000,   p:1/100000 },
+    { label:"3등", prize:1500000,    p:1/5000 },
+    { label:"4등", prize:50000,      p:1/300 },
+    { label:"5등", prize:5000,       p:1/20 }
   ];
 
   function drawLotto(){
