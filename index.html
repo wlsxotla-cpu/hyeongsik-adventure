@@ -60,7 +60,9 @@
     display:flex;
     justify-content:center;
     padding:40px 16px 64px;
+    touch-action:manipulation;
   }
+  button{ touch-action:manipulation; }
   .mono{ font-family: ui-monospace, "SFMono-Regular", Consolas, "Noto Sans Mono", monospace; font-variant-numeric: tabular-nums; }
 
   .book{
@@ -289,6 +291,14 @@
   .deed button:focus-visible, .stamp-btn:focus-visible, .buy-btn:focus-visible,
   .stock-btns button:focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
 
+  .reset-wrap{ text-align:center; margin-top:18px; }
+  .reset-btn{
+    background:none; border:1px solid rgba(255,255,255,.22); color:rgba(255,255,255,.5);
+    font-size:12px; padding:8px 16px; border-radius:20px; cursor:pointer; font-family:inherit;
+  }
+  .reset-btn:hover{ color:#fff; border-color:rgba(255,255,255,.5); }
+  .reset-btn:active{ transform:scale(.97); }
+
   /* ---- Toast ---- */
   .toast{
     position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-12px);
@@ -451,6 +461,10 @@
   </div>
 </div>
 
+<div class="reset-wrap">
+  <button class="reset-btn" id="resetBtn">🔄 이번 생은 안될듯... 초기화</button>
+</div>
+
 <div class="modal-bg" id="endingModal">
   <div class="deed">
     <div class="seal" id="modalSeal">이사</div>
@@ -477,6 +491,7 @@
     stockAvgPrice: 0,
     stockDir: 1,
     stockHistory: [],
+    stockHistoryFlags: [],
     stageIndex: 0,
     currentHome: "서울 강동구 빌라 거주 · 기혼",
     postGoal: null,
@@ -674,9 +689,17 @@
     const changePct = (Math.random() * 11 - 5.5) / 100;
     state.stockDir = changePct >= 0 ? 1 : -1;
     state.stockPrice = Math.max(1000, Math.round(state.stockPrice * (1 + changePct)));
-    state.stockHistory.push(state.stockPrice);
-    while(state.stockHistory.length > STOCK_HISTORY_MAX) state.stockHistory.shift();
+    pushStockHistory(state.stockPrice, false);
     drawStockChart();
+  }
+
+  function pushStockHistory(price, isEvent){
+    state.stockHistory.push(price);
+    state.stockHistoryFlags.push(!!isEvent);
+    while(state.stockHistory.length > STOCK_HISTORY_MAX){
+      state.stockHistory.shift();
+      state.stockHistoryFlags.shift();
+    }
   }
 
   function drawStockChart(hoverIdx){
@@ -747,6 +770,19 @@
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.globalAlpha = 1;
+
+    const flags = state.stockHistoryFlags;
+    prices.forEach((p, i) => {
+      if(!flags[i]) return;
+      const x = xAt(i), y = yAt(p);
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = "#f5efdc";
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#b1872f";
+      ctx.stroke();
+    });
 
     if(hoverIdx != null && hoverIdx >= 0 && hoverIdx < prices.length){
       const hx = xAt(hoverIdx), hy = yAt(prices[hoverIdx]);
@@ -887,8 +923,8 @@
     { text:"명절 상여금이 들어왔다", type:"gain", amountFn: s => Math.max(50000, s.money*0.02) },
     { text:"아내와 데이트 비용이 나갔다", type:"loss", amountFn: s => Math.max(20000, s.money*0.01) },
     { text:"경조사비를 지출했다", type:"loss", amountFn: s => Math.max(30000, s.money*0.015) },
-    { text:"형식전자 주식이 급등했다", type:"gain", fn: s => { s.stockPrice = Math.round(s.stockPrice*1.15); } },
-    { text:"형식전자 주식이 급락했다", type:"loss", fn: s => { s.stockPrice = Math.max(1000, Math.round(s.stockPrice*0.85)); } },
+    { text:"📈 형식전자 주식이 급등했다", type:"gain", toast:true, stockFn: s => { s.stockPrice = Math.round(s.stockPrice*1.15); } },
+    { text:"📉 형식전자 주식이 급락했다", type:"loss", toast:true, stockFn: s => { s.stockPrice = Math.max(1000, Math.round(s.stockPrice*0.85)); } },
     { text:"부모님이 용돈을 주셨다", type:"gain", amountFn: s => Math.max(30000, s.money*0.01) },
     { text:"회사에서 특별 상여금이 나왔다", type:"gain", toast:true, amountFn: s => Math.max(200000, s.money*0.04) },
     { text:"뜻밖의 보너스를 받았다", type:"gain", toast:true, amountFn: s => Math.max(150000, s.money*0.035) },
@@ -909,6 +945,12 @@
         state.money -= delta;
         logText += ` (-${fmt(delta)})`;
       }
+    } else if(ev.stockFn){
+      ev.stockFn(state);
+      pushStockHistory(state.stockPrice, true);
+      state.stockDir = ev.type === "gain" ? 1 : -1;
+      logText += ` (${fmt(state.stockPrice)})`;
+      drawStockChart();
     } else if(ev.fn){
       ev.fn(state);
     }
@@ -975,7 +1017,9 @@
   setInterval(()=>{ if(Math.random() < 0.35) randomEvent(); }, 9000);
   setInterval(()=>{ if(state.autoClick) doWork(); }, 1500);
 
+  let isResetting = false;
   function save(){
+    if(isResetting) return;
     try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
   }
   function load(){
@@ -1057,8 +1101,19 @@
   }
   document.getElementById("refreshBtn").addEventListener("click", hardRefresh);
 
+  document.getElementById("resetBtn").addEventListener("click", ()=>{
+    const ok = window.confirm("정말 처음부터 다시 시작할까요? 지금까지 쌓은 모든 진행 상황이 사라져요.");
+    if(!ok) return;
+    isResetting = true;
+    try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+    location.reload();
+  });
+
   load();
   if(state.stockHistory.length < 2){ state.stockHistory = [state.stockPrice, state.stockPrice]; }
+  if(state.stockHistoryFlags.length !== state.stockHistory.length){
+    state.stockHistoryFlags = state.stockHistory.map(()=>false);
+  }
   state.modalOpen = false;
   applyOfflineEarnings();
   render();
