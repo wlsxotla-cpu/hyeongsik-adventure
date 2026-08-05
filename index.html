@@ -483,7 +483,8 @@
     },
     autoClick:false,
     modalOpen:false,
-    lottoCooldownUntil:0
+    lottoCooldownUntil:0,
+    lastActiveAt:null
   };
 
   Object.values(state.upgrades).forEach(u => u.cost = u.baseCost);
@@ -955,6 +956,7 @@
   });
 
   setInterval(()=>{
+    state.lastActiveAt = Date.now();
     if(currentCps() > 0){
       state.money += currentCps() / 5;
       render();
@@ -985,6 +987,24 @@
   setInterval(save, 5000);
   window.addEventListener("beforeunload", save);
 
+  const OFFLINE_CAP_SEC = 8 * 3600;
+  function applyOfflineEarnings(){
+    const now = Date.now();
+    const last = state.lastActiveAt || now;
+    let elapsedSec = Math.floor((now - last) / 1000);
+    state.lastActiveAt = now;
+    if(elapsedSec < 30) return;
+    elapsedSec = Math.min(elapsedSec, OFFLINE_CAP_SEC);
+    const income = currentCps() * elapsedSec;
+    if(income > 0){
+      state.money += income;
+      const hrs = Math.floor(elapsedSec / 3600), mins = Math.floor((elapsedSec % 3600) / 60);
+      const timeText = hrs > 0 ? `${hrs}시간 ${mins}분` : `${mins}분`;
+      log(`오프라인 수입 (${timeText}) +${fmt(income)}`, "gain");
+      showToast(`💤 자리를 비운 사이 (${timeText}) +${fmt(income)}`, "gain", 5000);
+    }
+  }
+
   function hardRefresh(){
     const btn = document.getElementById("refreshBtn");
     if(btn) btn.classList.add("spinning");
@@ -1008,6 +1028,7 @@
   load();
   if(state.stockHistory.length < 2){ state.stockHistory = [state.stockPrice, state.stockPrice]; }
   state.modalOpen = false;
+  applyOfflineEarnings();
   render();
   setupStockChartHover();
   drawStockChart();
