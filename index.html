@@ -1,0 +1,791 @@
+<title>형식이의 모험 — 수지구 내집마련 통장</title>
+<style>
+  :root{
+    color-scheme: light dark;
+    --ink-900:#0f2038;
+    --ink-700:#1b3457;
+    --ink-600:#274571;
+    --paper:#f5efdc;
+    --paper-line:#d9cead;
+    --paper-shadow:#e6dcbc;
+    --brass:#b1872f;
+    --brass-light:#d9b45c;
+    --ink-red:#a53a32;
+    --ink-green:#2e6b48;
+    --backdrop:#e9e2cd;
+    --backdrop-2:#d8cfae;
+    --text-on-paper:#241d0f;
+    --text-sub:#7a6f52;
+    --shadow: 0 24px 60px rgba(15,32,56,.28), 0 4px 12px rgba(15,32,56,.16);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --backdrop:#0a1220;
+      --backdrop-2:#050a12;
+      --paper:#efe6cc;
+      --paper-shadow:#ddd0a3;
+      --text-sub:#7a6f52;
+      --shadow: 0 24px 70px rgba(0,0,0,.6), 0 4px 16px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --backdrop:#0a1220;
+    --backdrop-2:#050a12;
+    --paper:#efe6cc;
+    --paper-shadow:#ddd0a3;
+    --shadow: 0 24px 70px rgba(0,0,0,.6), 0 4px 16px rgba(0,0,0,.4);
+  }
+  :root[data-theme="light"]{
+    --backdrop:#e9e2cd;
+    --backdrop-2:#d8cfae;
+    --paper:#f5efdc;
+    --paper-shadow:#e6dcbc;
+    --shadow: 0 24px 60px rgba(15,32,56,.28), 0 4px 12px rgba(15,32,56,.16);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    background:
+      radial-gradient(ellipse at 30% -10%, var(--backdrop-2), transparent 60%),
+      var(--backdrop);
+    color:var(--text-on-paper);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:40px 16px 64px;
+  }
+  .mono{ font-family: ui-monospace, "SFMono-Regular", Consolas, "Noto Sans Mono", monospace; font-variant-numeric: tabular-nums; }
+
+  .book{
+    width:100%; max-width:460px;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow: var(--shadow);
+    background:var(--paper);
+  }
+
+  /* ---- Cover ---- */
+  .cover{
+    position:relative;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 2px, transparent 2px 6px),
+      linear-gradient(160deg, var(--ink-600), var(--ink-900) 70%);
+    color:#f2ead0;
+    padding:28px 26px 24px;
+  }
+  .cover-top{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:11px; letter-spacing:.06em; color:var(--brass-light); margin-bottom:18px;
+  }
+  .bank-mark{ font-weight:700; }
+  .passbook-no{ font-family: ui-monospace, Consolas, monospace; opacity:.85; }
+  .refresh-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:50%; margin-left:8px;
+    background:none; border:1px solid rgba(245,239,220,.4); color:#f2ead0;
+    font-size:12px; line-height:1; cursor:pointer; padding:0;
+  }
+  .refresh-btn:hover{ background:rgba(245,239,220,.15); }
+  .refresh-btn:active{ transform:scale(.9); }
+  .refresh-btn.spinning{ animation:spin .6s linear; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .refresh-btn.spinning{ animation:none; } }
+  .title{
+    margin:0 0 6px; font-size:28px; font-weight:800; letter-spacing:-.01em; text-wrap:balance;
+  }
+  .subtitle{ margin:0 0 20px; font-size:13px; color:#cdd8ea; }
+  .holder-row{ display:flex; }
+  .holder{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    border-radius:12px; padding:10px 14px;
+  }
+  .holder-avatar{ font-size:26px; }
+  .holder-name{ font-weight:700; font-size:13px; }
+  .holder-sub{ font-size:11.5px; color:#c9d3e4; margin-top:2px; }
+
+  .perforation{
+    height:14px;
+    background:var(--paper);
+    background-image: radial-gradient(circle, var(--backdrop) 2.6px, transparent 2.7px);
+    background-size: 16px 14px;
+    background-position: 8px center;
+    border-bottom:1px dashed var(--paper-line);
+  }
+
+  /* ---- Ledger sections ---- */
+  .ledger{
+    padding:18px 22px;
+    border-bottom:1px solid var(--paper-line);
+  }
+  .ledger:last-of-type{ border-bottom:none; }
+  .ledger-head{
+    font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--brass);
+    text-transform:uppercase; margin-bottom:12px;
+  }
+
+  .balance-ledger{ background:linear-gradient(180deg, var(--paper-shadow), var(--paper) 70%); }
+  .balance-row{ display:flex; align-items:baseline; gap:6px; }
+  .balance-figure{ font-size:34px; font-weight:700; letter-spacing:-.01em; }
+  .won{ font-size:16px; color:var(--text-sub); font-weight:600; }
+  .income-row{ font-size:12px; color:var(--ink-green); font-weight:600; margin-top:2px; font-family: ui-monospace, Consolas, monospace; }
+
+  .gauge{ margin-top:16px; }
+  .gauge-track{
+    position:relative; height:14px; border-radius:8px;
+    background:repeating-linear-gradient(90deg, var(--paper-line) 0 1px, transparent 1px 10%);
+    background-color:#fffdf5; border:1px solid var(--paper-line);
+    overflow:hidden;
+  }
+  .gauge-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--brass), var(--brass-light));
+    transition:width .5s ease;
+  }
+  .gauge-labels{
+    display:flex; justify-content:space-between; font-size:11px; color:var(--text-sub);
+    margin-top:6px; font-family: ui-monospace, Consolas, monospace;
+  }
+  .stage-stamp{
+    margin-top:12px; font-size:12.5px; font-weight:700; color:var(--ink-700);
+    padding:8px 10px; border-left:3px solid var(--brass); background:rgba(177,135,47,.08);
+    border-radius:0 6px 6px 0;
+  }
+
+  /* ---- Work button ---- */
+  .stamp-btn{
+    width:100%; position:relative; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:20px; border-radius:12px;
+    border:2px solid var(--ink-700);
+    background:linear-gradient(180deg, var(--ink-600), var(--ink-900));
+    color:#f2ead0; font-family:inherit;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 8px 18px rgba(15,32,56,.35);
+    transition:transform .08s ease;
+  }
+  .stamp-btn:active{ transform:scale(.97); }
+  .stamp-btn-label{ font-size:16px; font-weight:800; letter-spacing:.01em; }
+  .stamp-btn-sub{ font-size:11.5px; color:var(--brass-light); font-family: ui-monospace, Consolas, monospace; }
+  .auto-badge{
+    position:absolute; top:10px; right:12px; display:none;
+    font-size:10px; font-weight:700; letter-spacing:.03em;
+    background:var(--brass); color:var(--ink-900); padding:3px 9px; border-radius:20px;
+  }
+  .auto-badge.on{ display:inline-block; }
+
+  .float{
+    position:absolute; left:50%; top:-4px; transform:translateX(-50%);
+    color:#7fe3a8; font-weight:800; font-size:15px; pointer-events:none;
+    font-family: ui-monospace, Consolas, monospace;
+    animation:floatUp 1s ease-out forwards;
+  }
+  @keyframes floatUp{
+    0%{ opacity:1; top:-4px; }
+    100%{ opacity:0; top:-56px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .float{ animation:none; opacity:0; }
+  }
+
+  /* ---- Stock insert ---- */
+  .insert-card{ background:repeating-linear-gradient(0deg, rgba(177,135,47,.05) 0 1px, transparent 1px 26px); }
+  .stock-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; flex-wrap:wrap; gap:4px; }
+  .stock-price{ font-size:22px; font-weight:700; font-family: ui-monospace, Consolas, monospace; }
+  .stock-price.up{ color:var(--ink-green); }
+  .stock-price.down{ color:var(--ink-red); }
+  .stock-hold{ font-size:11.5px; color:var(--text-sub); font-family: ui-monospace, Consolas, monospace; }
+  .stock-pl{ font-size:12px; font-weight:600; color:var(--text-sub); margin:0 0 12px; font-family: ui-monospace, Consolas, monospace; }
+  .stock-pl.gain{ color:var(--ink-green); }
+  .stock-pl.loss{ color:var(--ink-red); }
+
+  .stock-chart-wrap{ position:relative; margin:2px 0 12px; }
+  #stockChart{ display:block; width:100%; height:64px; cursor:crosshair; }
+  .stock-tooltip{
+    position:absolute; top:-4px; left:0; transform:translate(-50%,-100%);
+    background:var(--ink-900); color:#f2ead0; font-size:11px; font-weight:600;
+    padding:4px 8px; border-radius:6px; white-space:nowrap; pointer-events:none;
+    font-family: ui-monospace, Consolas, monospace; opacity:0; transition:opacity .1s ease;
+  }
+  .stock-tooltip.show{ opacity:1; }
+  .stock-btns{ display:flex; gap:8px; }
+  .stock-btns + .stock-btns{ margin-top:8px; }
+  .stock-btns button{
+    flex:1; padding:11px; border-radius:8px; font-weight:700; font-size:12.5px; cursor:pointer;
+    border:1px solid transparent; font-family:inherit;
+  }
+  #stockBuy{ background:var(--ink-green); color:#fff; }
+  #stockBuyAll{ background:transparent; color:var(--ink-green); border-color:var(--ink-green); }
+  #stockSell{ background:transparent; color:var(--ink-red); border-color:var(--ink-red); }
+  .stock-btns button:disabled{ background:var(--paper-line); color:var(--text-sub); border-color:transparent; cursor:not-allowed; }
+
+  /* ---- Upgrade ledger rows ---- */
+  .upg-item{ display:flex; align-items:baseline; gap:8px; padding:9px 0; }
+  .upg-name{ font-weight:700; font-size:13px; white-space:nowrap; }
+  .upg-lv{ font-size:10.5px; color:var(--brass); font-weight:700; }
+  .upg-leader{ flex:1; border-bottom:1px dotted var(--paper-line); min-width:12px; transform:translateY(-4px); }
+  .upg-desc{ display:block; font-size:10.5px; color:var(--text-sub); margin-top:1px; }
+  .upg-right{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+  .buy-btn{
+    padding:7px 11px; border:1px solid var(--ink-700); border-radius:7px; background:var(--ink-700); color:#f2ead0;
+    font-weight:700; font-size:11.5px; cursor:pointer; white-space:nowrap; font-family: ui-monospace, Consolas, monospace;
+  }
+  .buy-btn:disabled{ background:transparent; color:var(--text-sub); border-color:var(--paper-line); cursor:not-allowed; }
+  .upg-row-wrap{ border-bottom:1px solid var(--paper-line); }
+  .upg-row-wrap:last-child{ border-bottom:none; }
+
+  /* ---- Transaction log ---- */
+  .log-item{
+    display:flex; gap:8px; align-items:flex-start; font-size:12px; padding:6px 0 6px 10px;
+    border-left:3px solid var(--paper-line); border-bottom:1px dashed var(--paper-line);
+  }
+  .log-item:last-child{ border-bottom:none; }
+  .log-item.gain{ border-left-color:var(--ink-green); }
+  .log-item.loss{ border-left-color:var(--ink-red); }
+  .log-item.event{ border-left-color:var(--brass); }
+
+  .cover-back{ padding:16px 22px; text-align:center; }
+  .back-note{ margin:0; font-size:11px; color:#b9c4d9; }
+
+  /* ---- Ending modal ---- */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(10,18,32,.7); display:none;
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-bg.show{ display:flex; }
+  .deed{
+    position:relative; background:var(--paper); border:1px solid var(--paper-line);
+    border-radius:14px; padding:40px 32px 32px; max-width:380px; text-align:center;
+    box-shadow:0 30px 70px rgba(0,0,0,.5); overflow:hidden;
+  }
+  .seal{
+    width:104px; height:104px; margin:0 auto 18px; border-radius:50%;
+    border:3px solid var(--ink-red); color:var(--ink-red);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:800; letter-spacing:.05em;
+    transform:rotate(-11deg); mix-blend-mode:multiply;
+    box-shadow: inset 0 0 0 3px rgba(165,58,50,.25);
+  }
+  .deed h2{ margin:0 0 10px; font-size:21px; color:var(--ink-900); }
+  .deed p{ font-size:13px; color:var(--text-sub); line-height:1.6; margin:0 0 6px; }
+  .deed button{
+    margin-top:18px; padding:12px 22px; border:none; border-radius:9px;
+    background:var(--ink-700); color:#f2ead0; font-weight:700; cursor:pointer; font-size:13.5px;
+    font-family:inherit;
+  }
+  .deed button:focus-visible, .stamp-btn:focus-visible, .buy-btn:focus-visible,
+  .stock-btns button:focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
+</style>
+
+<div class="book">
+  <div class="cover">
+    <div class="cover-top">
+      <span class="bank-mark">형식저축은행 <button class="refresh-btn" id="refreshBtn" title="최신 버전 새로 불러오기" aria-label="최신 버전 새로 불러오기">⟳</button></span>
+      <span class="passbook-no mono">No. 30-SUJI</span>
+    </div>
+    <h1 class="title">형식이의 모험</h1>
+    <p class="subtitle">경기도 용인시 수지구 30평대 내집마련 적립통장</p>
+    <div class="holder-row">
+      <div class="holder">
+        <span class="holder-avatar">🧑‍💼</span>
+        <div>
+          <div class="holder-name">예금주 · 형식</div>
+          <div class="holder-sub" id="statusSub">서울 강동구 빌라 거주 · 기혼</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="perforation"></div>
+
+  <div class="ledger balance-ledger">
+    <div class="ledger-head">잔액 현황</div>
+    <div class="balance-row">
+      <span class="balance-figure mono" id="moneyDisplay">0</span>
+      <span class="won">원</span>
+    </div>
+    <div class="income-row" id="incomeDisplay">+0원 / 초</div>
+
+    <div class="gauge">
+      <div class="gauge-track"><div class="gauge-fill" id="progressFill"></div></div>
+      <div class="gauge-labels">
+        <span id="progressText">0.0%</span>
+        <span>목표 <span id="goalText">850,000,000원</span></span>
+      </div>
+    </div>
+    <div class="stage-stamp" id="stageText">월세 탈출 자금을 모으는 중...</div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head">입금 창구</div>
+    <button class="stamp-btn" id="workBtn">
+      <span class="auto-badge" id="autoBadge">자동 출근중</span>
+      <span class="stamp-btn-label">출근해서 일하기</span>
+      <span class="stamp-btn-sub mono" id="clickValueText">클릭당 +10,000원</span>
+    </button>
+  </div>
+
+  <div class="ledger insert-card">
+    <div class="ledger-head">투자 현황 · 형식전자</div>
+    <div class="stock-row">
+      <span class="stock-price mono" id="stockPrice">10,000원</span>
+      <span class="stock-hold" id="stockHold">보유 0주 · 평단가 0원</span>
+    </div>
+    <div class="stock-chart-wrap">
+      <canvas id="stockChart"></canvas>
+      <div class="stock-tooltip" id="stockTooltip"></div>
+    </div>
+    <div class="stock-pl mono" id="stockPL">평가금액 0원</div>
+    <div class="stock-btns">
+      <button id="stockBuy">100만원 매수</button>
+      <button id="stockBuyAll">전액 매수</button>
+    </div>
+    <div class="stock-btns">
+      <button id="stockSell">전량 매도</button>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head">자동이체 등록 · 업그레이드</div>
+    <div id="upgradeList"></div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head">거래내역</div>
+    <div id="logList"></div>
+  </div>
+
+  <div class="cover cover-back">
+    <p class="back-note">이 통장은 이 브라우저에 자동 저장됩니다 (localStorage)</p>
+  </div>
+</div>
+
+<div class="modal-bg" id="endingModal">
+  <div class="deed">
+    <div class="seal">완료</div>
+    <h2>내집마련 완료!</h2>
+    <p>형식이는 마침내 <b>경기도 용인시 수지구</b>의<br>30평대 아파트 주인이 되었습니다.</p>
+    <p>강동구 빌라에서 시작해 저축, 부업, 주식 투자를 거쳐<br>이룬 소중한 결실입니다. 축하합니다.</p>
+    <button id="continueBtn">계속 적립하기 (다음 목표: 40평대)</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SAVE_KEY = "hyeongsik_adventure_save_v2";
+
+  const state = {
+    money: 0,
+    clickBase: 10000,
+    clickMult: 1,
+    cps: 0,
+    stockPrice: 10000,
+    stockShares: 0,
+    stockAvgPrice: 0,
+    stockDir: 1,
+    stockHistory: [],
+    goal: 850000000,
+    upgrades: {
+      overtime:   { name:"야근 수당",   desc:"클릭당 수입 +10,000원",     baseCost:100000,    cost:0, level:0, scale:1.15, type:"click", value:10000 },
+      autoclick:  { name:"자동 출납기", desc:"1.2초마다 자동으로 일합니다 (클릭 1회와 동일)", baseCost:3000000, cost:0, level:0, scale:1, type:"auto", value:1, maxLevel:1 },
+      delivery:   { name:"배달 부업",   desc:"자동 수입 +5,000원/초",      baseCost:500000,    cost:0, level:0, scale:1.15, type:"cps",   value:5000 },
+      savings:    { name:"예금 이자",   desc:"자동 수입 +20,000원/초",     baseCost:2000000,   cost:0, level:0, scale:1.15, type:"cps",   value:20000 },
+      lecture:    { name:"재테크 강의", desc:"모든 수입 x1.3배",           baseCost:10000000,  cost:0, level:0, scale:1.6,  type:"mult",  value:0.3, maxLevel:6 },
+      promotion:  { name:"승진",       desc:"자동 수입 +200,000원/초",     baseCost:50000000,  cost:0, level:0, scale:1.15, type:"cps",   value:200000 },
+      realestate: { name:"부동산 스터디", desc:"자동 수입 +1,000,000원/초", baseCost:200000000, cost:0, level:0, scale:1.15, type:"cps",   value:1000000 }
+    },
+    autoClick:false,
+    endingShown:false
+  };
+
+  Object.values(state.upgrades).forEach(u => u.cost = u.baseCost);
+  const defaultUpgrades = JSON.parse(JSON.stringify(state.upgrades));
+
+  function fmt(n){
+    n = Math.floor(n);
+    return n.toLocaleString("ko-KR") + "원";
+  }
+
+  function log(msg, type){
+    const list = document.getElementById("logList");
+    const item = document.createElement("div");
+    item.className = "log-item" + (type ? " " + type : "");
+    item.textContent = msg;
+    list.prepend(item);
+    while(list.children.length > 8) list.removeChild(list.lastChild);
+  }
+
+  const stages = [
+    {p:0,   text:"월세 탈출 자금을 모으는 중...", sub:"서울 강동구 빌라 거주 · 기혼"},
+    {p:0.1, text:"전세자금을 모으는 중...", sub:"서울 강동구 빌라 거주 · 기혼"},
+    {p:0.3, text:"청약통장을 열심히 채우는 중...", sub:"서울 강동구 빌라 거주 · 기혼 · 주식투자 중"},
+    {p:0.55,text:"수지구 아파트 시세를 알아보는 중...", sub:"서울 강동구 빌라 거주 · 기혼 · 주식투자 중"},
+    {p:0.8, text:"드디어 계약금이 보이기 시작한다!", sub:"서울 강동구 빌라 거주 · 기혼 · 이사 준비중"},
+    {p:0.97,text:"거의 다 왔다! 잔금만 남았다!", sub:"서울 강동구 빌라 거주 · 기혼 · 잔금 준비중"}
+  ];
+
+  function updateStageText(progress){
+    let cur = stages[0];
+    for(const s of stages){ if(progress >= s.p) cur = s; }
+    document.getElementById("stageText").textContent = cur.text;
+    document.getElementById("statusSub").textContent = cur.sub;
+  }
+
+  function currentClickValue(){ return state.clickBase * state.clickMult; }
+  function currentCps(){ return state.cps * state.clickMult; }
+
+  function render(){
+    document.getElementById("moneyDisplay").textContent = Math.floor(state.money).toLocaleString("ko-KR");
+    document.getElementById("incomeDisplay").textContent = "+" + fmt(currentCps()) + " / 초";
+    document.getElementById("clickValueText").textContent = "클릭당 +" + fmt(currentClickValue());
+    document.getElementById("goalText").textContent = fmt(state.goal);
+
+    const progress = Math.min(1, state.money / state.goal);
+    document.getElementById("progressFill").style.width = (progress*100).toFixed(1) + "%";
+    document.getElementById("progressText").textContent = (progress*100).toFixed(1) + "%";
+    updateStageText(progress);
+
+    const priceEl = document.getElementById("stockPrice");
+    priceEl.textContent = fmt(state.stockPrice);
+    priceEl.className = "stock-price mono " + (state.stockDir >= 0 ? "up" : "down");
+    const holdVal = state.stockShares * state.stockPrice;
+    document.getElementById("stockHold").textContent =
+      "보유 " + state.stockShares.toLocaleString("ko-KR") + "주 · 평단가 " + fmt(state.stockAvgPrice);
+
+    const plEl = document.getElementById("stockPL");
+    if(state.stockShares > 0){
+      const costBasis = state.stockAvgPrice * state.stockShares;
+      const pl = holdVal - costBasis;
+      const plPct = costBasis > 0 ? (pl / costBasis * 100) : 0;
+      plEl.textContent = "평가금액 " + fmt(holdVal) + " · 손익 " + (pl>=0?"+":"") + fmt(pl) + " (" + (plPct>=0?"+":"") + plPct.toFixed(1) + "%)";
+      plEl.className = "stock-pl mono " + (pl >= 0 ? "gain" : "loss");
+    } else {
+      plEl.textContent = "평가금액 0원";
+      plEl.className = "stock-pl mono";
+    }
+
+    document.getElementById("stockBuy").disabled = state.money < 1000000;
+    document.getElementById("stockBuyAll").disabled = state.money < state.stockPrice;
+    document.getElementById("stockSell").disabled = state.stockShares <= 0;
+
+    document.getElementById("autoBadge").classList.toggle("on", !!state.autoClick);
+
+    renderUpgrades();
+
+    if(!state.endingShown && state.money >= state.goal){
+      state.endingShown = true;
+      showEnding();
+    }
+  }
+
+  function renderUpgrades(){
+    const list = document.getElementById("upgradeList");
+    list.innerHTML = "";
+    Object.entries(state.upgrades).forEach(([key,u]) => {
+      const maxed = u.maxLevel && u.level >= u.maxLevel;
+      const wrap = document.createElement("div");
+      wrap.className = "upg-row-wrap";
+      wrap.innerHTML = `
+        <div class="upg-item">
+          <span class="upg-name">${u.name} <span class="upg-lv mono">Lv.${u.level}</span>
+            <span class="upg-desc">${u.desc}</span>
+          </span>
+          <span class="upg-leader"></span>
+          <span class="upg-right">
+            <button class="buy-btn" data-key="${key}" ${(state.money < u.cost || maxed) ? "disabled" : ""}>
+              ${maxed ? "MAX" : fmt(u.cost)}
+            </button>
+          </span>
+        </div>
+      `;
+      list.appendChild(wrap);
+    });
+    list.querySelectorAll(".buy-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=> buyUpgrade(btn.getAttribute("data-key")));
+    });
+  }
+
+  function buyUpgrade(key){
+    const u = state.upgrades[key];
+    if(!u) return;
+    if(u.maxLevel && u.level >= u.maxLevel) return;
+    if(state.money < u.cost) return;
+
+    state.money -= u.cost;
+    u.level += 1;
+
+    if(u.type === "click") state.clickBase += u.value;
+    if(u.type === "cps") state.cps += u.value;
+    if(u.type === "mult") state.clickMult += u.value;
+    if(u.type === "auto") state.autoClick = true;
+
+    u.cost = Math.floor(u.baseCost * Math.pow(u.scale, u.level));
+    log(`${u.name} 자동이체 등록 (Lv.${u.level})`, "event");
+    render();
+  }
+
+  function doWork(){
+    const gain = currentClickValue();
+    state.money += gain;
+    spawnFloat(gain);
+    render();
+  }
+
+  function spawnFloat(amount){
+    const btn = document.getElementById("workBtn");
+    const f = document.createElement("div");
+    f.className = "float mono";
+    f.textContent = "+" + fmt(amount);
+    btn.appendChild(f);
+    setTimeout(()=> f.remove(), 1000);
+  }
+
+  const STOCK_TICK_MS = 2000;
+  const STOCK_HISTORY_MAX = 40;
+
+  function stockTick(){
+    const changePct = (Math.random() * 10 - 4.5) / 100;
+    state.stockDir = changePct >= 0 ? 1 : -1;
+    state.stockPrice = Math.max(1000, Math.round(state.stockPrice * (1 + changePct)));
+    state.stockHistory.push(state.stockPrice);
+    while(state.stockHistory.length > STOCK_HISTORY_MAX) state.stockHistory.shift();
+    drawStockChart();
+  }
+
+  function drawStockChart(hoverIdx){
+    const canvas = document.getElementById("stockChart");
+    if(!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(rect.width, 100);
+    const h = Math.max(rect.height, 40);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const prices = state.stockHistory;
+    if(prices.length < 2) return;
+
+    const min = Math.min(...prices), max = Math.max(...prices);
+    const pad = (max - min) * 0.18 || Math.max(max * 0.05, 10);
+    const yMin = min - pad, yMax = max + pad;
+    const stepX = w / (prices.length - 1);
+    const xAt = i => i * stepX;
+    const yAt = p => h - ((p - yMin) / (yMax - yMin)) * h;
+
+    ctx.strokeStyle = "rgba(122,111,82,.22)";
+    ctx.lineWidth = 1;
+    for(let g = 1; g <= 3; g++){
+      const gy = Math.round(h * (g / 4)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+    }
+
+    const trendUp = prices[prices.length - 1] >= prices[0];
+    const lineColor = trendUp ? "#2e6b48" : "#a53a32";
+
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, trendUp ? "rgba(46,107,72,.25)" : "rgba(165,58,50,.25)");
+    grad.addColorStop(1, trendUp ? "rgba(46,107,72,0)" : "rgba(165,58,50,0)");
+    ctx.beginPath();
+    ctx.moveTo(xAt(0), yAt(prices[0]));
+    prices.forEach((p, i) => ctx.lineTo(xAt(i), yAt(p)));
+    ctx.lineTo(xAt(prices.length - 1), h);
+    ctx.lineTo(xAt(0), h);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    prices.forEach((p, i) => {
+      const x = xAt(i), y = yAt(p);
+      if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    const lastX = xAt(prices.length - 1), lastY = yAt(prices[prices.length - 1]);
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = lineColor;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 7, 0, Math.PI * 2);
+    ctx.strokeStyle = lineColor;
+    ctx.globalAlpha = .35;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    if(hoverIdx != null && hoverIdx >= 0 && hoverIdx < prices.length){
+      const hx = xAt(hoverIdx), hy = yAt(prices[hoverIdx]);
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = "rgba(122,111,82,.5)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(hx, 0); ctx.lineTo(hx, h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#f5efdc";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = lineColor;
+      ctx.stroke();
+    }
+  }
+
+  function setupStockChartHover(){
+    const canvas = document.getElementById("stockChart");
+    const tip = document.getElementById("stockTooltip");
+    if(!canvas || !tip) return;
+    canvas.addEventListener("mousemove", (e)=>{
+      const prices = state.stockHistory;
+      if(prices.length < 2) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+      const stepX = rect.width / (prices.length - 1);
+      const idx = Math.max(0, Math.min(prices.length - 1, Math.round(x / stepX)));
+      drawStockChart(idx);
+      const agoSec = (prices.length - 1 - idx) * (STOCK_TICK_MS / 1000);
+      tip.textContent = fmt(prices[idx]) + (agoSec === 0 ? " · 현재" : " · " + agoSec + "초 전");
+      tip.style.left = (idx * stepX) + "px";
+      tip.classList.add("show");
+    });
+    canvas.addEventListener("mouseleave", ()=>{
+      drawStockChart(null);
+      tip.classList.remove("show");
+    });
+    window.addEventListener("resize", ()=> drawStockChart(null));
+  }
+
+  document.getElementById("stockBuy").addEventListener("click", ()=>{
+    if(state.money < 1000000) return;
+    const shares = Math.floor(1000000 / state.stockPrice);
+    if(shares <= 0) return;
+    const oldCostBasis = state.stockAvgPrice * state.stockShares;
+    state.money -= 1000000;
+    state.stockShares += shares;
+    state.stockAvgPrice = (oldCostBasis + 1000000) / state.stockShares;
+    log(`형식전자 ${shares}주 매수 (평단가 ${fmt(state.stockAvgPrice)})`, "gain");
+    render();
+  });
+
+  document.getElementById("stockBuyAll").addEventListener("click", ()=>{
+    const shares = Math.floor(state.money / state.stockPrice);
+    if(shares <= 0) return;
+    const cost = shares * state.stockPrice;
+    const oldCostBasis = state.stockAvgPrice * state.stockShares;
+    state.money -= cost;
+    state.stockShares += shares;
+    state.stockAvgPrice = (oldCostBasis + cost) / state.stockShares;
+    log(`형식전자 ${shares}주 전액 매수 (평단가 ${fmt(state.stockAvgPrice)})`, "gain");
+    render();
+  });
+
+  document.getElementById("stockSell").addEventListener("click", ()=>{
+    if(state.stockShares <= 0) return;
+    const value = Math.floor(state.stockShares * state.stockPrice);
+    const costBasis = state.stockAvgPrice * state.stockShares;
+    const profit = value - costBasis;
+    state.money += value;
+    log(`형식전자 ${state.stockShares}주 전량 매도 (${fmt(value)}, 손익 ${profit>=0?"+":""}${fmt(profit)})`, profit >= 0 ? "gain" : "loss");
+    state.stockShares = 0;
+    state.stockAvgPrice = 0;
+    render();
+  });
+
+  document.getElementById("workBtn").addEventListener("click", doWork);
+
+  const events = [
+    { text:"명절 상여금이 들어왔다", type:"gain", fn: s => s.money += Math.max(50000, s.money*0.02) },
+    { text:"아내와 데이트 비용이 나갔다", type:"loss", fn: s => s.money = Math.max(0, s.money - Math.max(20000, s.money*0.01)) },
+    { text:"경조사비를 지출했다", type:"loss", fn: s => s.money = Math.max(0, s.money - Math.max(30000, s.money*0.015)) },
+    { text:"형식전자 주식이 급등했다", type:"gain", fn: s => { s.stockPrice = Math.round(s.stockPrice*1.15); } },
+    { text:"형식전자 주식이 급락했다", type:"loss", fn: s => { s.stockPrice = Math.max(1000, Math.round(s.stockPrice*0.85)); } },
+    { text:"부모님이 용돈을 주셨다", type:"gain", fn: s => s.money += Math.max(30000, s.money*0.01) }
+  ];
+  function randomEvent(){
+    const ev = events[Math.floor(Math.random()*events.length)];
+    ev.fn(state);
+    log(ev.text, ev.type);
+    render();
+  }
+
+  function showEnding(){
+    document.getElementById("endingModal").classList.add("show");
+    log("내집마련 완료! 수지구 30평대 아파트 매수", "gain");
+  }
+  document.getElementById("continueBtn").addEventListener("click", ()=>{
+    document.getElementById("endingModal").classList.remove("show");
+    state.goal = Math.floor(state.goal * 2.2);
+    state.endingShown = false;
+    log(`새 목표 등록: ${fmt(state.goal)} (더 넓은 집으로 이사)`, "event");
+    render();
+  });
+
+  setInterval(()=>{
+    if(currentCps() > 0){
+      state.money += currentCps() / 5;
+      render();
+    }
+  }, 200);
+
+  setInterval(stockTick, STOCK_TICK_MS);
+  setInterval(()=>{ if(Math.random() < 0.35) randomEvent(); }, 9000);
+  setInterval(()=>{ if(state.autoClick) doWork(); }, 1200);
+
+  function save(){
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function load(){
+    try{
+      const raw = localStorage.getItem(SAVE_KEY);
+      if(!raw) return;
+      const loaded = JSON.parse(raw);
+      const loadedUpgrades = loaded.upgrades || {};
+      delete loaded.upgrades;
+      Object.assign(state, loaded);
+      state.upgrades = {};
+      Object.keys(defaultUpgrades).forEach(key=>{
+        state.upgrades[key] = Object.assign({}, defaultUpgrades[key], loadedUpgrades[key] || {});
+      });
+    }catch(e){}
+  }
+  setInterval(save, 5000);
+  window.addEventListener("beforeunload", save);
+
+  function hardRefresh(){
+    const btn = document.getElementById("refreshBtn");
+    if(btn) btn.classList.add("spinning");
+    save();
+    const clearPromises = [];
+    try{
+      if(window.caches && caches.keys){
+        clearPromises.push(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
+      }
+      if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
+        clearPromises.push(navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.unregister()))));
+      }
+    }catch(e){}
+    Promise.all(clearPromises).catch(()=>{}).finally(()=>{
+      const base = location.href.split("#")[0].split("?")[0];
+      location.replace(base + "?_r=" + Date.now());
+    });
+  }
+  document.getElementById("refreshBtn").addEventListener("click", hardRefresh);
+
+  load();
+  if(state.stockHistory.length < 2){ state.stockHistory = [state.stockPrice, state.stockPrice]; }
+  render();
+  setupStockChartHover();
+  drawStockChart();
+  log("통장을 개설했습니다. 형식이의 내집마련을 응원해주세요.", "event");
+})();
+</script>
