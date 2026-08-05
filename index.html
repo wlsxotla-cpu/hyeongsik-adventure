@@ -307,6 +307,41 @@
   }
   .lotto-result.win{ color:var(--ink-green); font-weight:800; }
   .lotto-odds{ margin-top:8px; font-size:10px; color:var(--text-sub); text-align:center; line-height:1.6; }
+
+  /* ---- Readability boost: bigger card, bigger text ---- */
+  .book{ max-width:520px; }
+  @media (min-width:760px){ .book{ max-width:600px; } }
+  .cover-top{ font-size:12.5px; }
+  .title{ font-size:33px; }
+  .subtitle{ font-size:15px; }
+  .holder-name{ font-size:15px; }
+  .holder-sub{ font-size:13px; }
+  .ledger-head{ font-size:12.5px; }
+  .balance-figure{ font-size:42px; }
+  .won{ font-size:18px; }
+  .income-row{ font-size:14px; }
+  .gauge-labels{ font-size:13px; }
+  .stage-stamp{ font-size:14px; }
+  .stamp-btn-label{ font-size:19px; }
+  .stamp-btn-sub{ font-size:13px; }
+  .auto-badge{ font-size:11px; }
+  .float{ font-size:17px; }
+  .stock-price{ font-size:26px; }
+  .stock-hold{ font-size:13px; }
+  .stock-pl{ font-size:14px; }
+  .stock-tooltip{ font-size:12.5px; }
+  .upg-name{ font-size:15px; }
+  .upg-desc{ font-size:12px; }
+  .buy-btn{ font-size:13px; }
+  .log-item{ font-size:13.5px; }
+  .back-note{ font-size:12.5px; }
+  .deed h2{ font-size:24px; }
+  .deed p{ font-size:15px; }
+  .deed button{ font-size:15px; }
+  .toast{ font-size:15px; }
+  .lotto-btn{ font-size:16px; }
+  .lotto-result{ font-size:14px; }
+  .lotto-odds{ font-size:11.5px; }
 </style>
 
 <div class="toast" id="toast"><span id="toastText"></span></div>
@@ -833,23 +868,36 @@
   setInterval(updateLottoButton, 150);
 
   const events = [
-    { text:"명절 상여금이 들어왔다", type:"gain", fn: s => s.money += Math.max(50000, s.money*0.02) },
-    { text:"아내와 데이트 비용이 나갔다", type:"loss", fn: s => s.money = Math.max(0, s.money - Math.max(20000, s.money*0.01)) },
-    { text:"경조사비를 지출했다", type:"loss", fn: s => s.money = Math.max(0, s.money - Math.max(30000, s.money*0.015)) },
+    { text:"명절 상여금이 들어왔다", type:"gain", amountFn: s => Math.max(50000, s.money*0.02) },
+    { text:"아내와 데이트 비용이 나갔다", type:"loss", amountFn: s => Math.max(20000, s.money*0.01) },
+    { text:"경조사비를 지출했다", type:"loss", amountFn: s => Math.max(30000, s.money*0.015) },
     { text:"형식전자 주식이 급등했다", type:"gain", fn: s => { s.stockPrice = Math.round(s.stockPrice*1.15); } },
     { text:"형식전자 주식이 급락했다", type:"loss", fn: s => { s.stockPrice = Math.max(1000, Math.round(s.stockPrice*0.85)); } },
-    { text:"부모님이 용돈을 주셨다", type:"gain", fn: s => s.money += Math.max(30000, s.money*0.01) },
-    { text:"회사에서 특별 상여금이 나왔다", type:"gain", toast:true, fn: s => s.money += Math.max(200000, s.money*0.04) },
-    { text:"뜻밖의 보너스를 받았다", type:"gain", toast:true, fn: s => s.money += Math.max(150000, s.money*0.035) },
-    { text:"⚠️ 부모님이 편찮으셔서 병원비를 보냈다", type:"loss", toast:true, fn: s => s.money = Math.max(0, s.money - Math.max(200000, s.money*0.05)) },
-    { text:"⚠️ 형식이가 몸살로 병원비를 지출했다", type:"loss", toast:true, fn: s => s.money = Math.max(0, s.money - Math.max(100000, s.money*0.03)) },
-    { text:"⚠️ 교통사고를 당해 치료비가 나갔다", type:"loss", toast:true, fn: s => s.money = Math.max(0, s.money - Math.max(300000, s.money*0.06)) }
+    { text:"부모님이 용돈을 주셨다", type:"gain", amountFn: s => Math.max(30000, s.money*0.01) },
+    { text:"회사에서 특별 상여금이 나왔다", type:"gain", toast:true, amountFn: s => Math.max(200000, s.money*0.04) },
+    { text:"뜻밖의 보너스를 받았다", type:"gain", toast:true, amountFn: s => Math.max(150000, s.money*0.035) },
+    { text:"⚠️ 부모님이 편찮으셔서 병원비를 보냈다", type:"loss", toast:true, amountFn: s => Math.max(200000, s.money*0.05) },
+    { text:"⚠️ 형식이가 몸살로 병원비를 지출했다", type:"loss", toast:true, amountFn: s => Math.max(100000, s.money*0.03) },
+    { text:"⚠️ 교통사고를 당해 치료비가 나갔다", type:"loss", toast:true, amountFn: s => Math.max(300000, s.money*0.06) }
   ];
   function randomEvent(){
     const ev = events[Math.floor(Math.random()*events.length)];
-    ev.fn(state);
-    log(ev.text, ev.type);
-    if(ev.toast) showToast(ev.text, ev.type === "loss" ? "warn" : "gain");
+    let logText = ev.text;
+    if(ev.amountFn){
+      const raw = ev.amountFn(state);
+      if(ev.type === "gain"){
+        state.money += raw;
+        logText += ` (+${fmt(raw)})`;
+      } else {
+        const delta = Math.min(state.money, raw);
+        state.money -= delta;
+        logText += ` (-${fmt(delta)})`;
+      }
+    } else if(ev.fn){
+      ev.fn(state);
+    }
+    log(logText, ev.type);
+    if(ev.toast) showToast(logText, ev.type === "loss" ? "warn" : "gain");
     render();
   }
 
