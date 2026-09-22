@@ -217,7 +217,7 @@
     filter:drop-shadow(0 2px 3px rgba(0,0,0,.2)); cursor:grab; touch-action:none; z-index:2;
     transform-origin:top left; user-select:none;
   }
-  .furniture-piece.dragging{ cursor:grabbing; opacity:.85; z-index:5; }
+  .furniture-piece.dragging{ cursor:grabbing; opacity:.85; z-index:5; filter:none; will-change:transform; }
   .furniture-piece svg, .furniture-piece img{
     display:block; pointer-events:none; width:100%; height:auto; border-radius:4px;
     -webkit-user-drag:none; user-select:none;
@@ -1143,19 +1143,21 @@
       const boxRect = box.getBoundingClientRect();
       const p = getPlacement(key);
       const startX = e.clientX, startY = e.clientY;
-      const startLeftPct = p.left, startTopPct = p.top;
       function onMove(ev){
-        const dxPct = (ev.clientX - startX) / boxRect.width * 100;
-        const dyPct = (ev.clientY - startY) / boxRect.height * 100;
-        const newLeft = Math.max(0, Math.min(94, startLeftPct + dxPct));
-        const newTop = Math.max(0, Math.min(88, startTopPct + dyPct));
-        el.style.left = newLeft + "%"; el.style.top = newTop + "%";
-        state.furniturePlacement[key] = Object.assign({}, state.furniturePlacement[key], { top: newTop, left: newLeft });
+        const dx = ev.clientX - startX, dy = ev.clientY - startY;
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
       }
-      function onUp(){
+      function onUp(ev){
         document.removeEventListener("pointermove", onMove);
         document.removeEventListener("pointerup", onUp);
+        const dxPct = (ev.clientX - startX) / boxRect.width * 100;
+        const dyPct = (ev.clientY - startY) / boxRect.height * 100;
+        const newLeft = Math.max(0, Math.min(94, p.left + dxPct));
+        const newTop = Math.max(0, Math.min(88, p.top + dyPct));
         el.classList.remove("dragging");
+        el.style.transform = "";
+        el.style.left = newLeft + "%"; el.style.top = newTop + "%";
+        state.furniturePlacement[key] = Object.assign({}, state.furniturePlacement[key], { top: newTop, left: newLeft });
         save();
       }
       document.addEventListener("pointermove", onMove);
@@ -1165,6 +1167,7 @@
     handle.addEventListener("pointerdown", (e)=>{
       e.preventDefault();
       e.stopPropagation();
+      el.classList.add("dragging");
       const startX = e.clientX, startY = e.clientY;
       const p = getPlacement(key);
       const startSize = p.size;
@@ -1172,11 +1175,14 @@
         const delta = (ev.clientX - startX + ev.clientY - startY) / 2;
         const newSize = Math.max(20, Math.min(90, startSize + delta));
         el.style.width = newSize + "px";
-        state.furniturePlacement[key] = Object.assign({}, state.furniturePlacement[key], { size: newSize });
       }
-      function onUp(){
+      function onUp(ev){
         document.removeEventListener("pointermove", onMove);
         document.removeEventListener("pointerup", onUp);
+        el.classList.remove("dragging");
+        const delta = (ev.clientX - startX + ev.clientY - startY) / 2;
+        const newSize = Math.max(20, Math.min(90, startSize + delta));
+        state.furniturePlacement[key] = Object.assign({}, state.furniturePlacement[key], { size: newSize });
         save();
       }
       document.addEventListener("pointermove", onMove);
