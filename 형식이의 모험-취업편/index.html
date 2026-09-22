@@ -296,7 +296,7 @@
   .stock-pl.loss{ color:var(--ink-red); }
 
   .stock-chart-wrap{ position:relative; margin:2px 0 12px; }
-  #stockChart{ display:block; width:100%; height:64px; cursor:crosshair; }
+  .stock-chart-wrap canvas{ display:block; width:100%; height:64px; cursor:crosshair; }
   .stock-tooltip{
     position:absolute; top:-4px; left:0; transform:translate(-50%,-100%);
     background:var(--ink-900); color:#f2ead0; font-size:11px; font-weight:600;
@@ -740,7 +740,7 @@
     { job:"차장",        goal:2800000000,  sub:"차장 승진 · 기혼 · 자녀 계획중",
       moveMsg:"차장으로 승진했다. 이제 후배들도 제법 따른다." },
     { job:"퇴사 후 창업", goal:4900000000, sub:"퇴사 후 1인 사업자 · 기혼",
-      moveMsg:"드디어 사표를 던지고 내 사업을 시작했다! 형식이의 모험을 완주했다!" }
+      moveMsg:"드디어 사표를 던지고 내 사업을 시작했다!" }
   ];
 
   function currentGoal(){
@@ -1479,14 +1479,15 @@
       showToast(s.moveMsg, "move");
       if(state.stageIndex === 2) state.pendingMarriage = true;
       if(isFinal) state.pendingChildbirth = true;
+      const pname = state.playerName || "형식";
       openModal({
         seal: isFinal ? "완료" : "승진",
-        title: isFinal ? "형식이의 모험, 완주!" : "승진 완료!",
+        title: isFinal ? `${pname}의 모험, 완주!` : "승진 완료!",
         desc1: isFinal
-          ? `형식이는 마침내 <b>${s.job}</b>이 되었습니다.`
+          ? `${pname}은(는) 마침내 <b>${s.job}</b>이 되었습니다.`
           : `이제 <b>${s.job}</b>입니다.`,
         desc2: isFinal
-          ? "인턴사원에서 시작해 대리, 이직, 차장을 거쳐 퇴사 후 창업까지 — 형식이의 커리어 대장정이 여기서 마무리됩니다. 축하합니다."
+          ? `인턴사원에서 시작해 대리, 이직, 차장을 거쳐 퇴사 후 창업까지 — ${pname}의 커리어 대장정이 여기서 마무리됩니다. 축하합니다.`
           : "다음 목표를 향해 계속 나아가볼까요?",
         btnText: isFinal ? "계속 플레이하기 (사업 확장)" : "계속하기"
       });
