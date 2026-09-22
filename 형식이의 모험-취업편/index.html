@@ -221,6 +221,15 @@
   .furn-name{ font-size:13px; font-weight:700; }
   .furn-price{ font-size:11px; color:var(--text-sub); font-family: ui-monospace, Consolas, monospace; }
 
+  .sync-desc{ font-size:12px; color:var(--text-sub); margin:0 0 8px; }
+  .sync-btns{ display:flex; gap:8px; margin-top:8px; }
+  .sync-btns .buy-btn{ flex:1; padding:9px; }
+  .sync-new-btn{
+    display:block; margin:10px auto 0; padding:8px 16px; border-radius:20px; cursor:pointer;
+    background:none; color:var(--text-sub); border:1px solid var(--paper-line); font-family:inherit; font-size:12px;
+  }
+  .sync-status{ font-size:11.5px; color:var(--text-sub); margin-top:8px; text-align:center; min-height:1.4em; }
+
   .name-input{
     width:100%; padding:11px 12px; margin-top:8px; border-radius:8px; border:1px solid var(--paper-line);
     background:#fffdf5; color:var(--text-on-paper); font-family:inherit; font-size:14px; text-align:center;
@@ -556,6 +565,18 @@
 
   <div class="tab-panel" data-panel="log">
   <div class="ledger">
+    <div class="ledger-head">휴대폰 ↔ PC 동기화</div>
+    <p class="sync-desc">코드를 만들어서 다른 기기에 똑같이 입력하면 진행 상황이 넘어가요.</p>
+    <input type="text" id="syncCodeInput" class="name-input" maxlength="6" placeholder="6자리 코드">
+    <div class="sync-btns">
+      <button class="buy-btn" id="syncPushBtn">이 코드로 저장</button>
+      <button class="buy-btn" id="syncPullBtn">이 코드로 불러오기</button>
+    </div>
+    <button class="sync-new-btn" id="syncNewCodeBtn">🎲 새 코드 만들기</button>
+    <div class="sync-status" id="syncStatus"></div>
+  </div>
+
+  <div class="ledger">
     <div class="ledger-head">거래내역</div>
     <div id="logList"></div>
   </div>
@@ -625,6 +646,7 @@
     hasChild: false,
     childName: "",
     furniture: {},
+    syncCode: "",
     pendingMarriage: false,
     pendingChildbirth: false,
     modalOpen:false,
@@ -1469,23 +1491,64 @@
     if(isResetting) return;
     try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
   }
+  function applyLoadedState(loaded){
+    const loadedUpgrades = loaded.upgrades || {};
+    delete loaded.upgrades;
+    Object.assign(state, loaded);
+    state.upgrades = {};
+    Object.keys(defaultUpgrades).forEach(key=>{
+      state.upgrades[key] = Object.assign({}, defaultUpgrades[key], loadedUpgrades[key] || {});
+    });
+    if(!state.missions || !Array.isArray(state.missions.items)){
+      state.missions = { date:"", items:[] };
+    }
+    if(state.stockHistory.length < 2){ state.stockHistory = [state.stockPrice, state.stockPrice]; }
+    if(state.stockHistoryFlags.length !== state.stockHistory.length){
+      state.stockHistoryFlags = state.stockHistory.map(()=>false);
+    }
+  }
+
   function load(){
     try{
       const raw = localStorage.getItem(SAVE_KEY);
       if(!raw) return true;
-      const loaded = JSON.parse(raw);
-      const loadedUpgrades = loaded.upgrades || {};
-      delete loaded.upgrades;
-      Object.assign(state, loaded);
-      state.upgrades = {};
-      Object.keys(defaultUpgrades).forEach(key=>{
-        state.upgrades[key] = Object.assign({}, defaultUpgrades[key], loadedUpgrades[key] || {});
-      });
-      if(!state.missions || !Array.isArray(state.missions.items)){
-        state.missions = { date:"", items:[] };
-      }
+      applyLoadedState(JSON.parse(raw));
     }catch(e){}
     return false;
+  }
+
+  const FIREBASE_URL = "https://chwiholok-default-rtdb.firebaseio.com";
+
+  function syncPush(code){
+    const btn = document.getElementById("syncPushBtn");
+    const statusEl = document.getElementById("syncStatus");
+    statusEl.textContent = "저장하는 중...";
+    fetch(`${FIREBASE_URL}/saves/${code}.json`, { method:"PUT", body: JSON.stringify(state) })
+      .then(r => { if(!r.ok) throw new Error("save failed"); })
+      .then(()=>{
+        state.syncCode = code;
+        save();
+        statusEl.textContent = `코드 [${code}]로 저장 완료. 다른 기기에서 이 코드로 불러오세요.`;
+        showToast(`동기화 코드 [${code}] 저장 완료`, "gain");
+      })
+      .catch(()=>{ statusEl.textContent = "저장 실패 — 인터넷 연결을 확인해주세요."; });
+  }
+
+  function syncPull(code){
+    const statusEl = document.getElementById("syncStatus");
+    statusEl.textContent = "불러오는 중...";
+    fetch(`${FIREBASE_URL}/saves/${code}.json`)
+      .then(r => r.json())
+      .then(data => {
+        if(!data){ statusEl.textContent = "그 코드로 저장된 데이터가 없어요."; return; }
+        applyLoadedState(data);
+        state.syncCode = code;
+        save();
+        statusEl.textContent = `코드 [${code}]에서 불러왔습니다.`;
+        showToast(`동기화 코드 [${code}] 불러오기 완료`, "gain");
+        render();
+      })
+      .catch(()=>{ statusEl.textContent = "불러오기 실패 — 인터넷 연결을 확인해주세요."; });
   }
   setInterval(save, 5000);
   window.addEventListener("beforeunload", save);
@@ -1560,6 +1623,25 @@
     document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.getAttribute("data-panel") === tab));
   });
 
+  function genSyncCode(){
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  document.getElementById("syncNewCodeBtn").addEventListener("click", ()=>{
+    const code = genSyncCode();
+    document.getElementById("syncCodeInput").value = code;
+    syncPush(code);
+  });
+  document.getElementById("syncPushBtn").addEventListener("click", ()=>{
+    const code = document.getElementById("syncCodeInput").value.trim();
+    if(!/^\d{4,6}$/.test(code)){ document.getElementById("syncStatus").textContent = "4~6자리 숫자 코드를 입력해주세요."; return; }
+    syncPush(code);
+  });
+  document.getElementById("syncPullBtn").addEventListener("click", ()=>{
+    const code = document.getElementById("syncCodeInput").value.trim();
+    if(!/^\d{4,6}$/.test(code)){ document.getElementById("syncStatus").textContent = "4~6자리 숫자 코드를 입력해주세요."; return; }
+    syncPull(code);
+  });
   document.getElementById("resetBtn").addEventListener("click", ()=>{
     const ok = window.confirm("정말 처음부터 다시 시작할까요? 지금까지 쌓은 모든 진행 상황이 사라져요.");
     if(!ok) return;
@@ -1573,6 +1655,7 @@
   if(state.stockHistoryFlags.length !== state.stockHistory.length){
     state.stockHistoryFlags = state.stockHistory.map(()=>false);
   }
+  if(state.syncCode) document.getElementById("syncCodeInput").value = state.syncCode;
   state.modalOpen = false;
   ensureDailyMissions();
   applyOfflineEarnings();
