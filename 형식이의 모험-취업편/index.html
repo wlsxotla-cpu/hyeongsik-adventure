@@ -302,6 +302,13 @@
     background:#fffdf5; color:var(--text-on-paper); font-family:inherit; font-size:14px; text-align:center;
   }
 
+  .choice-btn{
+    display:block; width:100%; margin-top:10px; padding:13px; border-radius:9px;
+    border:1px solid var(--ink-700); background:var(--ink-700); color:#f2ead0;
+    font-weight:700; font-size:13.5px; cursor:pointer; font-family:inherit;
+  }
+  .choice-btn.secondary{ background:transparent; color:var(--ink-700); }
+
   /* ---- Daily missions ---- */
   .mission-item{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -319,6 +326,11 @@
   }
   .mission-btn:disabled{ background:transparent; color:var(--text-sub); border-color:var(--paper-line); cursor:not-allowed; }
   .mission-reset-note{ font-size:10.5px; color:var(--text-sub); margin-top:10px; text-align:right; }
+  .streak-badge{
+    font-size:11px; font-weight:700; color:var(--ink-900); text-transform:none; letter-spacing:0;
+    background:linear-gradient(135deg, var(--brass-light), var(--brass)); padding:2px 8px; border-radius:10px;
+    margin-left:6px; vertical-align:middle;
+  }
 
   .mg-wrap{ margin-top:8px; }
   .mg-hint{ font-size:11.5px; color:var(--text-sub); margin-bottom:6px; text-align:center; }
@@ -615,10 +627,10 @@
   </div>
 
   <div class="ledger">
-    <div class="ledger-head">오늘의 미션</div>
+    <div class="ledger-head">오늘의 미션 <span class="streak-badge" id="streakBadge"></span></div>
     <button class="offline-btn" id="offlineBtn" style="display:none;"></button>
     <div id="missionList"></div>
-    <div class="mission-reset-note">미션은 매일 자정에 새로 고침됩니다</div>
+    <div class="mission-reset-note" id="missionResetNote">미션은 매일 자정에 새로 고침됩니다</div>
   </div>
   </div>
 
@@ -771,6 +783,16 @@
   </div>
 </div>
 
+<div class="modal-bg" id="choiceModal">
+  <div class="deed">
+    <div class="seal" id="choiceSeal">🎲</div>
+    <h2 id="choiceTitle"></h2>
+    <p id="choiceDesc"></p>
+    <button id="choiceBtnA" class="choice-btn"></button>
+    <button id="choiceBtnB" class="choice-btn secondary"></button>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -807,6 +829,8 @@
     furniture: {},
     furniturePlacement: {},
     syncCode: "",
+    streak: 0,
+    lastVisitDate: "",
     pendingMarriage: false,
     pendingChildbirth: false,
     modalOpen:false,
@@ -935,10 +959,19 @@
 
   const MINIGAME_TYPES = ["timing", "rps", "memory"];
 
+  function streakBonusMult(){
+    const s = state.streak || 1;
+    if(s >= 30) return 1.5;
+    if(s >= 14) return 1.3;
+    if(s >= 7) return 1.2;
+    if(s >= 3) return 1.1;
+    return 1.0;
+  }
+
   function pickMissions(){
     const pool = shuffle(MISSION_POOL).slice(0, 3);
     const games = shuffle(MINIGAME_TYPES);
-    const rewardMult = 1 + state.stageIndex * 0.6;
+    const rewardMult = (1 + state.stageIndex * 0.6) * streakBonusMult();
     return pool.map((m, idx) => ({
       key: "m" + idx,
       text: m.text,
@@ -950,9 +983,21 @@
     }));
   }
 
+  function daysBetween(a, b){
+    const da = new Date(a + "T00:00:00"), db = new Date(b + "T00:00:00");
+    return Math.round((db - da) / 86400000);
+  }
+
   function ensureDailyMissions(){
     const key = todayKey();
     if(state.missions.date !== key){
+      if(!state.lastVisitDate) state.streak = 1;
+      else {
+        const diff = daysBetween(state.lastVisitDate, key);
+        if(diff === 1) state.streak = (state.streak || 1) + 1;
+        else if(diff > 1) state.streak = 1;
+      }
+      state.lastVisitDate = key;
       state.missions.date = key;
       state.missions.items = pickMissions();
     }
@@ -1286,6 +1331,17 @@
     document.getElementById("progressFill").style.width = (progress*100).toFixed(1) + "%";
     document.getElementById("progressText").textContent = (progress*100).toFixed(1) + "%";
     updateStageText(progress);
+
+    const streakBadge = document.getElementById("streakBadge");
+    if(state.streak >= 2){
+      streakBadge.textContent = `🔥 ${state.streak}일 연속`;
+      const bonusPct = Math.round((streakBonusMult() - 1) * 100);
+      document.getElementById("missionResetNote").textContent =
+        bonusPct > 0 ? `미션은 매일 자정에 새로 고침됩니다 · 연속 출석 보너스 +${bonusPct}%` : "미션은 매일 자정에 새로 고침됩니다";
+    } else {
+      streakBadge.textContent = "";
+      document.getElementById("missionResetNote").textContent = "미션은 매일 자정에 새로 고침됩니다";
+    }
 
     Object.keys(state.stocks).forEach(renderStock);
 
@@ -1706,6 +1762,90 @@
     render();
   }
 
+  const CHOICE_EVENTS = [
+    {
+      title:"동료의 투자 제보",
+      desc:"동료가 은밀하게 투자 정보를 알려줬다. 급여의 상당액을 태워볼까?",
+      optionA:{ label:"몰빵한다", resolve:(s)=>{
+        const bet = Math.max(10000, Math.round(s.money * 0.15));
+        const win = Math.random() < 0.55;
+        s.money += win ? bet : -bet;
+        return { text: win ? `대박! +${fmt(bet)}` : `손실... -${fmt(bet)}`, type: win ? "gain" : "loss" };
+      }},
+      optionB:{ label:"무시한다", resolve:()=>({ text:"괜히 흔들리지 않기로 했다.", type:"event" }) }
+    },
+    {
+      title:"헤드헌터의 제안",
+      desc:"더 좋은 조건으로 이직하지 않겠냐는 연락이 왔다. 이력서를 보내볼까?",
+      optionA:{ label:"이력서를 보낸다", resolve:(s)=>{
+        const win = Math.random() < 0.5;
+        const gain = Math.round(s.money * 0.06);
+        if(win) s.money += gain;
+        return { text: win ? `좋은 제안을 받았다! +${fmt(gain)}` : "정중히 거절당했다.", type: win ? "gain" : "event" };
+      }},
+      optionB:{ label:"지금 회사에 남는다", resolve:(s)=>{
+        const gain = Math.max(5000, Math.round(s.money * 0.01));
+        s.money += gain;
+        return { text:`착실히 일했다. +${fmt(gain)}`, type:"gain" };
+      }}
+    },
+    {
+      title:"길에서 지갑을 주웠다",
+      desc:"낯선 지갑이 떨어져 있다. 어떻게 할까?",
+      optionA:{ label:"주인을 찾아준다", resolve:(s)=>{
+        const gain = 10000;
+        s.money += gain;
+        return { text:`고마워하며 사례금을 줬다. +${fmt(gain)}`, type:"gain" };
+      }},
+      optionB:{ label:"그냥 가진다", resolve:(s)=>{
+        const gain = Math.max(20000, Math.round(s.money * 0.02));
+        s.money += gain;
+        return { text:`왠지 찜찜하지만 +${fmt(gain)}`, type:"gain" };
+      }}
+    },
+    {
+      title:"갑작스런 회식 초대",
+      desc:"오늘 저녁 팀 회식에 오라는 연락이 왔다.",
+      optionA:{ label:"참석한다", resolve:(s)=>{
+        const cost = Math.max(10000, Math.round(s.money * 0.01));
+        const delta = Math.min(s.money, cost);
+        s.money -= delta;
+        return { text:`동료들과 친해졌다. -${fmt(delta)}`, type:"loss" };
+      }},
+      optionB:{ label:"선약이 있다고 거절한다", resolve:()=>({ text:"혼자만의 시간을 가졌다.", type:"event" }) }
+    }
+  ];
+
+  function triggerChoiceEvent(){
+    const ev = CHOICE_EVENTS[Math.floor(Math.random() * CHOICE_EVENTS.length)];
+    document.getElementById("choiceTitle").textContent = ev.title;
+    document.getElementById("choiceDesc").textContent = ev.desc;
+    const btnA = document.getElementById("choiceBtnA");
+    const btnB = document.getElementById("choiceBtnB");
+    btnA.textContent = ev.optionA.label;
+    btnB.textContent = ev.optionB.label;
+    document.getElementById("choiceModal").classList.add("show");
+
+    function resolve(opt){
+      document.getElementById("choiceModal").classList.remove("show");
+      btnA.removeEventListener("click", onA);
+      btnB.removeEventListener("click", onB);
+      const result = opt.resolve(state);
+      log(`[선택] ${ev.title} → ${opt.label}: ${result.text}`, result.type);
+      showToast(result.text, result.type === "loss" ? "warn" : (result.type === "gain" ? "gain" : "move"));
+      if(result.type !== "event") pulseMoney(result.type === "gain" ? "gain" : "spend");
+      render();
+    }
+    function onA(){ resolve(ev.optionA); }
+    function onB(){ resolve(ev.optionB); }
+    btnA.addEventListener("click", onA);
+    btnB.addEventListener("click", onB);
+  }
+
+  function anyModalOpen(){
+    return ["endingModal", "nameModal", "choiceModal"].some(id => document.getElementById(id).classList.contains("show"));
+  }
+
   function openModal(cfg){
     document.getElementById("modalSeal").textContent = cfg.seal;
     document.getElementById("modalTitle").textContent = cfg.title;
@@ -1797,7 +1937,13 @@
   }, 200);
 
   setInterval(stockTick, STOCK_TICK_MS);
-  setInterval(()=>{ if(Math.random() < 0.28) randomEvent(); }, 11000);
+  setInterval(()=>{
+    if(anyModalOpen()) return;
+    if(Math.random() < 0.28){
+      if(Math.random() < 0.3) triggerChoiceEvent();
+      else randomEvent();
+    }
+  }, 11000);
 
   let isResetting = false;
   function save(){
