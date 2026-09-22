@@ -380,6 +380,36 @@
   .reset-btn:hover{ color:#fff; border-color:rgba(255,255,255,.5); }
   .reset-btn:active{ transform:scale(.97); }
 
+  .asset-pill{
+    position:fixed; top:16px; left:16px; z-index:60;
+    display:flex; align-items:center; gap:6px;
+    background:var(--paper); border:2px solid var(--brass);
+    border-radius:20px; padding:8px 14px 8px 10px;
+    box-shadow: 0 4px 14px rgba(120,80,40,.3);
+    font-weight:800; font-size:14px; color:var(--text-on-paper);
+    max-width:44vw; cursor:pointer; user-select:none;
+  }
+  .asset-pill-icon{ font-size:16px; line-height:1; flex-shrink:0; }
+  #assetPillAmount{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .asset-pill-caret{ font-size:11px; opacity:.7; transition:transform .2s ease; flex-shrink:0; }
+  .asset-pill.open .asset-pill-caret{ transform:rotate(180deg); }
+  @media (max-width:420px){ .asset-pill{ top:10px; left:10px; padding:6px 12px 6px 8px; font-size:12px; }
+    .asset-pill-icon{ font-size:14px; } }
+
+  .asset-panel{
+    position:fixed; top:66px; left:16px; z-index:59;
+    background:var(--paper); border:2px solid var(--brass); border-radius:14px;
+    padding:10px 14px; box-shadow:0 10px 26px rgba(120,80,40,.28);
+    min-width:230px; display:none; font-size:12.5px;
+  }
+  .asset-panel.show{ display:block; }
+  .asset-panel-row{ display:flex; justify-content:space-between; gap:12px; padding:4px 0; color:var(--text-sub); }
+  .asset-panel-total{
+    border-top:1px dashed var(--paper-line); margin-top:4px; padding-top:7px;
+    font-weight:800; color:var(--brass);
+  }
+  @media (max-width:420px){ .asset-panel{ top:52px; left:10px; min-width:200px; font-size:11.5px; } }
+
   /* ---- Toast ---- */
   .toast{
     position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-12px);
@@ -450,6 +480,19 @@
 <body>
 
 <div class="toast" id="toast"><span id="toastText"></span></div>
+
+<div class="asset-pill" id="assetPill">
+  <span class="asset-pill-icon">💰</span>
+  <span class="mono" id="assetPillAmount">0원</span>
+  <span class="asset-pill-caret">▾</span>
+</div>
+<div class="asset-panel" id="assetPanel">
+  <div class="asset-panel-row"><span>현금</span><span class="mono" id="apCash">0원</span></div>
+  <div class="asset-panel-row"><span>형식전자</span><span class="mono" id="apFormsik">0원</span></div>
+  <div class="asset-panel-row"><span>경태건설</span><span class="mono" id="apAnjeong">0원</span></div>
+  <div class="asset-panel-row"><span>성주바이오</span><span class="mono" id="apJapju">0원</span></div>
+  <div class="asset-panel-row asset-panel-total"><span>전량 매도 시 총액</span><span class="mono" id="apTotal">0원</span></div>
+</div>
 
 <div class="book">
   <div class="cover">
@@ -1065,6 +1108,16 @@
     updateStageText(progress);
 
     Object.keys(state.stocks).forEach(renderStock);
+
+    const formsikVal = state.stocks.formsik.shares * state.stocks.formsik.price;
+    const anjeongVal = state.stocks.anjeong.shares * state.stocks.anjeong.price;
+    const japjuVal = state.stocks.japju.shares * state.stocks.japju.price;
+    document.getElementById("assetPillAmount").textContent = fmt(state.money);
+    document.getElementById("apCash").textContent = fmt(state.money);
+    document.getElementById("apFormsik").textContent = fmt(formsikVal);
+    document.getElementById("apAnjeong").textContent = fmt(anjeongVal);
+    document.getElementById("apJapju").textContent = fmt(japjuVal);
+    document.getElementById("apTotal").textContent = fmt(state.money + formsikVal + anjeongVal + japjuVal);
 
     renderUpgrades();
     renderMissions();
@@ -1688,6 +1741,11 @@
     });
   }
   document.getElementById("refreshBtn").addEventListener("click", hardRefresh);
+
+  document.getElementById("assetPill").addEventListener("click", ()=>{
+    document.getElementById("assetPill").classList.toggle("open");
+    document.getElementById("assetPanel").classList.toggle("show");
+  });
 
   document.getElementById("tabBar").addEventListener("click", (e)=>{
     const btn = e.target.closest(".tab-btn");
