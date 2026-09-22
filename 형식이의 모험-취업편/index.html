@@ -264,7 +264,7 @@
     background:#fffdf5; border:1px solid var(--paper-line); overflow:hidden;
   }
   .mg-timing-target{
-    position:absolute; left:42%; width:16%; height:100%;
+    position:absolute; left:46%; width:8%; height:100%;
     background:rgba(46,107,72,.35); border-left:1px solid var(--ink-green); border-right:1px solid var(--ink-green);
   }
   .mg-timing-marker{
@@ -536,22 +536,62 @@
   </div>
 
   <div class="ledger insert-card">
-    <div class="ledger-head">재테크 현황 · 형식전자</div>
+    <div class="ledger-head">재테크 현황 · 형식전자 (성장주)</div>
     <div class="stock-row">
-      <span class="stock-price mono" id="stockPrice">10,000원</span>
-      <span class="stock-hold" id="stockHold">보유 0주 · 평단가 0원</span>
+      <span class="stock-price mono" id="stockPrice-formsik">10,000원</span>
+      <span class="stock-hold" id="stockHold-formsik">보유 0주 · 평단가 0원</span>
     </div>
     <div class="stock-chart-wrap">
-      <canvas id="stockChart"></canvas>
-      <div class="stock-tooltip" id="stockTooltip"></div>
+      <canvas id="stockChart-formsik"></canvas>
+      <div class="stock-tooltip" id="stockTooltip-formsik"></div>
     </div>
-    <div class="stock-pl mono" id="stockPL">평가금액 0원</div>
+    <div class="stock-pl mono" id="stockPL-formsik">평가금액 0원</div>
     <div class="stock-btns">
-      <button id="stockBuy">10만원 매수</button>
-      <button id="stockBuyAll">전액 매수</button>
+      <button id="stockBuy-formsik">10만원 매수</button>
+      <button id="stockBuyAll-formsik">전액 매수</button>
     </div>
     <div class="stock-btns">
-      <button id="stockSell">전량 매도</button>
+      <button id="stockSell-formsik">전량 매도</button>
+    </div>
+  </div>
+
+  <div class="ledger insert-card">
+    <div class="ledger-head">재테크 현황 · 안정건설 (안정주)</div>
+    <div class="stock-row">
+      <span class="stock-price mono" id="stockPrice-anjeong">10,000원</span>
+      <span class="stock-hold" id="stockHold-anjeong">보유 0주 · 평단가 0원</span>
+    </div>
+    <div class="stock-chart-wrap">
+      <canvas id="stockChart-anjeong"></canvas>
+      <div class="stock-tooltip" id="stockTooltip-anjeong"></div>
+    </div>
+    <div class="stock-pl mono" id="stockPL-anjeong">평가금액 0원</div>
+    <div class="stock-btns">
+      <button id="stockBuy-anjeong">10만원 매수</button>
+      <button id="stockBuyAll-anjeong">전액 매수</button>
+    </div>
+    <div class="stock-btns">
+      <button id="stockSell-anjeong">전량 매도</button>
+    </div>
+  </div>
+
+  <div class="ledger insert-card">
+    <div class="ledger-head">재테크 현황 · 떡상바이오 (잡주)</div>
+    <div class="stock-row">
+      <span class="stock-price mono" id="stockPrice-japju">10,000원</span>
+      <span class="stock-hold" id="stockHold-japju">보유 0주 · 평단가 0원</span>
+    </div>
+    <div class="stock-chart-wrap">
+      <canvas id="stockChart-japju"></canvas>
+      <div class="stock-tooltip" id="stockTooltip-japju"></div>
+    </div>
+    <div class="stock-pl mono" id="stockPL-japju">평가금액 0원</div>
+    <div class="stock-btns">
+      <button id="stockBuy-japju">10만원 매수</button>
+      <button id="stockBuyAll-japju">전액 매수</button>
+    </div>
+    <div class="stock-btns">
+      <button id="stockSell-japju">전량 매도</button>
     </div>
   </div>
 
@@ -621,12 +661,11 @@
     money: 0,
     cpsBase: 700,
     cpsMult: 1,
-    stockPrice: 10000,
-    stockShares: 0,
-    stockAvgPrice: 0,
-    stockDir: 1,
-    stockHistory: [],
-    stockHistoryFlags: [],
+    stocks: {
+      formsik: { name:"형식전자",   price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:5.5, tradeCooldownUntil:0 },
+      anjeong: { name:"안정건설",   price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:2,   tradeCooldownUntil:0 },
+      japju:   { name:"떡상바이오", price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:12,  tradeCooldownUntil:0 }
+    },
     stageIndex: 0,
     currentJob: "인턴사원 재직중 · 미혼",
     postGoal: null,
@@ -665,6 +704,7 @@
 
   Object.values(state.upgrades).forEach(u => u.cost = u.baseCost);
   const defaultUpgrades = JSON.parse(JSON.stringify(state.upgrades));
+  const defaultStocks = JSON.parse(JSON.stringify(state.stocks));
 
   function fmt(n){
     n = Math.floor(n);
@@ -794,13 +834,14 @@
   function resolveMission(key, multiplier, resultLabel){
     const m = state.missions.items.find(x => x.key === key);
     if(!m || m.done) return;
-    const payout = Math.max(100, Math.round(m.reward * multiplier / 100) * 100);
+    const payout = multiplier > 0 ? Math.max(100, Math.round(m.reward * multiplier / 100) * 100) : 0;
     m.done = true;
     m.finalReward = payout;
     m.resultLabel = resultLabel;
     state.money += payout;
-    log(`[미션] ${m.text} - ${resultLabel} (+${fmt(payout)})`, "gain");
-    if(multiplier >= 2) showToast(`${resultLabel}! +${fmt(payout)}`, "gain");
+    log(`[미션] ${m.text} - ${resultLabel} (+${fmt(payout)})`, payout > 0 ? "gain" : "loss");
+    if(multiplier >= 3) showToast(`${resultLabel}! +${fmt(payout)}`, "gain");
+    if(multiplier === 0) showToast(`${resultLabel}... 0원`, "warn");
     if(activeMinigameTimers[key]){ clearInterval(activeMinigameTimers[key]); delete activeMinigameTimers[key]; }
     render();
   }
@@ -858,9 +899,9 @@
     }, 30);
     container.querySelector(`#tapbtn-${key}`).addEventListener("click", ()=>{
       const dist = Math.abs(pos - 50);
-      if(dist <= 8) resolveMission(key, 2, "완벽한 타이밍");
-      else if(dist <= 25) resolveMission(key, 1, "적당히 성공");
-      else resolveMission(key, 0.5, "타이밍 놓침");
+      if(dist <= 4) resolveMission(key, 3, "완벽한 타이밍");
+      else if(dist <= 15) resolveMission(key, 1, "적당히 성공");
+      else resolveMission(key, 0, "완전히 놓침");
     });
   }
 
@@ -880,8 +921,8 @@
         const opts = ["rock","paper","scissors"];
         const theirs = opts[Math.floor(Math.random()*3)];
         if(mine === theirs) resolveMission(key, 1, "비김");
-        else if(beats[mine] === theirs) resolveMission(key, 2, "승리");
-        else resolveMission(key, 0.5, "패배");
+        else if(beats[mine] === theirs) resolveMission(key, 3, "승리");
+        else resolveMission(key, 0, "패배");
       });
     });
   }
@@ -925,9 +966,9 @@
           if(picked.length === sequence.length){
             let correct = 0;
             for(let i = 0; i < sequence.length; i++){ if(picked[i] === sequence[i]) correct++; }
-            if(correct === sequence.length) resolveMission(key, 2, "완벽 기억");
+            if(correct === sequence.length) resolveMission(key, 3, "완벽 기억");
             else if(correct > 0) resolveMission(key, 1, "얼추 기억");
-            else resolveMission(key, 0.5, "기억 실패");
+            else resolveMission(key, 0, "기억 실패");
           }
         });
         row.appendChild(b);
@@ -1023,28 +1064,7 @@
     document.getElementById("progressText").textContent = (progress*100).toFixed(1) + "%";
     updateStageText(progress);
 
-    const priceEl = document.getElementById("stockPrice");
-    priceEl.textContent = fmt(state.stockPrice);
-    priceEl.className = "stock-price mono " + (state.stockDir >= 0 ? "up" : "down");
-    const holdVal = state.stockShares * state.stockPrice;
-    document.getElementById("stockHold").textContent =
-      "보유 " + state.stockShares.toLocaleString("ko-KR") + "주 · 평단가 " + fmt(state.stockAvgPrice);
-
-    const plEl = document.getElementById("stockPL");
-    if(state.stockShares > 0){
-      const costBasis = state.stockAvgPrice * state.stockShares;
-      const pl = holdVal - costBasis;
-      const plPct = costBasis > 0 ? (pl / costBasis * 100) : 0;
-      plEl.textContent = "평가금액 " + fmt(holdVal) + " · 손익 " + (pl>=0?"+":"") + fmt(pl) + " (" + (plPct>=0?"+":"") + plPct.toFixed(1) + "%)";
-      plEl.className = "stock-pl mono " + (pl >= 0 ? "gain" : "loss");
-    } else {
-      plEl.textContent = "평가금액 0원";
-      plEl.className = "stock-pl mono";
-    }
-
-    document.getElementById("stockBuy").disabled = state.money < 100000;
-    document.getElementById("stockBuyAll").disabled = state.money < state.stockPrice;
-    document.getElementById("stockSell").disabled = state.stockShares <= 0;
+    Object.keys(state.stocks).forEach(renderStock);
 
     renderUpgrades();
     renderMissions();
@@ -1123,26 +1143,105 @@
 
   const STOCK_TICK_MS = 2000;
   const STOCK_HISTORY_MAX = 40;
+  const TRADE_FEE = 0.015;
+  const TRADE_COOLDOWN_MS = 45000;
 
   function stockTick(){
-    const changePct = (Math.random() * 11 - 5.5) / 100;
-    state.stockDir = changePct >= 0 ? 1 : -1;
-    state.stockPrice = Math.max(1000, Math.round(state.stockPrice * (1 + changePct)));
-    pushStockHistory(state.stockPrice, false);
-    drawStockChart();
+    Object.keys(state.stocks).forEach(key => {
+      const s = state.stocks[key];
+      const changePct = (Math.random() * 2 - 1) * (s.volatility / 100);
+      s.dir = changePct >= 0 ? 1 : -1;
+      s.price = Math.max(1000, Math.round(s.price * (1 + changePct)));
+      pushStockHistory(key, s.price, false);
+      drawStockChart(key);
+    });
   }
 
-  function pushStockHistory(price, isEvent){
-    state.stockHistory.push(price);
-    state.stockHistoryFlags.push(!!isEvent);
-    while(state.stockHistory.length > STOCK_HISTORY_MAX){
-      state.stockHistory.shift();
-      state.stockHistoryFlags.shift();
+  function pushStockHistory(key, price, isEvent){
+    const s = state.stocks[key];
+    s.history.push(price);
+    s.historyFlags.push(!!isEvent);
+    while(s.history.length > STOCK_HISTORY_MAX){
+      s.history.shift();
+      s.historyFlags.shift();
     }
   }
 
-  function drawStockChart(hoverIdx){
-    const canvas = document.getElementById("stockChart");
+  function renderStock(key){
+    const s = state.stocks[key];
+    const priceEl = document.getElementById("stockPrice-" + key);
+    priceEl.textContent = fmt(s.price);
+    priceEl.className = "stock-price mono " + (s.dir >= 0 ? "up" : "down");
+    const holdVal = s.shares * s.price;
+    document.getElementById("stockHold-" + key).textContent =
+      "보유 " + s.shares.toLocaleString("ko-KR") + "주 · 평단가 " + fmt(s.avgPrice);
+
+    const plEl = document.getElementById("stockPL-" + key);
+    if(s.shares > 0){
+      const costBasis = s.avgPrice * s.shares;
+      const pl = holdVal - costBasis;
+      const plPct = costBasis > 0 ? (pl / costBasis * 100) : 0;
+      plEl.textContent = "평가금액 " + fmt(holdVal) + " · 손익 " + (pl>=0?"+":"") + fmt(pl) + " (" + (plPct>=0?"+":"") + plPct.toFixed(1) + "%)";
+      plEl.className = "stock-pl mono " + (pl >= 0 ? "gain" : "loss");
+    } else {
+      plEl.textContent = "평가금액 0원";
+      plEl.className = "stock-pl mono";
+    }
+
+    const onCooldown = Date.now() < s.tradeCooldownUntil;
+    const cooldownSec = onCooldown ? Math.ceil((s.tradeCooldownUntil - Date.now())/1000) : 0;
+    const buyBtn = document.getElementById("stockBuy-" + key);
+    const buyAllBtn = document.getElementById("stockBuyAll-" + key);
+    const sellBtn = document.getElementById("stockSell-" + key);
+    buyBtn.disabled = onCooldown || state.money < 100000;
+    buyAllBtn.disabled = onCooldown || state.money < s.price;
+    sellBtn.disabled = onCooldown || s.shares <= 0;
+    buyBtn.textContent = onCooldown ? `대기 ${cooldownSec}초` : "10만원 매수";
+    buyAllBtn.textContent = onCooldown ? `대기 ${cooldownSec}초` : "전액 매수";
+    sellBtn.textContent = onCooldown ? `대기 ${cooldownSec}초` : "전량 매도";
+  }
+
+  function buyStock(key, budget){
+    const s = state.stocks[key];
+    if(Date.now() < s.tradeCooldownUntil) return;
+    if(budget <= 0 || state.money < Math.min(budget, 100000)) return;
+    const askPrice = s.price * (1 + TRADE_FEE);
+    const shares = Math.floor(Math.min(budget, state.money) / askPrice);
+    if(shares <= 0) return;
+    const cost = Math.round(shares * askPrice);
+    state.money -= cost;
+    const oldCostBasis = s.avgPrice * s.shares;
+    s.shares += shares;
+    s.avgPrice = (oldCostBasis + cost) / s.shares;
+    s.tradeCooldownUntil = Date.now() + TRADE_COOLDOWN_MS;
+    log(`${s.name} ${shares}주 매수 (수수료 포함 평단가 ${fmt(s.avgPrice)})`, "gain");
+    render();
+  }
+
+  function sellStock(key){
+    const s = state.stocks[key];
+    if(Date.now() < s.tradeCooldownUntil) return;
+    if(s.shares <= 0) return;
+    const bidPrice = s.price * (1 - TRADE_FEE);
+    const proceeds = Math.round(s.shares * bidPrice);
+    const costBasis = s.avgPrice * s.shares;
+    const profit = proceeds - costBasis;
+    state.money += proceeds;
+    log(`${s.name} ${s.shares}주 전량 매도 (수수료 제외 ${fmt(proceeds)}, 손익 ${profit>=0?"+":""}${fmt(profit)})`, profit >= 0 ? "gain" : "loss");
+    s.shares = 0;
+    s.avgPrice = 0;
+    s.tradeCooldownUntil = Date.now() + TRADE_COOLDOWN_MS;
+    render();
+  }
+
+  Object.keys(state.stocks).forEach(key => {
+    document.getElementById("stockBuy-" + key).addEventListener("click", ()=> buyStock(key, 100000));
+    document.getElementById("stockBuyAll-" + key).addEventListener("click", ()=> buyStock(key, state.money));
+    document.getElementById("stockSell-" + key).addEventListener("click", ()=> sellStock(key));
+  });
+
+  function drawStockChart(key, hoverIdx){
+    const canvas = document.getElementById("stockChart-" + key);
     if(!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const w = Math.max(rect.width, 100);
@@ -1154,7 +1253,8 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
-    const prices = state.stockHistory;
+    const s = state.stocks[key];
+    const prices = s.history;
     if(prices.length < 2) return;
 
     const min = Math.min(...prices), max = Math.max(...prices);
@@ -1210,7 +1310,7 @@
     ctx.stroke();
     ctx.globalAlpha = 1;
 
-    const flags = state.stockHistoryFlags;
+    const flags = s.historyFlags;
     prices.forEach((p, i) => {
       if(!flags[i]) return;
       const x = xAt(i), y = yAt(p);
@@ -1240,65 +1340,29 @@
     }
   }
 
-  function setupStockChartHover(){
-    const canvas = document.getElementById("stockChart");
-    const tip = document.getElementById("stockTooltip");
+  function setupStockChartHover(key){
+    const canvas = document.getElementById("stockChart-" + key);
+    const tip = document.getElementById("stockTooltip-" + key);
     if(!canvas || !tip) return;
     canvas.addEventListener("mousemove", (e)=>{
-      const prices = state.stockHistory;
+      const prices = state.stocks[key].history;
       if(prices.length < 2) return;
       const rect = canvas.getBoundingClientRect();
       const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
       const stepX = rect.width / (prices.length - 1);
       const idx = Math.max(0, Math.min(prices.length - 1, Math.round(x / stepX)));
-      drawStockChart(idx);
+      drawStockChart(key, idx);
       const agoSec = (prices.length - 1 - idx) * (STOCK_TICK_MS / 1000);
       tip.textContent = fmt(prices[idx]) + (agoSec === 0 ? " · 현재" : " · " + agoSec + "초 전");
       tip.style.left = (idx * stepX) + "px";
       tip.classList.add("show");
     });
     canvas.addEventListener("mouseleave", ()=>{
-      drawStockChart(null);
+      drawStockChart(key, null);
       tip.classList.remove("show");
     });
-    window.addEventListener("resize", ()=> drawStockChart(null));
+    window.addEventListener("resize", ()=> drawStockChart(key, null));
   }
-
-  document.getElementById("stockBuy").addEventListener("click", ()=>{
-    if(state.money < 100000) return;
-    const shares = Math.floor(100000 / state.stockPrice);
-    if(shares <= 0) return;
-    const oldCostBasis = state.stockAvgPrice * state.stockShares;
-    state.money -= 100000;
-    state.stockShares += shares;
-    state.stockAvgPrice = (oldCostBasis + 100000) / state.stockShares;
-    log(`형식전자 ${shares}주 매수 (평단가 ${fmt(state.stockAvgPrice)})`, "gain");
-    render();
-  });
-
-  document.getElementById("stockBuyAll").addEventListener("click", ()=>{
-    const shares = Math.floor(state.money / state.stockPrice);
-    if(shares <= 0) return;
-    const cost = shares * state.stockPrice;
-    const oldCostBasis = state.stockAvgPrice * state.stockShares;
-    state.money -= cost;
-    state.stockShares += shares;
-    state.stockAvgPrice = (oldCostBasis + cost) / state.stockShares;
-    log(`형식전자 ${shares}주 전액 매수 (평단가 ${fmt(state.stockAvgPrice)})`, "gain");
-    render();
-  });
-
-  document.getElementById("stockSell").addEventListener("click", ()=>{
-    if(state.stockShares <= 0) return;
-    const value = Math.floor(state.stockShares * state.stockPrice);
-    const costBasis = state.stockAvgPrice * state.stockShares;
-    const profit = value - costBasis;
-    state.money += value;
-    log(`형식전자 ${state.stockShares}주 전량 매도 (${fmt(value)}, 손익 ${profit>=0?"+":""}${fmt(profit)})`, profit >= 0 ? "gain" : "loss");
-    state.stockShares = 0;
-    state.stockAvgPrice = 0;
-    render();
-  });
 
   // ---- Lotto ---- (real Lotto 6/45 price & odds)
   const LOTTO_COST = 1000;
@@ -1360,8 +1424,8 @@
     { text:"명절 상여금이 들어왔다", type:"gain", amountFn: s => Math.max(50000, s.money*0.02) },
     { text:"팀 회식비를 냈다", type:"loss", amountFn: s => Math.max(15000, s.money*0.01) },
     { text:"경조사비를 지출했다", type:"loss", amountFn: s => Math.max(30000, s.money*0.015) },
-    { text:"📈 형식전자 주식이 급등했다", type:"gain", toast:true, stockFn: s => { s.stockPrice = Math.round(s.stockPrice*1.15); } },
-    { text:"📉 형식전자 주식이 급락했다", type:"loss", toast:true, stockFn: s => { s.stockPrice = Math.max(1000, Math.round(s.stockPrice*0.85)); } },
+    { text:null, type:"gain", toast:true, stockDir:1 },
+    { text:null, type:"loss", toast:true, stockDir:-1 },
     { text:"부모님이 용돈을 주셨다", type:"gain", amountFn: s => Math.max(30000, s.money*0.01) },
     { text:"회사에서 성과급이 나왔다", type:"gain", toast:true, amountFn: s => Math.max(200000, s.money*0.04) },
     { text:"헤드헌터에게 좋은 제안을 받았다", type:"gain", toast:true, amountFn: s => Math.max(100000, s.money*0.025) },
@@ -1382,12 +1446,15 @@
         state.money -= delta;
         logText += ` (-${fmt(delta)})`;
       }
-    } else if(ev.stockFn){
-      ev.stockFn(state);
-      pushStockHistory(state.stockPrice, true);
-      state.stockDir = ev.type === "gain" ? 1 : -1;
-      logText += ` (${fmt(state.stockPrice)})`;
-      drawStockChart();
+    } else if(ev.stockDir){
+      const keys = Object.keys(state.stocks);
+      const key = keys[Math.floor(Math.random()*keys.length)];
+      const s = state.stocks[key];
+      s.price = ev.stockDir > 0 ? Math.round(s.price*1.15) : Math.max(1000, Math.round(s.price*0.85));
+      s.dir = ev.stockDir;
+      pushStockHistory(key, s.price, true);
+      logText = `${ev.stockDir>0?"📈":"📉"} ${s.name} 주식이 ${ev.stockDir>0?"급등":"급락"}했다 (${fmt(s.price)})`;
+      drawStockChart(key);
     }
     log(logText, ev.type);
     if(ev.toast) showToast(logText, ev.type === "loss" ? "warn" : "gain");
@@ -1493,19 +1560,25 @@
   }
   function applyLoadedState(loaded){
     const loadedUpgrades = loaded.upgrades || {};
+    const loadedStocks = loaded.stocks || {};
     delete loaded.upgrades;
+    delete loaded.stocks;
     Object.assign(state, loaded);
     state.upgrades = {};
     Object.keys(defaultUpgrades).forEach(key=>{
       state.upgrades[key] = Object.assign({}, defaultUpgrades[key], loadedUpgrades[key] || {});
     });
+    state.stocks = {};
+    Object.keys(defaultStocks).forEach(key=>{
+      state.stocks[key] = Object.assign({}, defaultStocks[key], loadedStocks[key] || {});
+    });
     if(!state.missions || !Array.isArray(state.missions.items)){
       state.missions = { date:"", items:[] };
     }
-    if(state.stockHistory.length < 2){ state.stockHistory = [state.stockPrice, state.stockPrice]; }
-    if(state.stockHistoryFlags.length !== state.stockHistory.length){
-      state.stockHistoryFlags = state.stockHistory.map(()=>false);
-    }
+    Object.values(state.stocks).forEach(s => {
+      if(s.history.length < 2){ s.history = [s.price, s.price]; }
+      if(s.historyFlags.length !== s.history.length){ s.historyFlags = s.history.map(()=>false); }
+    });
   }
 
   function load(){
@@ -1651,16 +1724,16 @@
   });
 
   const isNewGame = load();
-  if(state.stockHistory.length < 2){ state.stockHistory = [state.stockPrice, state.stockPrice]; }
-  if(state.stockHistoryFlags.length !== state.stockHistory.length){
-    state.stockHistoryFlags = state.stockHistory.map(()=>false);
-  }
+  Object.values(state.stocks).forEach(s => {
+    if(s.history.length < 2){ s.history = [s.price, s.price]; }
+    if(s.historyFlags.length !== s.history.length){ s.historyFlags = s.history.map(()=>false); }
+  });
   if(state.syncCode) document.getElementById("syncCodeInput").value = state.syncCode;
   state.modalOpen = false;
   ensureDailyMissions();
   applyOfflineEarnings();
   render();
-  setupStockChartHover();
+  Object.keys(state.stocks).forEach(setupStockChartHover);
   if(isNewGame){
     openNameModal({
       seal:"입사",
@@ -1674,7 +1747,7 @@
       }
     });
   }
-  drawStockChart();
+  Object.keys(state.stocks).forEach(key => drawStockChart(key));
   log("통장을 개설했습니다. 형식이의 커리어를 응원해주세요.", "event");
 })();
 </script>
