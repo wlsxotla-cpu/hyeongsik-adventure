@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>형식이의 모험 — 첫 출근부터 퇴사까지</title>
+<style>
+  :root{
+    color-scheme: light dark;
+    --ink-900:#0f2038;
+    --ink-700:#1b3457;
+    --ink-600:#274571;
+    --paper:#f5efdc;
+    --paper-line:#d9cead;
+    --paper-shadow:#e6dcbc;
+    --brass:#b1872f;
+    --brass-light:#d9b45c;
+    --ink-red:#a53a32;
+    --ink-green:#2e6b48;
+    --backdrop:#e9e2cd;
+    --backdrop-2:#d8cfae;
+    --text-on-paper:#241d0f;
+    --text-sub:#7a6f52;
+    --shadow: 0 24px 60px rgba(15,32,56,.28), 0 4px 12px rgba(15,32,56,.16);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --backdrop:#0a1220;
+      --backdrop-2:#050a12;
+      --paper:#efe6cc;
+      --paper-shadow:#ddd0a3;
+      --text-sub:#7a6f52;
+      --shadow: 0 24px 70px rgba(0,0,0,.6), 0 4px 16px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --backdrop:#0a1220;
+    --backdrop-2:#050a12;
+    --paper:#efe6cc;
+    --paper-shadow:#ddd0a3;
+    --shadow: 0 24px 70px rgba(0,0,0,.6), 0 4px 16px rgba(0,0,0,.4);
+  }
+  :root[data-theme="light"]{
+    --backdrop:#e9e2cd;
+    --backdrop-2:#d8cfae;
+    --paper:#f5efdc;
+    --paper-shadow:#e6dcbc;
+    --shadow: 0 24px 60px rgba(15,32,56,.28), 0 4px 12px rgba(15,32,56,.16);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    background:
+      radial-gradient(ellipse at 30% -10%, var(--backdrop-2), transparent 60%),
+      var(--backdrop);
+    color:var(--text-on-paper);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 16px 64px;
+    touch-action:manipulation;
+  }
+  button{ touch-action:manipulation; }
+  .mono{ font-family: ui-monospace, "SFMono-Regular", Consolas, "Noto Sans Mono", monospace; font-variant-numeric: tabular-nums; }
+
+  .book{
+    width:100%; max-width:460px;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow: var(--shadow);
+    background:var(--paper);
+  }
+
+  /* ---- Cover ---- */
+  .cover{
+    position:relative;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 2px, transparent 2px 6px),
+      linear-gradient(160deg, var(--ink-600), var(--ink-900) 70%);
+    color:#f2ead0;
+    padding:28px 26px 24px;
+  }
+  .cover-top{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:11px; letter-spacing:.06em; color:var(--brass-light); margin-bottom:18px;
+  }
+  .bank-mark{ font-weight:700; }
+  .passbook-no{ font-family: ui-monospace, Consolas, monospace; opacity:.85; }
+  .refresh-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:50%; margin-left:8px;
+    background:none; border:1px solid rgba(245,239,220,.4); color:#f2ead0;
+    font-size:12px; line-height:1; cursor:pointer; padding:0;
+  }
+  .refresh-btn:hover{ background:rgba(245,239,220,.15); }
+  .refresh-btn:active{ transform:scale(.9); }
+  .refresh-btn.spinning{ animation:spin .6s linear; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .refresh-btn.spinning{ animation:none; } }
+  .title{
+    margin:0 0 6px; font-size:28px; font-weight:800; letter-spacing:-.01em; text-wrap:balance;
+  }
+  .subtitle{ margin:0 0 20px; font-size:13px; color:#cdd8ea; }
+  .holder-row{ display:flex; }
+  .holder{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    border-radius:12px; padding:10px 14px;
+  }
+  .holder-avatar{ font-size:26px; }
+  .holder-name{ font-weight:700; font-size:13px; }
+  .holder-sub{ font-size:11.5px; color:#c9d3e4; margin-top:2px; }
+
+  .perforation{
+    height:14px;
+    background:var(--paper);
+    background-image: radial-gradient(circle, var(--backdrop) 2.6px, transparent 2.7px);
+    background-size: 16px 14px;
+    background-position: 8px center;
+    border-bottom:1px dashed var(--paper-line);
+  }
+
+  /* ---- Ledger sections ---- */
+  .ledger{
+    padding:18px 22px;
+    border-bottom:1px solid var(--paper-line);
+  }
+  .ledger:last-of-type{ border-bottom:none; }
+  .ledger-head{
+    font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--brass);
+    text-transform:uppercase; margin-bottom:12px;
+  }
+
+  .balance-ledger{ background:linear-gradient(180deg, var(--paper-shadow), var(--paper) 70%); }
+  .balance-row{ display:flex; align-items:baseline; gap:6px; }
+  .balance-figure{ font-size:34px; font-weight:700; letter-spacing:-.01em; }
+  .won{ font-size:16px; color:var(--text-sub); font-weight:600; }
+  .income-row{ font-size:12px; color:var(--ink-green); font-weight:600; margin-top:2px; font-family: ui-monospace, Consolas, monospace; }
+
+  .gauge{ margin-top:16px; }
+  .gauge-track{
+    position:relative; height:14px; border-radius:8px;
+    background:repeating-linear-gradient(90deg, var(--paper-line) 0 1px, transparent 1px 10%);
+    background-color:#fffdf5; border:1px solid var(--paper-line);
+    overflow:hidden;
+  }
+  .gauge-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--brass), var(--brass-light));
+    transition:width .5s ease;
+  }
+  .gauge-labels{
+    display:flex; justify-content:space-between; font-size:11px; color:var(--text-sub);
+    margin-top:6px; font-family: ui-monospace, Consolas, monospace;
+  }
+  .stage-stamp{
+    margin-top:12px; font-size:12.5px; font-weight:700; color:var(--ink-700);
+    padding:8px 10px; border-left:3px solid var(--brass); background:rgba(177,135,47,.08);
+    border-radius:0 6px 6px 0;
+  }
+
+  .offline-btn{
+    width:100%; padding:14px; margin-bottom:4px; border-radius:10px; border:none;
+    background:linear-gradient(135deg, var(--brass), var(--brass-light)); color:var(--ink-900);
+    font-weight:800; font-size:14px; cursor:pointer; font-family:inherit;
+    box-shadow:0 6px 14px rgba(177,135,47,.35);
+  }
+  .offline-btn:active{ transform:scale(.98); }
+
+  /* ---- Tabs ---- */
+  .tab-bar{
+    position:sticky; top:0; z-index:20; display:flex;
+    background:var(--paper); border-bottom:1px solid var(--paper-line);
+  }
+  .tab-btn{
+    flex:1; padding:12px 4px 10px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:12.5px; font-weight:700; color:var(--text-sub);
+    border-bottom:3px solid transparent;
+  }
+  .tab-btn.active{ color:var(--ink-700); border-bottom-color:var(--brass); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  /* ---- Mini room ---- */
+  .room-box{
+    position:relative; height:150px; border-radius:10px; overflow:hidden;
+    background:linear-gradient(180deg, #d8ecdf 0%, #d8ecdf 68%, #b9d9c4 68%, #b9d9c4 100%);
+    border:1px solid var(--paper-line);
+  }
+  :root[data-theme="dark"] .room-box{
+    background:linear-gradient(180deg, #26332c 0%, #26332c 68%, #1c2620 68%, #1c2620 100%);
+  }
+  @media (prefers-color-scheme: dark){
+    .room-box{ background:linear-gradient(180deg, #26332c 0%, #26332c 68%, #1c2620 68%, #1c2620 100%); }
+  }
+  .room-caption{ margin-top:8px; font-size:11.5px; color:var(--text-sub); text-align:center; }
+  .furniture-piece{
+    position:absolute; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.15);
+    display:flex; align-items:flex-end; justify-content:center;
+    font-size:9px; font-weight:700; color:rgba(255,255,255,.85); padding-bottom:2px;
+  }
+  .avatar{ position:absolute; bottom:8px; display:flex; flex-direction:column; align-items:center; }
+  .avatar-head{ width:20px; height:20px; border-radius:50%; background:#f0c9a0; z-index:2; }
+  .avatar-body{ width:28px; height:32px; border-radius:9px 9px 4px 4px; margin-top:-4px; }
+  .avatar-player .avatar-body{ background:var(--ink-700); }
+  .avatar-spouse .avatar-head{ position:relative; }
+  .avatar-spouse .avatar-head::before{
+    content:""; position:absolute; top:-5px; left:-3px; right:-3px; height:12px;
+    background:#4a3324; border-radius:10px 10px 0 0;
+  }
+  .avatar-spouse .avatar-body{ background:var(--ink-red); border-radius:9px 9px 14px 14px; }
+  .avatar-baby{ transform:scale(.6); bottom:6px; }
+  .avatar-baby .avatar-body{ background:var(--brass); }
+  .avatar-name{ font-size:9px; font-weight:700; color:var(--ink-900); margin-top:2px; background:rgba(255,255,255,.7); padding:0 4px; border-radius:4px; }
+
+  .furn-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px dashed var(--paper-line); }
+  .furn-item:last-child{ border-bottom:none; }
+  .furn-name{ font-size:13px; font-weight:700; }
+  .furn-price{ font-size:11px; color:var(--text-sub); font-family: ui-monospace, Consolas, monospace; }
+
+  .name-input{
+    width:100%; padding:11px 12px; margin-top:8px; border-radius:8px; border:1px solid var(--paper-line);
+    background:#fffdf5; color:var(--text-on-paper); font-family:inherit; font-size:14px; text-align:center;
+  }
+
+  /* ---- Daily missions ---- */
+  .mission-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 0; border-bottom:1px dashed var(--paper-line);
+  }
+  .mission-item:last-child{ border-bottom:none; }
+  .mission-body{ min-width:0; }
+  .mission-text{ font-size:13px; font-weight:700; }
+  .mission-text.done{ text-decoration:line-through; color:var(--text-sub); }
+  .mission-reward{ font-size:11.5px; color:var(--ink-green); font-weight:700; font-family: ui-monospace, Consolas, monospace; margin-top:2px; }
+  .mission-btn{
+    flex:0 0 auto; padding:8px 14px; border-radius:8px; border:1px solid var(--ink-700);
+    background:var(--ink-700); color:#f2ead0; font-weight:700; font-size:12px; cursor:pointer;
+    font-family:inherit; white-space:nowrap;
+  }
+  .mission-btn:disabled{ background:transparent; color:var(--text-sub); border-color:var(--paper-line); cursor:not-allowed; }
+  .mission-reset-note{ font-size:10.5px; color:var(--text-sub); margin-top:10px; text-align:right; }
+
+  .mg-wrap{ margin-top:8px; }
+  .mg-hint{ font-size:11.5px; color:var(--text-sub); margin-bottom:6px; text-align:center; }
+  .mg-play-btn{
+    width:100%; padding:9px; border-radius:8px; border:1px solid var(--ink-700);
+    background:var(--ink-700); color:#f2ead0; font-weight:700; font-size:12.5px; cursor:pointer; font-family:inherit;
+  }
+  .mg-timing-track{
+    position:relative; height:16px; border-radius:8px; margin-bottom:8px;
+    background:#fffdf5; border:1px solid var(--paper-line); overflow:hidden;
+  }
+  .mg-timing-target{
+    position:absolute; left:42%; width:16%; height:100%;
+    background:rgba(46,107,72,.35); border-left:1px solid var(--ink-green); border-right:1px solid var(--ink-green);
+  }
+  .mg-timing-marker{
+    position:absolute; top:-2px; width:3px; height:20px; background:var(--ink-red);
+    transform:translateX(-50%);
+  }
+  .mg-rps-row{ display:flex; gap:8px; }
+  .mg-rps-btn{
+    flex:1; padding:10px; border-radius:8px; border:1px solid var(--paper-line);
+    background:#fffdf5; font-size:20px; cursor:pointer;
+  }
+  .mg-memory-display{ text-align:center; font-size:28px; min-height:40px; display:flex; align-items:center; justify-content:center; }
+  .mg-memory-row{ display:flex; gap:8px; justify-content:center; }
+  .mg-memory-btn{
+    padding:8px 14px; border-radius:8px; border:1px solid var(--paper-line);
+    background:#fffdf5; font-size:20px; cursor:pointer;
+  }
+  .mg-memory-btn:disabled{ opacity:.35; cursor:not-allowed; }
+
+  /* ---- Stock insert ---- */
+  .insert-card{ background:repeating-linear-gradient(0deg, rgba(177,135,47,.05) 0 1px, transparent 1px 26px); }
+  .stock-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; flex-wrap:wrap; gap:4px; }
+  .stock-price{ font-size:22px; font-weight:700; font-family: ui-monospace, Consolas, monospace; }
+  .stock-price.up{ color:var(--ink-green); }
+  .stock-price.down{ color:var(--ink-red); }
+  .stock-hold{ font-size:11.5px; color:var(--text-sub); font-family: ui-monospace, Consolas, monospace; }
+  .stock-pl{ font-size:12px; font-weight:600; color:var(--text-sub); margin:0 0 12px; font-family: ui-monospace, Consolas, monospace; }
+  .stock-pl.gain{ color:var(--ink-green); }
+  .stock-pl.loss{ color:var(--ink-red); }
+
+  .stock-chart-wrap{ position:relative; margin:2px 0 12px; }
+  #stockChart{ display:block; width:100%; height:64px; cursor:crosshair; }
+  .stock-tooltip{
+    position:absolute; top:-4px; left:0; transform:translate(-50%,-100%);
+    background:var(--ink-900); color:#f2ead0; font-size:11px; font-weight:600;
+    padding:4px 8px; border-radius:6px; white-space:nowrap; pointer-events:none;
+    font-family: ui-monospace, Consolas, monospace; opacity:0; transition:opacity .1s ease;
+  }
+  .stock-tooltip.show{ opacity:1; }
+  .stock-btns{ display:flex; gap:8px; }
+  .stock-btns + .stock-btns{ margin-top:8px; }
+  .stock-btns button{
+    flex:1; padding:11px; border-radius:8px; font-weight:700; font-size:12.5px; cursor:pointer;
+    border:1px solid transparent; font-family:inherit;
+  }
+  #stockBuy{ background:var(--ink-green); color:#fff; }
+  #stockBuyAll{ background:transparent; color:var(--ink-green); border-color:var(--ink-green); }
+  #stockSell{ background:transparent; color:var(--ink-red); border-color:var(--ink-red); }
+  .stock-btns button:disabled{ background:var(--paper-line); color:var(--text-sub); border-color:transparent; cursor:not-allowed; }
+
+  /* ---- Upgrade ledger rows ---- */
+  .upg-item{ display:flex; align-items:baseline; gap:8px; padding:9px 0; }
+  .upg-name{ font-weight:700; font-size:13px; white-space:nowrap; }
+  .upg-lv{ font-size:10.5px; color:var(--brass); font-weight:700; }
+  .upg-leader{ flex:1; border-bottom:1px dotted var(--paper-line); min-width:12px; transform:translateY(-4px); }
+  .upg-desc{ display:block; font-size:10.5px; color:var(--text-sub); margin-top:1px; }
+  .upg-right{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+  .buy-btn{
+    padding:7px 11px; border:1px solid var(--ink-700); border-radius:7px; background:var(--ink-700); color:#f2ead0;
+    font-weight:700; font-size:11.5px; cursor:pointer; white-space:nowrap; font-family: ui-monospace, Consolas, monospace;
+  }
+  .buy-btn:disabled{ background:transparent; color:var(--text-sub); border-color:var(--paper-line); cursor:not-allowed; }
+  .upg-row-wrap{ border-bottom:1px solid var(--paper-line); }
+  .upg-row-wrap:last-child{ border-bottom:none; }
+
+  /* ---- Transaction log ---- */
+  .log-item{
+    display:flex; gap:8px; align-items:flex-start; font-size:12px; padding:6px 0 6px 10px;
+    border-left:3px solid var(--paper-line); border-bottom:1px dashed var(--paper-line);
+  }
+  .log-item:last-child{ border-bottom:none; }
+  .log-item.gain{ border-left-color:var(--ink-green); }
+  .log-item.loss{ border-left-color:var(--ink-red); }
+  .log-item.event{ border-left-color:var(--brass); }
+
+  .cover-back{ padding:16px 22px; text-align:center; }
+  .back-note{ margin:0; font-size:11px; color:#b9c4d9; }
+
+  /* ---- Ending modal ---- */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(10,18,32,.7); display:none;
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-bg.show{ display:flex; }
+  .deed{
+    position:relative; background:var(--paper); border:1px solid var(--paper-line);
+    border-radius:14px; padding:40px 32px 32px; max-width:380px; text-align:center;
+    box-shadow:0 30px 70px rgba(0,0,0,.5); overflow:hidden;
+  }
+  .seal{
+    width:104px; height:104px; margin:0 auto 18px; border-radius:50%;
+    border:3px solid var(--ink-red); color:var(--ink-red);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:800; letter-spacing:.05em;
+    transform:rotate(-11deg); mix-blend-mode:multiply;
+    box-shadow: inset 0 0 0 3px rgba(165,58,50,.25);
+  }
+  .deed h2{ margin:0 0 10px; font-size:21px; color:var(--ink-900); }
+  .deed p{ font-size:13px; color:var(--text-sub); line-height:1.6; margin:0 0 6px; }
+  .deed button{
+    margin-top:18px; padding:12px 22px; border:none; border-radius:9px;
+    background:var(--ink-700); color:#f2ead0; font-weight:700; cursor:pointer; font-size:13.5px;
+    font-family:inherit;
+  }
+  .deed button:focus-visible, .buy-btn:focus-visible, .mission-btn:focus-visible,
+  .stock-btns button:focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
+
+  .reset-wrap{ text-align:center; margin-top:18px; }
+  .reset-btn{
+    background:none; border:1px solid rgba(255,255,255,.22); color:rgba(255,255,255,.5);
+    font-size:12px; padding:8px 16px; border-radius:20px; cursor:pointer; font-family:inherit;
+  }
+  .reset-btn:hover{ color:#fff; border-color:rgba(255,255,255,.5); }
+  .reset-btn:active{ transform:scale(.97); }
+
+  /* ---- Toast ---- */
+  .toast{
+    position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-12px);
+    max-width:min(420px, calc(100vw - 32px));
+    display:flex; align-items:center; gap:8px;
+    padding:12px 16px; border-radius:10px; z-index:80;
+    font-size:13px; font-weight:700; color:#fff;
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.warn{ background:linear-gradient(135deg,#a53a32,#7d2b25); }
+  .toast.gain{ background:linear-gradient(135deg,#2e6b48,#1f4d34); }
+  .toast.move{ background:linear-gradient(135deg,var(--brass),#8f6a1f); color:var(--ink-900); }
+  @media (prefers-reduced-motion: reduce){ .toast{ transition:opacity .01s linear; } }
+
+  /* ---- Lotto ---- */
+  .lotto-btn{
+    width:100%; padding:14px; border-radius:10px; border:2px dashed var(--brass);
+    background:repeating-linear-gradient(135deg, rgba(177,135,47,.08) 0 8px, rgba(177,135,47,.03) 8px 16px);
+    color:var(--ink-900); font-weight:800; font-size:14px; cursor:pointer; font-family:inherit;
+  }
+  .lotto-btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .lotto-btn:active{ transform:scale(.98); }
+  .lotto-result{
+    margin-top:10px; font-size:12.5px; font-weight:600; text-align:center; color:var(--text-sub);
+    min-height:1.4em;
+  }
+  .lotto-result.win{ color:var(--ink-green); font-weight:800; }
+  .lotto-odds{ margin-top:8px; font-size:10px; color:var(--text-sub); text-align:center; line-height:1.6; }
+
+  /* ---- Readability boost: bigger card, bigger text ---- */
+  .book{ max-width:520px; }
+  @media (min-width:760px){ .book{ max-width:600px; } }
+  .cover-top{ font-size:12.5px; }
+  .title{ font-size:33px; }
+  .subtitle{ font-size:15px; }
+  .holder-name{ font-size:15px; }
+  .holder-sub{ font-size:13px; }
+  .ledger-head{ font-size:12.5px; }
+  .balance-figure{ font-size:42px; }
+  .won{ font-size:18px; }
+  .income-row{ font-size:14px; }
+  .gauge-labels{ font-size:13px; }
+  .stage-stamp{ font-size:14px; }
+  .mission-text{ font-size:15px; }
+  .mission-reward{ font-size:13px; }
+  .mission-btn{ font-size:13px; }
+  .mission-reset-note{ font-size:12px; }
+  .stock-price{ font-size:26px; }
+  .stock-hold{ font-size:13px; }
+  .stock-pl{ font-size:14px; }
+  .stock-tooltip{ font-size:12.5px; }
+  .upg-name{ font-size:15px; }
+  .upg-desc{ font-size:12px; }
+  .buy-btn{ font-size:13px; }
+  .log-item{ font-size:13.5px; }
+  .back-note{ font-size:12.5px; }
+  .deed h2{ font-size:24px; }
+  .deed p{ font-size:15px; }
+  .deed button{ font-size:15px; }
+  .toast{ font-size:15px; }
+  .lotto-btn{ font-size:16px; }
+  .lotto-result{ font-size:14px; }
+  .lotto-odds{ font-size:11.5px; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"><span id="toastText"></span></div>
+
+<div class="book">
+  <div class="cover">
+    <div class="cover-top">
+      <span class="bank-mark">형식저축은행 <button class="refresh-btn" id="refreshBtn" title="최신 버전 새로 불러오기" aria-label="최신 버전 새로 불러오기">⟳</button></span>
+      <span class="passbook-no mono">No. HS-JOB</span>
+    </div>
+    <h1 class="title" id="gameTitle">형식이의 모험</h1>
+    <p class="subtitle">인턴사원 → 정규직 → 대리 → 이직 → 퇴사 후 창업, 커리어 적립통장</p>
+    <div class="holder-row">
+      <div class="holder">
+        <span class="holder-avatar">🧑‍💼</span>
+        <div>
+          <div class="holder-name" id="holderName">예금주 · 형식</div>
+          <div class="holder-sub" id="statusSub">인턴사원 재직중 · 미혼</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="perforation"></div>
+
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" data-tab="home">🏠 홈</button>
+    <button class="tab-btn" data-tab="room">🛋️ 우리집</button>
+    <button class="tab-btn" data-tab="grow">📈 성장</button>
+    <button class="tab-btn" data-tab="log">📜 기록</button>
+  </div>
+
+  <div class="tab-panel active" data-panel="home">
+  <div class="ledger balance-ledger">
+    <div class="ledger-head">잔액 현황</div>
+    <div class="balance-row">
+      <span class="balance-figure mono" id="moneyDisplay">0</span>
+      <span class="won">원</span>
+    </div>
+    <div class="income-row" id="incomeDisplay">+0원 / 초 (자동 급여)</div>
+
+    <div class="gauge">
+      <div class="gauge-track"><div class="gauge-fill" id="progressFill"></div></div>
+      <div class="gauge-labels">
+        <span id="progressText">0.0%</span>
+        <span>목표 <span id="goalText">1,000,000원</span></span>
+      </div>
+    </div>
+    <div class="stage-stamp" id="stageText">통장 잔고를 조금씩 채우는 중...</div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head">오늘의 미션</div>
+    <button class="offline-btn" id="offlineBtn" style="display:none;"></button>
+    <div id="missionList"></div>
+    <div class="mission-reset-note">미션은 매일 자정에 새로 고침됩니다</div>
+  </div>
+  </div>
+
+  <div class="tab-panel" data-panel="room">
+  <div class="ledger">
+    <div class="ledger-head">우리 집</div>
+    <div class="room-box" id="roomBox">
+      <div id="furnitureLayer"></div>
+      <div class="avatar avatar-player" style="left:14%">
+        <div class="avatar-head"></div><div class="avatar-body"></div>
+      </div>
+      <div class="avatar avatar-spouse" id="spouseAvatar" style="left:54%; display:none">
+        <div class="avatar-head"></div><div class="avatar-body"></div>
+        <div class="avatar-name" id="spouseNameTag"></div>
+      </div>
+      <div class="avatar avatar-baby" id="babyAvatar" style="left:35%; display:none">
+        <div class="avatar-head"></div><div class="avatar-body"></div>
+        <div class="avatar-name" id="babyNameTag"></div>
+      </div>
+    </div>
+    <div class="room-caption" id="roomCaption"></div>
+    <div class="ledger-head" style="margin-top:16px;">가구 사기</div>
+    <div id="furnitureShop"></div>
+  </div>
+  </div>
+
+  <div class="tab-panel" data-panel="grow">
+  <div class="ledger">
+    <div class="ledger-head">자기계발 · 커리어 업그레이드</div>
+    <div id="upgradeList"></div>
+  </div>
+
+  <div class="ledger insert-card">
+    <div class="ledger-head">재테크 현황 · 형식전자</div>
+    <div class="stock-row">
+      <span class="stock-price mono" id="stockPrice">10,000원</span>
+      <span class="stock-hold" id="stockHold">보유 0주 · 평단가 0원</span>
+    </div>
+    <div class="stock-chart-wrap">
+      <canvas id="stockChart"></canvas>
+      <div class="stock-tooltip" id="stockTooltip"></div>
+    </div>
+    <div class="stock-pl mono" id="stockPL">평가금액 0원</div>
+    <div class="stock-btns">
+      <button id="stockBuy">10만원 매수</button>
+      <button id="stockBuyAll">전액 매수</button>
+    </div>
+    <div class="stock-btns">
+      <button id="stockSell">전량 매도</button>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head">복권방 · 인생 한 방</div>
+    <button class="lotto-btn" id="lottoBtn">🎟️ 로또 한 장 사기 (1,000원)</button>
+    <div class="lotto-result" id="lottoResult">긁지 않은 복권...</div>
+    <div class="lotto-odds">1등 20억원 (1/1,000,000) · 2등 3천만원 (1/100,000) · 3등 150만원 (1/5,000) · 4등 5만원 (1/300) · 5등 5천원 (1/20)</div>
+  </div>
+  </div>
+
+  <div class="tab-panel" data-panel="log">
+  <div class="ledger">
+    <div class="ledger-head">거래내역</div>
+    <div id="logList"></div>
+  </div>
+  </div>
+
+  <div class="cover cover-back">
+    <p class="back-note">이 통장은 이 브라우저에 자동 저장됩니다 (localStorage)</p>
+  </div>
+</div>
+
+<div class="reset-wrap">
+  <button class="reset-btn" id="resetBtn">🔄 이번 생은 안될듯... 초기화</button>
+</div>
+
+<div class="modal-bg" id="endingModal">
+  <div class="deed">
+    <div class="seal" id="modalSeal">승진</div>
+    <h2 id="modalTitle">승진 완료!</h2>
+    <p id="modalDesc1"></p>
+    <p id="modalDesc2"></p>
+    <button id="continueBtn">계속하기</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="nameModal">
+  <div class="deed">
+    <div class="seal" id="nameSeal">😊</div>
+    <h2 id="nameTitle">이름을 지어주세요</h2>
+    <p id="nameDesc"></p>
+    <input type="text" id="nameInput" class="name-input" maxlength="8">
+    <button id="nameConfirmBtn">확인</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SAVE_KEY = "hyeongsik_adventure_career_v1";
+
+  const state = {
+    money: 0,
+    cpsBase: 700,
+    cpsMult: 1,
+    stockPrice: 10000,
+    stockShares: 0,
+    stockAvgPrice: 0,
+    stockDir: 1,
+    stockHistory: [],
+    stockHistoryFlags: [],
+    stageIndex: 0,
+    currentJob: "인턴사원 재직중 · 미혼",
+    postGoal: null,
+    upgrades: {
+      license:    { name:"자격증 취득",     desc:"자동 수입 +30원/초",          baseCost:150000,  cost:0, level:0, scale:1.30, value:30,  unlock:0, maxLevel:8 },
+      sidejob:    { name:"자기계발 부업",   desc:"자동 수입 +60원/초",          baseCost:360000,  cost:0, level:0, scale:1.30, value:60,  unlock:0, maxLevel:8 },
+      reputation: { name:"사내 평판 관리",  desc:"모든 수입 x1.03배",           baseCost:500000,  cost:0, level:0, scale:1.50, value:0.03, isMult:true, unlock:0, maxLevel:5 },
+      portfolio:  { name:"포트폴리오 강화", desc:"자동 수입 +75원/초",          baseCost:600000,  cost:0, level:0, scale:1.35, value:75,  unlock:1, maxLevel:6 },
+      promotion:  { name:"진급 (대리)",     desc:"자동 수입 +110원/초",         baseCost:1100000, cost:0, level:0, scale:1.40, value:110, unlock:2, maxLevel:5 },
+      jobchange:  { name:"이직 성공",       desc:"자동 수입 +150원/초",         baseCost:2250000, cost:0, level:0, scale:1.45, value:150, unlock:3, maxLevel:4 },
+      executive:  { name:"임원 승진",       desc:"자동 수입 +200원/초",         baseCost:4000000, cost:0, level:0, scale:1.50, value:200, unlock:4, maxLevel:3 }
+    },
+    missions: { date:"", items:[] },
+    playerName: "",
+    married: false,
+    spouseName: "",
+    hasChild: false,
+    childName: "",
+    furniture: {},
+    pendingMarriage: false,
+    pendingChildbirth: false,
+    modalOpen:false,
+    lottoCooldownUntil:0,
+    lastActiveAt:null
+  };
+
+  const FURNITURE = [
+    { key:"desk",   name:"책상",   cost:150000, top:"14%", left:"6%",  w:38, h:20, color:"#8a6a3f" },
+    { key:"plant",  name:"화분",   cost:80000,  top:"48%", left:"84%", w:16, h:26, color:"#2e6b48" },
+    { key:"tv",     name:"TV",     cost:350000, top:"12%", left:"68%", w:34, h:22, color:"#2b2b2b" },
+    { key:"sofa",   name:"소파",   cost:250000, top:"58%", left:"66%", w:52, h:24, color:"#274571" },
+    { key:"fridge", name:"냉장고", cost:450000, top:"10%", left:"38%", w:22, h:34, color:"#c9c9c9" },
+    { key:"bed",    name:"침대",   cost:550000, top:"56%", left:"6%",  w:56, h:24, color:"#a5445a" }
+  ];
+
+  Object.values(state.upgrades).forEach(u => u.cost = u.baseCost);
+  const defaultUpgrades = JSON.parse(JSON.stringify(state.upgrades));
+
+  function fmt(n){
+    n = Math.floor(n);
+    return n.toLocaleString("ko-KR") + "원";
+  }
+
+  let toastTimer = null;
+  function showToast(msg, type, duration){
+    const toast = document.getElementById("toast");
+    const text = document.getElementById("toastText");
+    text.textContent = msg;
+    toast.className = "toast show" + (type ? " " + type : "");
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ toast.classList.remove("show"); }, duration || 3500);
+  }
+
+  function log(msg, type){
+    const list = document.getElementById("logList");
+    const item = document.createElement("div");
+    item.className = "log-item" + (type ? " " + type : "");
+    item.textContent = msg;
+    list.prepend(item);
+    while(list.children.length > 8) list.removeChild(list.lastChild);
+  }
+
+  const STORY_STAGES = [
+    { job:"정규직 사원", goal:200000000,   sub:"정규직 사원 · 인턴 딱지 뗌 · 미혼",
+      moveMsg:"드디어 인턴 딱지를 떼고 정규직으로 전환됐다!" },
+    { job:"대리",        goal:620000000,   sub:"3년차 대리 · 연애중",
+      moveMsg:"대리로 진급했다! 명함이 조금 더 무거워졌다." },
+    { job:"과장 (이직)", goal:1500000000,  sub:"이직 성공, 과장 · 기혼",
+      moveMsg:"더 좋은 조건으로 이직에 성공! 과장으로 새 출발한다." },
+    { job:"차장",        goal:2800000000,  sub:"차장 승진 · 기혼 · 자녀 계획중",
+      moveMsg:"차장으로 승진했다. 이제 후배들도 제법 따른다." },
+    { job:"퇴사 후 창업", goal:4900000000, sub:"퇴사 후 1인 사업자 · 기혼",
+      moveMsg:"드디어 사표를 던지고 내 사업을 시작했다! 형식이의 모험을 완주했다!" }
+  ];
+
+  function currentGoal(){
+    if(state.stageIndex < STORY_STAGES.length) return STORY_STAGES[state.stageIndex].goal;
+    if(state.postGoal == null) state.postGoal = Math.floor(STORY_STAGES[STORY_STAGES.length-1].goal * 1.8);
+    return state.postGoal;
+  }
+
+  const flavorPhrases = [
+    {p:0,    text:"통장 잔고를 조금씩 채우는 중..."},
+    {p:0.1,  text:"티끌 모아 태산, 조금씩 쌓이는 중..."},
+    {p:0.3,  text:"비상금이 제법 쌓이고 있다..."},
+    {p:0.55, text:"다음 단계가 슬슬 보이기 시작한다..."},
+    {p:0.8,  text:"거의 다 왔다, 조금만 더!"},
+    {p:0.97, text:"이번 목표 달성이 코앞이다!"}
+  ];
+
+  function updateStageText(progress){
+    let cur = flavorPhrases[0];
+    for(const s of flavorPhrases){ if(progress >= s.p) cur = s; }
+    const nextJob = state.stageIndex < STORY_STAGES.length ? STORY_STAGES[state.stageIndex].job : "제2의 인생";
+    document.getElementById("stageText").textContent = cur.text + " · 다음 목표: " + nextJob;
+    document.getElementById("statusSub").textContent = state.currentJob;
+  }
+
+  function currentCps(){ return state.cpsBase * state.cpsMult; }
+
+  // ---- Daily missions ----
+  const MISSION_POOL = [
+    { text:"아침 지각하지 않기",             base:3000 },
+    { text:"점심값 아끼고 도시락 싸오기",     base:5000 },
+    { text:"업무 보고서 기한 내 제출하기",    base:8000 },
+    { text:"회의에서 아이디어 하나 내기",     base:9000 },
+    { text:"야근 없이 칼퇴하기",              base:6000 },
+    { text:"커피 대신 물 마시기 (절약)",      base:2000 },
+    { text:"동료 부탁으로 회식 자리 참석하기", base:7000 },
+    { text:"자기계발 강의 30분 듣기",         base:9000 },
+    { text:"상사에게 주간 업무 브리핑하기",   base:10000 },
+    { text:"재택근무 날 집중력 유지하기",     base:5000 },
+    { text:"이력서 업데이트하기",             base:15000 },
+    { text:"링크드인 프로필 정리하기",        base:10000 }
+  ];
+
+  function todayKey(){
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i+1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const MINIGAME_TYPES = ["timing", "rps", "memory"];
+
+  function pickMissions(){
+    const pool = shuffle(MISSION_POOL).slice(0, 3);
+    const games = shuffle(MINIGAME_TYPES);
+    const rewardMult = 1 + state.stageIndex * 0.6;
+    return pool.map((m, idx) => ({
+      key: "m" + idx,
+      text: m.text,
+      reward: Math.round(m.base * rewardMult / 100) * 100,
+      game: games[idx],
+      done: false,
+      finalReward: 0,
+      resultLabel: ""
+    }));
+  }
+
+  function ensureDailyMissions(){
+    const key = todayKey();
+    if(state.missions.date !== key){
+      state.missions.date = key;
+      state.missions.items = pickMissions();
+    }
+  }
+
+  const MEMORY_ICONS = ["📄","💻","☕","📞","📊"];
+  const activeMinigameTimers = {};
+
+  function clearMinigameTimers(){
+    Object.values(activeMinigameTimers).forEach(t => clearInterval(t));
+    Object.keys(activeMinigameTimers).forEach(k => delete activeMinigameTimers[k]);
+  }
+
+  function resolveMission(key, multiplier, resultLabel){
+    const m = state.missions.items.find(x => x.key === key);
+    if(!m || m.done) return;
+    const payout = Math.max(100, Math.round(m.reward * multiplier / 100) * 100);
+    m.done = true;
+    m.finalReward = payout;
+    m.resultLabel = resultLabel;
+    state.money += payout;
+    log(`[미션] ${m.text} - ${resultLabel} (+${fmt(payout)})`, "gain");
+    if(multiplier >= 2) showToast(`${resultLabel}! +${fmt(payout)}`, "gain");
+    if(activeMinigameTimers[key]){ clearInterval(activeMinigameTimers[key]); delete activeMinigameTimers[key]; }
+    render();
+  }
+
+  let missionsRenderSignature = null;
+
+  function renderMissions(){
+    const sig = state.missions.date + "|" + state.missions.items.map(m => m.done ? "1" : "0").join("");
+    if(sig === missionsRenderSignature) return;
+    missionsRenderSignature = sig;
+    clearMinigameTimers();
+
+    const list = document.getElementById("missionList");
+    list.innerHTML = "";
+    state.missions.items.forEach(m => {
+      const row = document.createElement("div");
+      row.className = "mission-item";
+      if(m.done){
+        row.innerHTML = `
+          <div class="mission-body">
+            <div class="mission-text done">✓ ${m.text} — ${m.resultLabel}</div>
+            <div class="mission-reward">+${fmt(m.finalReward)}</div>
+          </div>
+        `;
+      } else {
+        row.innerHTML = `
+          <div class="mission-body">
+            <div class="mission-text">${m.text}</div>
+            <div class="mission-reward">기본 +${fmt(m.reward)} (미니게임 결과에 따라 변동)</div>
+          </div>
+        `;
+        const mg = document.createElement("div");
+        mg.className = "mg-wrap";
+        row.appendChild(mg);
+        if(m.game === "timing") buildTimingGame(mg, m.key);
+        else if(m.game === "rps") buildRpsGame(mg, m.key);
+        else buildMemoryGame(mg, m.key);
+      }
+      list.appendChild(row);
+    });
+  }
+
+  function buildTimingGame(container, key){
+    container.innerHTML = `
+      <div class="mg-timing-track"><div class="mg-timing-target"></div><div class="mg-timing-marker" id="marker-${key}"></div></div>
+      <button class="mg-play-btn" id="tapbtn-${key}">탭!</button>
+    `;
+    let pos = 0;
+    const start = Date.now();
+    const marker = container.querySelector(`#marker-${key}`);
+    activeMinigameTimers[key] = setInterval(()=>{
+      const t = (Date.now() - start) / 900;
+      pos = Math.abs(((t % 2) - 1)) * 100;
+      marker.style.left = pos + "%";
+    }, 30);
+    container.querySelector(`#tapbtn-${key}`).addEventListener("click", ()=>{
+      const dist = Math.abs(pos - 50);
+      if(dist <= 8) resolveMission(key, 2, "완벽한 타이밍");
+      else if(dist <= 25) resolveMission(key, 1, "적당히 성공");
+      else resolveMission(key, 0.5, "타이밍 놓침");
+    });
+  }
+
+  function buildRpsGame(container, key){
+    container.innerHTML = `
+      <div class="mg-hint">상사와 가위바위보!</div>
+      <div class="mg-rps-row">
+        <button class="mg-rps-btn" data-c="rock">✊</button>
+        <button class="mg-rps-btn" data-c="paper">✋</button>
+        <button class="mg-rps-btn" data-c="scissors">✌️</button>
+      </div>
+    `;
+    const beats = { rock:"scissors", paper:"rock", scissors:"paper" };
+    container.querySelectorAll(".mg-rps-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const mine = btn.getAttribute("data-c");
+        const opts = ["rock","paper","scissors"];
+        const theirs = opts[Math.floor(Math.random()*3)];
+        if(mine === theirs) resolveMission(key, 1, "비김");
+        else if(beats[mine] === theirs) resolveMission(key, 2, "승리");
+        else resolveMission(key, 0.5, "패배");
+      });
+    });
+  }
+
+  function buildMemoryGame(container, key){
+    const sequence = shuffle(MEMORY_ICONS).slice(0, 3);
+    container.innerHTML = `
+      <div class="mg-hint">순서를 기억하세요...</div>
+      <div class="mg-memory-display" id="mdisp-${key}"></div>
+    `;
+    const disp = container.querySelector(`#mdisp-${key}`);
+    let step = 0;
+    const showStep = ()=>{
+      if(step >= sequence.length){
+        clearInterval(activeMinigameTimers[key]);
+        delete activeMinigameTimers[key];
+        showButtons();
+        return;
+      }
+      disp.textContent = sequence[step];
+      step++;
+    };
+    showStep();
+    activeMinigameTimers[key] = setInterval(showStep, 700);
+
+    function showButtons(){
+      const buttons = shuffle(sequence);
+      container.querySelector(".mg-hint").textContent = "본 순서대로 눌러보세요";
+      disp.innerHTML = "";
+      const row = document.createElement("div");
+      row.className = "mg-memory-row";
+      const picked = [];
+      buttons.forEach(icon => {
+        const b = document.createElement("button");
+        b.className = "mg-memory-btn";
+        b.textContent = icon;
+        b.addEventListener("click", ()=>{
+          if(b.disabled) return;
+          b.disabled = true;
+          picked.push(icon);
+          if(picked.length === sequence.length){
+            let correct = 0;
+            for(let i = 0; i < sequence.length; i++){ if(picked[i] === sequence[i]) correct++; }
+            if(correct === sequence.length) resolveMission(key, 2, "완벽 기억");
+            else if(correct > 0) resolveMission(key, 1, "얼추 기억");
+            else resolveMission(key, 0.5, "기억 실패");
+          }
+        });
+        row.appendChild(b);
+      });
+      disp.appendChild(row);
+    }
+  }
+
+  function renderRoom(){
+    const layer = document.getElementById("furnitureLayer");
+    layer.innerHTML = "";
+    FURNITURE.forEach(f => {
+      if(!state.furniture[f.key]) return;
+      const el = document.createElement("div");
+      el.className = "furniture-piece";
+      el.style.top = f.top; el.style.left = f.left;
+      el.style.width = f.w + "px"; el.style.height = f.h + "px";
+      el.style.background = f.color;
+      el.textContent = f.name;
+      layer.appendChild(el);
+    });
+
+    const name = state.playerName || "형식";
+    document.getElementById("spouseAvatar").style.display = state.married ? "flex" : "none";
+    document.getElementById("babyAvatar").style.display = state.hasChild ? "flex" : "none";
+    if(state.married) document.getElementById("spouseNameTag").textContent = state.spouseName || "배우자";
+    if(state.hasChild) document.getElementById("babyNameTag").textContent = state.childName || "아기";
+
+    let caption = `${name} 혼자 살고 있어요`;
+    if(state.married && state.hasChild) caption = `${name}, ${state.spouseName}, ${state.childName} 세 식구가 함께 살아요`;
+    else if(state.married) caption = `${name}와 ${state.spouseName}, 신혼집이에요`;
+    document.getElementById("roomCaption").textContent = caption;
+
+    const shop = document.getElementById("furnitureShop");
+    shop.innerHTML = "";
+    FURNITURE.forEach(f => {
+      const owned = !!state.furniture[f.key];
+      const row = document.createElement("div");
+      row.className = "furn-item";
+      row.innerHTML = `
+        <span class="furn-name">${f.name}</span>
+        <span class="furn-price mono">${owned ? "보유중" : fmt(f.cost)}</span>
+      `;
+      if(!owned){
+        const btn = document.createElement("button");
+        btn.className = "buy-btn";
+        btn.textContent = "구매";
+        btn.disabled = state.money < f.cost;
+        btn.addEventListener("click", ()=> buyFurniture(f.key));
+        row.appendChild(btn);
+      }
+      shop.appendChild(row);
+    });
+  }
+
+  function buyFurniture(key){
+    const f = FURNITURE.find(x => x.key === key);
+    if(!f || state.furniture[key]) return;
+    if(state.money < f.cost) return;
+    state.money -= f.cost;
+    state.furniture[key] = true;
+    log(`${f.name}을(를) 우리 집에 들였다`, "event");
+    render();
+  }
+
+  function openNameModal(cfg){
+    document.getElementById("nameSeal").textContent = cfg.seal || "😊";
+    document.getElementById("nameTitle").textContent = cfg.title;
+    document.getElementById("nameDesc").textContent = cfg.desc || "";
+    const input = document.getElementById("nameInput");
+    input.value = "";
+    input.placeholder = cfg.placeholder || "";
+    document.getElementById("nameModal").classList.add("show");
+    const confirmBtn = document.getElementById("nameConfirmBtn");
+    const handler = ()=>{
+      const val = input.value.trim().slice(0,8) || cfg.placeholder;
+      document.getElementById("nameModal").classList.remove("show");
+      confirmBtn.removeEventListener("click", handler);
+      cfg.onConfirm(val);
+    };
+    confirmBtn.addEventListener("click", handler);
+  }
+
+  function render(){
+    ensureDailyMissions();
+    document.getElementById("moneyDisplay").textContent = Math.floor(state.money).toLocaleString("ko-KR");
+    document.getElementById("incomeDisplay").textContent = "+" + fmt(currentCps()) + " / 초 (자동 급여)";
+    const goal = currentGoal();
+    document.getElementById("goalText").textContent = fmt(goal);
+
+    const progress = Math.min(1, state.money / goal);
+    document.getElementById("progressFill").style.width = (progress*100).toFixed(1) + "%";
+    document.getElementById("progressText").textContent = (progress*100).toFixed(1) + "%";
+    updateStageText(progress);
+
+    const priceEl = document.getElementById("stockPrice");
+    priceEl.textContent = fmt(state.stockPrice);
+    priceEl.className = "stock-price mono " + (state.stockDir >= 0 ? "up" : "down");
+    const holdVal = state.stockShares * state.stockPrice;
+    document.getElementById("stockHold").textContent =
+      "보유 " + state.stockShares.toLocaleString("ko-KR") + "주 · 평단가 " + fmt(state.stockAvgPrice);
+
+    const plEl = document.getElementById("stockPL");
+    if(state.stockShares > 0){
+      const costBasis = state.stockAvgPrice * state.stockShares;
+      const pl = holdVal - costBasis;
+      const plPct = costBasis > 0 ? (pl / costBasis * 100) : 0;
+      plEl.textContent = "평가금액 " + fmt(holdVal) + " · 손익 " + (pl>=0?"+":"") + fmt(pl) + " (" + (plPct>=0?"+":"") + plPct.toFixed(1) + "%)";
+      plEl.className = "stock-pl mono " + (pl >= 0 ? "gain" : "loss");
+    } else {
+      plEl.textContent = "평가금액 0원";
+      plEl.className = "stock-pl mono";
+    }
+
+    document.getElementById("stockBuy").disabled = state.money < 100000;
+    document.getElementById("stockBuyAll").disabled = state.money < state.stockPrice;
+    document.getElementById("stockSell").disabled = state.stockShares <= 0;
+
+    renderUpgrades();
+    renderMissions();
+    renderRoom();
+    updateLottoButton();
+    document.getElementById("holderName").textContent = "예금주 · " + (state.playerName || "형식");
+    document.getElementById("gameTitle").textContent = (state.playerName || "형식") + "의 모험";
+
+    if(!state.modalOpen && state.money >= goal){
+      state.modalOpen = true;
+      triggerStageComplete();
+    }
+  }
+
+  const UNLOCK_LABELS = ["정규직 전환", "대리 진급", "이직(과장)", "차장 승진", "퇴사 후 창업"];
+
+  function renderUpgrades(){
+    const list = document.getElementById("upgradeList");
+    list.innerHTML = "";
+    Object.entries(state.upgrades).forEach(([key,u]) => {
+      const locked = u.unlock > state.stageIndex;
+      const maxed = u.maxLevel && u.level >= u.maxLevel;
+      const wrap = document.createElement("div");
+      wrap.className = "upg-row-wrap";
+      if(locked){
+        wrap.innerHTML = `
+          <div class="upg-item">
+            <span class="upg-name">🔒 ${u.name}
+              <span class="upg-desc">${UNLOCK_LABELS[u.unlock - 1]} 이후 해금</span>
+            </span>
+            <span class="upg-leader"></span>
+            <span class="upg-right">
+              <button class="buy-btn" disabled>잠김</button>
+            </span>
+          </div>
+        `;
+      } else {
+        wrap.innerHTML = `
+          <div class="upg-item">
+            <span class="upg-name">${u.name} <span class="upg-lv mono">Lv.${u.level}</span>
+              <span class="upg-desc">${u.desc}</span>
+            </span>
+            <span class="upg-leader"></span>
+            <span class="upg-right">
+              <button class="buy-btn" data-key="${key}" ${(state.money < u.cost || maxed) ? "disabled" : ""}>
+                ${maxed ? "MAX" : fmt(u.cost)}
+              </button>
+            </span>
+          </div>
+        `;
+      }
+      list.appendChild(wrap);
+    });
+    list.querySelectorAll(".buy-btn[data-key]").forEach(btn=>{
+      btn.addEventListener("click", ()=> buyUpgrade(btn.getAttribute("data-key")));
+    });
+  }
+
+  function buyUpgrade(key){
+    const u = state.upgrades[key];
+    if(!u) return;
+    if(u.unlock > state.stageIndex) return;
+    if(u.maxLevel && u.level >= u.maxLevel) return;
+    if(state.money < u.cost) return;
+
+    state.money -= u.cost;
+    u.level += 1;
+
+    if(u.isMult) state.cpsMult += u.value;
+    else state.cpsBase += u.value;
+
+    u.cost = Math.floor(u.baseCost * Math.pow(u.scale, u.level));
+    log(`${u.name} 완료 (Lv.${u.level})`, "event");
+    render();
+  }
+
+  const STOCK_TICK_MS = 2000;
+  const STOCK_HISTORY_MAX = 40;
+
+  function stockTick(){
+    const changePct = (Math.random() * 11 - 5.5) / 100;
+    state.stockDir = changePct >= 0 ? 1 : -1;
+    state.stockPrice = Math.max(1000, Math.round(state.stockPrice * (1 + changePct)));
+    pushStockHistory(state.stockPrice, false);
+    drawStockChart();
+  }
+
+  function pushStockHistory(price, isEvent){
+    state.stockHistory.push(price);
+    state.stockHistoryFlags.push(!!isEvent);
+    while(state.stockHistory.length > STOCK_HISTORY_MAX){
+      state.stockHistory.shift();
+      state.stockHistoryFlags.shift();
+    }
+  }
+
+  function drawStockChart(hoverIdx){
+    const canvas = document.getElementById("stockChart");
+    if(!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(rect.width, 100);
+    const h = Math.max(rect.height, 40);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const prices = state.stockHistory;
+    if(prices.length < 2) return;
+
+    const min = Math.min(...prices), max = Math.max(...prices);
+    const pad = (max - min) * 0.18 || Math.max(max * 0.05, 10);
+    const yMin = min - pad, yMax = max + pad;
+    const stepX = w / (prices.length - 1);
+    const xAt = i => i * stepX;
+    const yAt = p => h - ((p - yMin) / (yMax - yMin)) * h;
+
+    ctx.strokeStyle = "rgba(122,111,82,.22)";
+    ctx.lineWidth = 1;
+    for(let g = 1; g <= 3; g++){
+      const gy = Math.round(h * (g / 4)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+    }
+
+    const trendUp = prices[prices.length - 1] >= prices[0];
+    const lineColor = trendUp ? "#2e6b48" : "#a53a32";
+
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, trendUp ? "rgba(46,107,72,.25)" : "rgba(165,58,50,.25)");
+    grad.addColorStop(1, trendUp ? "rgba(46,107,72,0)" : "rgba(165,58,50,0)");
+    ctx.beginPath();
+    ctx.moveTo(xAt(0), yAt(prices[0]));
+    prices.forEach((p, i) => ctx.lineTo(xAt(i), yAt(p)));
+    ctx.lineTo(xAt(prices.length - 1), h);
+    ctx.lineTo(xAt(0), h);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    prices.forEach((p, i) => {
+      const x = xAt(i), y = yAt(p);
+      if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    const lastX = xAt(prices.length - 1), lastY = yAt(prices[prices.length - 1]);
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = lineColor;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 7, 0, Math.PI * 2);
+    ctx.strokeStyle = lineColor;
+    ctx.globalAlpha = .35;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    const flags = state.stockHistoryFlags;
+    prices.forEach((p, i) => {
+      if(!flags[i]) return;
+      const x = xAt(i), y = yAt(p);
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = "#f5efdc";
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#b1872f";
+      ctx.stroke();
+    });
+
+    if(hoverIdx != null && hoverIdx >= 0 && hoverIdx < prices.length){
+      const hx = xAt(hoverIdx), hy = yAt(prices[hoverIdx]);
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = "rgba(122,111,82,.5)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(hx, 0); ctx.lineTo(hx, h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#f5efdc";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = lineColor;
+      ctx.stroke();
+    }
+  }
+
+  function setupStockChartHover(){
+    const canvas = document.getElementById("stockChart");
+    const tip = document.getElementById("stockTooltip");
+    if(!canvas || !tip) return;
+    canvas.addEventListener("mousemove", (e)=>{
+      const prices = state.stockHistory;
+      if(prices.length < 2) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+      const stepX = rect.width / (prices.length - 1);
+      const idx = Math.max(0, Math.min(prices.length - 1, Math.round(x / stepX)));
+      drawStockChart(idx);
+      const agoSec = (prices.length - 1 - idx) * (STOCK_TICK_MS / 1000);
+      tip.textContent = fmt(prices[idx]) + (agoSec === 0 ? " · 현재" : " · " + agoSec + "초 전");
+      tip.style.left = (idx * stepX) + "px";
+      tip.classList.add("show");
+    });
+    canvas.addEventListener("mouseleave", ()=>{
+      drawStockChart(null);
+      tip.classList.remove("show");
+    });
+    window.addEventListener("resize", ()=> drawStockChart(null));
+  }
+
+  document.getElementById("stockBuy").addEventListener("click", ()=>{
+    if(state.money < 100000) return;
+    const shares = Math.floor(100000 / state.stockPrice);
+    if(shares <= 0) return;
+    const oldCostBasis = state.stockAvgPrice * state.stockShares;
+    state.money -= 100000;
+    state.stockShares += shares;
+    state.stockAvgPrice = (oldCostBasis + 100000) / state.stockShares;
+    log(`형식전자 ${shares}주 매수 (평단가 ${fmt(state.stockAvgPrice)})`, "gain");
+    render();
+  });
+
+  document.getElementById("stockBuyAll").addEventListener("click", ()=>{
+    const shares = Math.floor(state.money / state.stockPrice);
+    if(shares <= 0) return;
+    const cost = shares * state.stockPrice;
+    const oldCostBasis = state.stockAvgPrice * state.stockShares;
+    state.money -= cost;
+    state.stockShares += shares;
+    state.stockAvgPrice = (oldCostBasis + cost) / state.stockShares;
+    log(`형식전자 ${shares}주 전액 매수 (평단가 ${fmt(state.stockAvgPrice)})`, "gain");
+    render();
+  });
+
+  document.getElementById("stockSell").addEventListener("click", ()=>{
+    if(state.stockShares <= 0) return;
+    const value = Math.floor(state.stockShares * state.stockPrice);
+    const costBasis = state.stockAvgPrice * state.stockShares;
+    const profit = value - costBasis;
+    state.money += value;
+    log(`형식전자 ${state.stockShares}주 전량 매도 (${fmt(value)}, 손익 ${profit>=0?"+":""}${fmt(profit)})`, profit >= 0 ? "gain" : "loss");
+    state.stockShares = 0;
+    state.stockAvgPrice = 0;
+    render();
+  });
+
+  // ---- Lotto ---- (real Lotto 6/45 price & odds)
+  const LOTTO_COST = 1000;
+  const LOTTO_COOLDOWN_MS = 1500;
+  const LOTTO_TIERS = [
+    { label:"1등", prize:2000000000, p:1/1000000 },
+    { label:"2등", prize:30000000,   p:1/100000 },
+    { label:"3등", prize:1500000,    p:1/5000 },
+    { label:"4등", prize:50000,      p:1/300 },
+    { label:"5등", prize:5000,       p:1/20 }
+  ];
+
+  function drawLotto(){
+    if(state.money < LOTTO_COST) return;
+    if(Date.now() < state.lottoCooldownUntil) return;
+    state.lottoCooldownUntil = Date.now() + LOTTO_COOLDOWN_MS;
+    state.money -= LOTTO_COST;
+
+    const r = Math.random();
+    let acc = 0, hit = null;
+    for(const tier of LOTTO_TIERS){
+      acc += tier.p;
+      if(r < acc){ hit = tier; break; }
+    }
+
+    const resultEl = document.getElementById("lottoResult");
+    if(hit){
+      state.money += hit.prize;
+      resultEl.textContent = `🎉 ${hit.label} 당첨! +${fmt(hit.prize)}`;
+      resultEl.className = "lotto-result win";
+      if(hit.prize >= LOTTO_TIERS[2].prize){
+        log(`로또 ${hit.label} 당첨! +${fmt(hit.prize)}`, "gain");
+        showToast(`🎉 로또 ${hit.label} 당첨! +${fmt(hit.prize)}`, "gain", 5000);
+      } else {
+        log(`로또 ${hit.label} 당첨 (+${fmt(hit.prize)})`, "gain");
+      }
+    } else {
+      resultEl.textContent = "꽝... 다음 기회에 😢";
+      resultEl.className = "lotto-result";
+    }
+    render();
+  }
+
+  function updateLottoButton(){
+    const btn = document.getElementById("lottoBtn");
+    const remainMs = state.lottoCooldownUntil - Date.now();
+    if(remainMs > 0){
+      btn.disabled = true;
+      btn.textContent = `잠시만요... (${(remainMs/1000).toFixed(1)}초)`;
+    } else {
+      btn.disabled = state.money < LOTTO_COST;
+      btn.textContent = "🎟️ 로또 한 장 사기 (1,000원)";
+    }
+  }
+  document.getElementById("lottoBtn").addEventListener("click", drawLotto);
+  setInterval(updateLottoButton, 150);
+
+  const events = [
+    { text:"명절 상여금이 들어왔다", type:"gain", amountFn: s => Math.max(50000, s.money*0.02) },
+    { text:"팀 회식비를 냈다", type:"loss", amountFn: s => Math.max(15000, s.money*0.01) },
+    { text:"경조사비를 지출했다", type:"loss", amountFn: s => Math.max(30000, s.money*0.015) },
+    { text:"📈 형식전자 주식이 급등했다", type:"gain", toast:true, stockFn: s => { s.stockPrice = Math.round(s.stockPrice*1.15); } },
+    { text:"📉 형식전자 주식이 급락했다", type:"loss", toast:true, stockFn: s => { s.stockPrice = Math.max(1000, Math.round(s.stockPrice*0.85)); } },
+    { text:"부모님이 용돈을 주셨다", type:"gain", amountFn: s => Math.max(30000, s.money*0.01) },
+    { text:"회사에서 성과급이 나왔다", type:"gain", toast:true, amountFn: s => Math.max(200000, s.money*0.04) },
+    { text:"헤드헌터에게 좋은 제안을 받았다", type:"gain", toast:true, amountFn: s => Math.max(100000, s.money*0.025) },
+    { text:"⚠️ 야근 택시비가 나갔다", type:"loss", amountFn: s => Math.max(15000, s.money*0.008) },
+    { text:"⚠️ 몸살로 병원비를 지출했다", type:"loss", toast:true, amountFn: s => Math.max(100000, s.money*0.03) },
+    { text:"⚠️ 연말정산 추가 납부금이 나갔다", type:"loss", toast:true, amountFn: s => Math.max(150000, s.money*0.035) }
+  ];
+  function randomEvent(){
+    const ev = events[Math.floor(Math.random()*events.length)];
+    let logText = ev.text;
+    if(ev.amountFn){
+      const raw = ev.amountFn(state);
+      if(ev.type === "gain"){
+        state.money += raw;
+        logText += ` (+${fmt(raw)})`;
+      } else {
+        const delta = Math.min(state.money, raw);
+        state.money -= delta;
+        logText += ` (-${fmt(delta)})`;
+      }
+    } else if(ev.stockFn){
+      ev.stockFn(state);
+      pushStockHistory(state.stockPrice, true);
+      state.stockDir = ev.type === "gain" ? 1 : -1;
+      logText += ` (${fmt(state.stockPrice)})`;
+      drawStockChart();
+    }
+    log(logText, ev.type);
+    if(ev.toast) showToast(logText, ev.type === "loss" ? "warn" : "gain");
+    render();
+  }
+
+  function openModal(cfg){
+    document.getElementById("modalSeal").textContent = cfg.seal;
+    document.getElementById("modalTitle").textContent = cfg.title;
+    document.getElementById("modalDesc1").innerHTML = cfg.desc1;
+    document.getElementById("modalDesc2").innerHTML = cfg.desc2;
+    document.getElementById("continueBtn").textContent = cfg.btnText;
+    document.getElementById("endingModal").classList.add("show");
+  }
+
+  function triggerStageComplete(){
+    if(state.stageIndex < STORY_STAGES.length){
+      const s = STORY_STAGES[state.stageIndex];
+      const isFinal = state.stageIndex === STORY_STAGES.length - 1;
+      state.currentJob = s.sub;
+      log(s.moveMsg, "gain");
+      showToast(s.moveMsg, "move");
+      if(state.stageIndex === 2) state.pendingMarriage = true;
+      if(isFinal) state.pendingChildbirth = true;
+      openModal({
+        seal: isFinal ? "완료" : "승진",
+        title: isFinal ? "형식이의 모험, 완주!" : "승진 완료!",
+        desc1: isFinal
+          ? `형식이는 마침내 <b>${s.job}</b>이 되었습니다.`
+          : `이제 <b>${s.job}</b>입니다.`,
+        desc2: isFinal
+          ? "인턴사원에서 시작해 대리, 이직, 차장을 거쳐 퇴사 후 창업까지 — 형식이의 커리어 대장정이 여기서 마무리됩니다. 축하합니다."
+          : "다음 목표를 향해 계속 나아가볼까요?",
+        btnText: isFinal ? "계속 플레이하기 (사업 확장)" : "계속하기"
+      });
+      state.stageIndex += 1;
+    } else {
+      openModal({
+        seal:"경신",
+        title:"자산 신기록!",
+        desc1:`순자산 <b>${fmt(state.postGoal)}</b>을 달성했습니다.`,
+        desc2:"형식이의 사업은 계속 커지는 중입니다.",
+        btnText:"계속하기"
+      });
+      state.postGoal = Math.floor(state.postGoal * 1.8);
+    }
+  }
+
+  document.getElementById("continueBtn").addEventListener("click", ()=>{
+    document.getElementById("endingModal").classList.remove("show");
+    state.modalOpen = false;
+
+    if(state.pendingMarriage){
+      state.pendingMarriage = false;
+      openNameModal({
+        seal:"청첩",
+        title:"결혼했습니다!",
+        desc:`${state.playerName || "형식"}이(가) 드디어 결혼했어요. 배우자의 이름을 지어주세요.`,
+        placeholder:"민지",
+        onConfirm: (val)=>{
+          state.spouseName = val;
+          state.married = true;
+          log(`${val}(와)과 결혼했다`, "gain");
+          showToast(`💍 ${val}(와)과 결혼했다!`, "move");
+          render();
+        }
+      });
+    } else if(state.pendingChildbirth){
+      state.pendingChildbirth = false;
+      openNameModal({
+        seal:"출생",
+        title:"아기가 태어났어요!",
+        desc:`${state.playerName || "형식"}(와)과 ${state.spouseName || "배우자"} 사이에 아기가 태어났습니다. 이름을 지어주세요.`,
+        placeholder:"하늘",
+        onConfirm: (val)=>{
+          state.childName = val;
+          state.hasChild = true;
+          log(`아기 ${val}(이)가 태어났다`, "gain");
+          showToast(`👶 ${val}(이)가 태어났다!`, "move");
+          render();
+        }
+      });
+    } else {
+      render();
+    }
+  });
+
+  setInterval(()=>{
+    state.lastActiveAt = Date.now();
+    if(currentCps() > 0){
+      state.money += currentCps() / 5;
+      render();
+    }
+  }, 200);
+
+  setInterval(stockTick, STOCK_TICK_MS);
+  setInterval(()=>{ if(Math.random() < 0.28) randomEvent(); }, 11000);
+
+  let isResetting = false;
+  function save(){
+    if(isResetting) return;
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function load(){
+    try{
+      const raw = localStorage.getItem(SAVE_KEY);
+      if(!raw) return true;
+      const loaded = JSON.parse(raw);
+      const loadedUpgrades = loaded.upgrades || {};
+      delete loaded.upgrades;
+      Object.assign(state, loaded);
+      state.upgrades = {};
+      Object.keys(defaultUpgrades).forEach(key=>{
+        state.upgrades[key] = Object.assign({}, defaultUpgrades[key], loadedUpgrades[key] || {});
+      });
+      if(!state.missions || !Array.isArray(state.missions.items)){
+        state.missions = { date:"", items:[] };
+      }
+    }catch(e){}
+    return false;
+  }
+  setInterval(save, 5000);
+  window.addEventListener("beforeunload", save);
+
+  const OFFLINE_CAP_SEC = 24 * 3600;
+  let pendingOffline = null;
+
+  function offlineTimeText(elapsedSec){
+    const hrs = Math.floor(elapsedSec / 3600), mins = Math.floor((elapsedSec % 3600) / 60);
+    return hrs > 0 ? `${hrs}시간 ${mins}분` : `${mins}분`;
+  }
+
+  function updateOfflineButton(){
+    const btn = document.getElementById("offlineBtn");
+    if(pendingOffline){
+      btn.textContent = `💤 오프라인 수입 받기 (${offlineTimeText(pendingOffline.elapsedSec)} · +${fmt(pendingOffline.income)})`;
+      btn.style.display = "block";
+    } else {
+      btn.style.display = "none";
+    }
+  }
+
+  function applyOfflineEarnings(){
+    const now = Date.now();
+    const last = state.lastActiveAt || now;
+    let elapsedSec = Math.floor((now - last) / 1000);
+    state.lastActiveAt = now;
+    if(elapsedSec < 30) return;
+    elapsedSec = Math.min(elapsedSec, OFFLINE_CAP_SEC);
+    const income = currentCps() * elapsedSec;
+    if(income > 0){
+      pendingOffline = { income, elapsedSec };
+      updateOfflineButton();
+    }
+  }
+
+  document.getElementById("offlineBtn").addEventListener("click", ()=>{
+    if(!pendingOffline) return;
+    state.money += pendingOffline.income;
+    log(`오프라인 수입 (${offlineTimeText(pendingOffline.elapsedSec)}) +${fmt(pendingOffline.income)}`, "gain");
+    showToast(`💤 오프라인 수입 +${fmt(pendingOffline.income)}`, "gain");
+    pendingOffline = null;
+    updateOfflineButton();
+    render();
+  });
+
+  function hardRefresh(){
+    const btn = document.getElementById("refreshBtn");
+    if(btn) btn.classList.add("spinning");
+    save();
+    const clearPromises = [];
+    try{
+      if(window.caches && caches.keys){
+        clearPromises.push(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
+      }
+      if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
+        clearPromises.push(navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.unregister()))));
+      }
+    }catch(e){}
+    Promise.all(clearPromises).catch(()=>{}).finally(()=>{
+      const base = location.href.split("#")[0].split("?")[0];
+      location.replace(base + "?_r=" + Date.now());
+    });
+  }
+  document.getElementById("refreshBtn").addEventListener("click", hardRefresh);
+
+  document.getElementById("tabBar").addEventListener("click", (e)=>{
+    const btn = e.target.closest(".tab-btn");
+    if(!btn) return;
+    const tab = btn.getAttribute("data-tab");
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.getAttribute("data-panel") === tab));
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", ()=>{
+    const ok = window.confirm("정말 처음부터 다시 시작할까요? 지금까지 쌓은 모든 진행 상황이 사라져요.");
+    if(!ok) return;
+    isResetting = true;
+    try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+    location.reload();
+  });
+
+  const isNewGame = load();
+  if(state.stockHistory.length < 2){ state.stockHistory = [state.stockPrice, state.stockPrice]; }
+  if(state.stockHistoryFlags.length !== state.stockHistory.length){
+    state.stockHistoryFlags = state.stockHistory.map(()=>false);
+  }
+  state.modalOpen = false;
+  ensureDailyMissions();
+  applyOfflineEarnings();
+  render();
+  setupStockChartHover();
+  if(isNewGame){
+    openNameModal({
+      seal:"입사",
+      title:"주인공 이름을 지어주세요",
+      desc:"이 통장의 주인공 이름입니다. 나중에 결혼/육아 이벤트에도 반영돼요.",
+      placeholder:"형식",
+      onConfirm: (val)=>{
+        state.playerName = val;
+        log(`${val}(이)가 사회생활을 시작했다`, "event");
+        render();
+      }
+    });
+  }
+  drawStockChart();
+  log("통장을 개설했습니다. 형식이의 커리어를 응원해주세요.", "event");
+})();
+</script>
+
+</body>
+</html>
