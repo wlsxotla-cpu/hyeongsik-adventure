@@ -215,10 +215,13 @@
   .furniture-piece{
     position:absolute; display:flex; flex-direction:column; align-items:center; gap:1px;
     filter:drop-shadow(0 2px 3px rgba(0,0,0,.2)); cursor:grab; touch-action:none; z-index:2;
-    transform-origin:top left;
+    transform-origin:top left; user-select:none;
   }
   .furniture-piece.dragging{ cursor:grabbing; opacity:.85; z-index:5; }
-  .furniture-piece svg, .furniture-piece img{ display:block; pointer-events:none; width:100%; height:auto; border-radius:4px; }
+  .furniture-piece svg, .furniture-piece img{
+    display:block; pointer-events:none; width:100%; height:auto; border-radius:4px;
+    -webkit-user-drag:none; user-select:none;
+  }
   .furn-resize-handle{
     position:absolute; right:-6px; bottom:-6px; width:14px; height:14px; border-radius:50%;
     background:var(--brass); border:2px solid #fff; cursor:nwse-resize; touch-action:none;
@@ -764,13 +767,18 @@
   };
 
   const FURNITURE = [
-    { key:"desk",   name:"책상",   cost:150000, top:"34%", left:"3%",  img:"assets/furniture/desk.jpg" },
-    { key:"plant",  name:"화분",   cost:80000,  top:"32%", left:"20%", img:"assets/furniture/plant.jpg" },
+    { key:"desk",   name:"책상",   cost:150000, top:"34%", left:"3%",
+      icon:'<svg viewBox="0 0 48 48"><rect x="4" y="16" width="40" height="7" rx="2" fill="#a9764a"/><rect x="4" y="21" width="40" height="2" fill="#8a5f3a"/><rect x="9" y="23" width="5" height="17" rx="1" fill="#7a5233"/><rect x="34" y="23" width="5" height="17" rx="1" fill="#7a5233"/><rect x="16" y="24" width="12" height="7" rx="1" fill="#c78f5c"/></svg>' },
+    { key:"plant",  name:"화분",   cost:80000,  top:"32%", left:"20%",
+      icon:'<svg viewBox="0 0 48 48"><path d="M14 28 L34 28 L30 42 L18 42 Z" fill="#b97b46"/><rect x="14" y="26" width="20" height="4" rx="1" fill="#a5713f"/><ellipse cx="24" cy="16" rx="12" ry="12" fill="#357a53"/><ellipse cx="15" cy="20" rx="7" ry="7" fill="#48945f"/><ellipse cx="33" cy="20" rx="7" ry="7" fill="#48945f"/><ellipse cx="24" cy="10" rx="7" ry="7" fill="#4aa06a"/></svg>' },
     { key:"tv",     name:"TV",     cost:350000, top:"34%", left:"37%",
-      icon:'<svg viewBox="0 0 40 40" width="36" height="30"><rect x="3" y="6" width="34" height="20" rx="2" fill="#2b2b2b"/><rect x="7" y="9" width="26" height="14" rx="1" fill="#4a90d9"/><rect x="17" y="27" width="6" height="5" fill="#444"/><rect x="12" y="32" width="16" height="3" rx="1" fill="#333"/></svg>' },
-    { key:"sofa",   name:"소파",   cost:250000, top:"38%", left:"53%", img:"assets/furniture/sofa.jpg" },
-    { key:"fridge", name:"냉장고", cost:450000, top:"30%", left:"70%", img:"assets/furniture/fridge.jpg" },
-    { key:"bed",    name:"침대",   cost:550000, top:"36%", left:"86%", img:"assets/furniture/bed.jpg" }
+      icon:'<svg viewBox="0 0 48 48"><rect x="3" y="7" width="42" height="25" rx="2" fill="#2b2b2b"/><rect x="8" y="11" width="32" height="17" rx="1" fill="#4a90d9"/><rect x="20" y="33" width="8" height="6" fill="#444"/><rect x="14" y="40" width="20" height="3" rx="1" fill="#333"/></svg>' },
+    { key:"sofa",   name:"소파",   cost:250000, top:"38%", left:"53%",
+      icon:'<svg viewBox="0 0 48 48"><rect x="2" y="20" width="44" height="16" rx="5" fill="#2f5488"/><rect x="2" y="12" width="44" height="12" rx="5" fill="#254470"/><rect x="0" y="20" width="10" height="18" rx="4" fill="#1e3a63"/><rect x="38" y="20" width="10" height="18" rx="4" fill="#1e3a63"/><rect x="10" y="22" width="12" height="8" rx="2" fill="#3a63a0" opacity=".5"/></svg>' },
+    { key:"fridge", name:"냉장고", cost:450000, top:"30%", left:"70%",
+      icon:'<svg viewBox="0 0 48 48"><rect x="10" y="2" width="28" height="44" rx="4" fill="#e4e4e4" stroke="#bbb" stroke-width="1"/><rect x="10" y="2" width="28" height="14" rx="4" fill="#efefef"/><line x1="10" y1="16" x2="38" y2="16" stroke="#bbb" stroke-width="1.5"/><rect x="32" y="5" width="3" height="8" rx="1.5" fill="#999"/><rect x="32" y="20" width="3" height="12" rx="1.5" fill="#999"/></svg>' },
+    { key:"bed",    name:"침대",   cost:550000, top:"36%", left:"86%",
+      icon:'<svg viewBox="0 0 48 48"><rect x="2" y="20" width="44" height="16" rx="3" fill="#b3536b"/><rect x="2" y="20" width="44" height="6" rx="3" fill="#c9647c"/><rect x="4" y="12" width="14" height="12" rx="3" fill="#f5efdc"/><rect x="2" y="34" width="44" height="5" rx="1.5" fill="#8a3b4e"/></svg>' }
   ];
   const FURNITURE_DEFAULT_SIZE = 44;
 
@@ -1084,7 +1092,7 @@
         el.className = "furniture-piece";
         el.style.top = p.top + "%"; el.style.left = p.left + "%";
         el.style.width = p.size + "px";
-        const media = f.img ? `<img src="${f.img}">` : f.icon;
+        const media = f.img ? `<img src="${f.img}" draggable="false">` : f.icon;
         el.innerHTML = media + `<span class="furniture-label">${f.name}</span><div class="furn-resize-handle"></div>`;
         layer.appendChild(el);
         makeFurnitureInteractive(el, f.key);
