@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>형식이의 모험 — 첫 출근부터 퇴사까지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     color-scheme: light dark;
@@ -48,6 +51,14 @@
     --shadow: 0 24px 60px rgba(15,32,56,.28), 0 4px 12px rgba(15,32,56,.16);
   }
 
+  /* ---- Stage theme colors: accent shifts as the career progresses ---- */
+  :root[data-stage="1"]{ --brass:#4a6fa5; --brass-light:#7fa0d1; }
+  :root[data-stage="2"]{ --brass:#2e8b6b; --brass-light:#5cbf9a; }
+  :root[data-stage="3"]{ --brass:#6b4a9e; --brass-light:#a184c9; }
+  :root[data-stage="4"]{ --brass:#c9852f; --brass-light:#e8b563; }
+  :root{ transition: color .4s ease; }
+  .book, .stage-stamp, .ledger-head, .gauge-fill, .lotto-btn{ transition: background .5s ease, border-color .5s ease, color .5s ease; }
+
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
   body{
@@ -63,8 +74,9 @@
     padding:40px 16px 64px;
     touch-action:manipulation;
   }
-  button{ touch-action:manipulation; }
-  .mono{ font-family: ui-monospace, "SFMono-Regular", Consolas, "Noto Sans Mono", monospace; font-variant-numeric: tabular-nums; }
+  button{ touch-action:manipulation; transition:transform .1s ease; }
+  button:active{ transform:scale(.94); }
+  .mono{ font-family:"Space Grotesk", ui-monospace, "SFMono-Regular", Consolas, "Noto Sans Mono", monospace; font-variant-numeric: tabular-nums; }
 
   .book{
     width:100%; max-width:460px;
@@ -136,7 +148,20 @@
 
   .balance-ledger{ background:linear-gradient(180deg, var(--paper-shadow), var(--paper) 70%); }
   .balance-row{ display:flex; align-items:baseline; gap:6px; }
-  .balance-figure{ font-size:34px; font-weight:700; letter-spacing:-.01em; }
+  .balance-figure{ font-size:34px; font-weight:700; letter-spacing:-.01em; display:inline-block; }
+  @keyframes pulseGain{
+    0%{ transform:scale(1); text-shadow:none; }
+    35%{ transform:scale(1.1); color:var(--ink-green); text-shadow:0 0 14px rgba(46,107,72,.55); }
+    100%{ transform:scale(1); text-shadow:none; }
+  }
+  @keyframes pulseSpend{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(.95); color:var(--ink-red); }
+    100%{ transform:scale(1); }
+  }
+  .balance-figure.pulse-gain{ animation:pulseGain .55s ease; }
+  .balance-figure.pulse-spend{ animation:pulseSpend .4s ease; }
+  @media (prefers-reduced-motion: reduce){ .balance-figure.pulse-gain, .balance-figure.pulse-spend{ animation:none; } }
   .won{ font-size:16px; color:var(--text-sub); font-weight:600; }
   .income-row{ font-size:12px; color:var(--ink-green); font-weight:600; margin-top:2px; font-family: ui-monospace, Consolas, monospace; }
 
@@ -148,9 +173,21 @@
     overflow:hidden;
   }
   .gauge-fill{
-    height:100%; width:0%;
+    position:relative; height:100%; width:0%;
     background:linear-gradient(90deg, var(--brass), var(--brass-light));
-    transition:width .5s ease;
+    transition:width .5s ease, background .5s ease;
+  }
+  .gauge-fill::after{
+    content:""; position:absolute; top:0; left:-40%; width:40%; height:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+    animation: gaugeShimmer 2.4s ease-in-out infinite;
+  }
+  @keyframes gaugeShimmer{ 0%{ left:-40%; } 100%{ left:110%; } }
+  @media (prefers-reduced-motion: reduce){ .gauge-fill::after{ animation:none; } }
+  .gauge-milestone{
+    position:absolute; top:50%; width:5px; height:5px; border-radius:50%;
+    background:var(--paper); transform:translate(-50%,-50%); z-index:2;
+    box-shadow:0 0 0 1.5px var(--brass);
   }
   .gauge-labels{
     display:flex; justify-content:space-between; font-size:11px; color:var(--text-sub);
@@ -182,7 +219,9 @@
   }
   .tab-btn.active{ color:var(--ink-700); border-bottom-color:var(--brass); }
   .tab-panel{ display:none; }
-  .tab-panel.active{ display:block; }
+  .tab-panel.active{ display:block; animation: tabFadeIn .28s ease; }
+  @keyframes tabFadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){ .tab-panel.active{ animation:none; } }
 
   /* ---- Mini room ---- */
   .room-box{
@@ -560,7 +599,12 @@
     <div class="income-row" id="incomeDisplay">+0원 / 초 (자동 급여)</div>
 
     <div class="gauge">
-      <div class="gauge-track"><div class="gauge-fill" id="progressFill"></div></div>
+      <div class="gauge-track">
+        <div class="gauge-fill" id="progressFill"></div>
+        <div class="gauge-milestone" style="left:25%"></div>
+        <div class="gauge-milestone" style="left:50%"></div>
+        <div class="gauge-milestone" style="left:75%"></div>
+      </div>
       <div class="gauge-labels">
         <span id="progressText">0.0%</span>
         <span>목표 <span id="goalText">1,000,000원</span></span>
@@ -791,6 +835,13 @@
     return n.toLocaleString("ko-KR") + "원";
   }
 
+  function pulseMoney(kind){
+    const el = document.getElementById("moneyDisplay");
+    el.classList.remove("pulse-gain", "pulse-spend");
+    void el.offsetWidth;
+    el.classList.add(kind === "spend" ? "pulse-spend" : "pulse-gain");
+  }
+
   let toastTimer = null;
   function showToast(msg, type, duration){
     const toast = document.getElementById("toast");
@@ -922,6 +973,7 @@
     log(`[미션] ${m.text} - ${resultLabel} (+${fmt(payout)})`, payout > 0 ? "gain" : "loss");
     if(multiplier >= 3) showToast(`${resultLabel}! +${fmt(payout)}`, "gain");
     if(multiplier === 0) showToast(`${resultLabel}... 0원`, "warn");
+    pulseMoney(payout > 0 ? "gain" : "spend");
     if(activeMinigameTimers[key]){ clearInterval(activeMinigameTimers[key]); delete activeMinigameTimers[key]; }
     render();
   }
@@ -1220,6 +1272,7 @@
 
   function render(){
     ensureDailyMissions();
+    document.documentElement.setAttribute("data-stage", Math.min(state.stageIndex, 4));
     document.getElementById("moneyDisplay").textContent = Math.floor(state.money).toLocaleString("ko-KR");
     document.getElementById("incomeDisplay").textContent = "+" + fmt(currentCps()) + " / 초 (자동 급여)";
     const goal = currentGoal();
@@ -1314,6 +1367,7 @@
 
     u.cost = Math.floor(u.baseCost * Math.pow(u.scale, u.level));
     log(`${u.name} 완료 (Lv.${u.level})`, "event");
+    pulseMoney("spend");
     render();
   }
 
@@ -1407,6 +1461,7 @@
     s.shares = 0;
     s.avgPrice = 0;
     s.tradeCooldownUntil = Date.now() + TRADE_COOLDOWN_MS;
+    pulseMoney(profit >= 0 ? "gain" : "spend");
     render();
   }
 
@@ -1569,6 +1624,7 @@
       state.money += hit.prize;
       resultEl.textContent = `🎉 ${hit.label} 당첨! +${fmt(hit.prize)}`;
       resultEl.className = "lotto-result win";
+      pulseMoney("gain");
       if(hit.prize >= LOTTO_TIERS[2].prize){
         log(`로또 ${hit.label} 당첨! +${fmt(hit.prize)}`, "gain");
         showToast(`🎉 로또 ${hit.label} 당첨! +${fmt(hit.prize)}`, "gain", 5000);
@@ -1578,6 +1634,7 @@
     } else {
       resultEl.textContent = "꽝... 다음 기회에 😢";
       resultEl.className = "lotto-result";
+      pulseMoney("spend");
     }
     render();
   }
@@ -1622,6 +1679,7 @@
         state.money -= delta;
         logText += ` (-${fmt(delta)})`;
       }
+      pulseMoney(ev.type === "gain" ? "gain" : "spend");
     } else if(ev.stockDir){
       const keys = Object.keys(state.stocks);
       const key = keys[Math.floor(Math.random()*keys.length)];
