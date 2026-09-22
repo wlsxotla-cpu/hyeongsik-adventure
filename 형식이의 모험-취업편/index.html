@@ -310,9 +310,9 @@
     flex:1; padding:11px; border-radius:8px; font-weight:700; font-size:12.5px; cursor:pointer;
     border:1px solid transparent; font-family:inherit;
   }
-  #stockBuy{ background:var(--ink-green); color:#fff; }
-  #stockBuyAll{ background:transparent; color:var(--ink-green); border-color:var(--ink-green); }
-  #stockSell{ background:transparent; color:var(--ink-red); border-color:var(--ink-red); }
+  .stock-buy-btn{ background:var(--ink-green); color:#fff; }
+  .stock-buyall-btn{ background:transparent; color:var(--ink-green); border-color:var(--ink-green); }
+  .stock-sell-btn{ background:transparent; color:var(--ink-red); border-color:var(--ink-red); }
   .stock-btns button:disabled{ background:var(--paper-line); color:var(--text-sub); border-color:transparent; cursor:not-allowed; }
 
   /* ---- Upgrade ledger rows ---- */
@@ -547,11 +547,11 @@
     </div>
     <div class="stock-pl mono" id="stockPL-formsik">평가금액 0원</div>
     <div class="stock-btns">
-      <button id="stockBuy-formsik">10만원 매수</button>
-      <button id="stockBuyAll-formsik">전액 매수</button>
+      <button id="stockBuy-formsik" class="stock-buy-btn">10만원 매수</button>
+      <button id="stockBuyAll-formsik" class="stock-buyall-btn">전액 매수</button>
     </div>
     <div class="stock-btns">
-      <button id="stockSell-formsik">전량 매도</button>
+      <button id="stockSell-formsik" class="stock-sell-btn">전량 매도</button>
     </div>
   </div>
 
@@ -567,11 +567,11 @@
     </div>
     <div class="stock-pl mono" id="stockPL-anjeong">평가금액 0원</div>
     <div class="stock-btns">
-      <button id="stockBuy-anjeong">10만원 매수</button>
-      <button id="stockBuyAll-anjeong">전액 매수</button>
+      <button id="stockBuy-anjeong" class="stock-buy-btn">10만원 매수</button>
+      <button id="stockBuyAll-anjeong" class="stock-buyall-btn">전액 매수</button>
     </div>
     <div class="stock-btns">
-      <button id="stockSell-anjeong">전량 매도</button>
+      <button id="stockSell-anjeong" class="stock-sell-btn">전량 매도</button>
     </div>
   </div>
 
@@ -587,11 +587,11 @@
     </div>
     <div class="stock-pl mono" id="stockPL-japju">평가금액 0원</div>
     <div class="stock-btns">
-      <button id="stockBuy-japju">10만원 매수</button>
-      <button id="stockBuyAll-japju">전액 매수</button>
+      <button id="stockBuy-japju" class="stock-buy-btn">10만원 매수</button>
+      <button id="stockBuyAll-japju" class="stock-buyall-btn">전액 매수</button>
     </div>
     <div class="stock-btns">
-      <button id="stockSell-japju">전량 매도</button>
+      <button id="stockSell-japju" class="stock-sell-btn">전량 매도</button>
     </div>
   </div>
 
