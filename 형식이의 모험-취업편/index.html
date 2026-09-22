@@ -379,6 +379,7 @@
   }
   .stock-buy-btn{ background:var(--ink-green); color:#fff; }
   .stock-buyall-btn{ background:transparent; color:var(--ink-green); border-color:var(--ink-green); }
+  .stock-sellhalf-btn{ background:transparent; color:var(--ink-red); border-color:var(--ink-red); opacity:.7; }
   .stock-sell-btn{ background:transparent; color:var(--ink-red); border-color:var(--ink-red); }
   .stock-btns button:disabled{ background:var(--paper-line); color:var(--text-sub); border-color:transparent; cursor:not-allowed; }
 
@@ -663,10 +664,11 @@
     </div>
     <div class="stock-pl mono" id="stockPL-formsik">평가금액 0원</div>
     <div class="stock-btns">
-      <button id="stockBuy-formsik" class="stock-buy-btn">10만원 매수</button>
+      <button id="stockBuy-formsik" class="stock-buy-btn">25% 매수</button>
       <button id="stockBuyAll-formsik" class="stock-buyall-btn">전액 매수</button>
     </div>
     <div class="stock-btns">
+      <button id="stockSellHalf-formsik" class="stock-sellhalf-btn">50% 매도</button>
       <button id="stockSell-formsik" class="stock-sell-btn">전량 매도</button>
     </div>
   </div>
@@ -683,10 +685,11 @@
     </div>
     <div class="stock-pl mono" id="stockPL-anjeong">평가금액 0원</div>
     <div class="stock-btns">
-      <button id="stockBuy-anjeong" class="stock-buy-btn">10만원 매수</button>
+      <button id="stockBuy-anjeong" class="stock-buy-btn">25% 매수</button>
       <button id="stockBuyAll-anjeong" class="stock-buyall-btn">전액 매수</button>
     </div>
     <div class="stock-btns">
+      <button id="stockSellHalf-anjeong" class="stock-sellhalf-btn">50% 매도</button>
       <button id="stockSell-anjeong" class="stock-sell-btn">전량 매도</button>
     </div>
   </div>
@@ -703,10 +706,11 @@
     </div>
     <div class="stock-pl mono" id="stockPL-japju">평가금액 0원</div>
     <div class="stock-btns">
-      <button id="stockBuy-japju" class="stock-buy-btn">10만원 매수</button>
+      <button id="stockBuy-japju" class="stock-buy-btn">25% 매수</button>
       <button id="stockBuyAll-japju" class="stock-buyall-btn">전액 매수</button>
     </div>
     <div class="stock-btns">
+      <button id="stockSellHalf-japju" class="stock-sellhalf-btn">50% 매도</button>
       <button id="stockSell-japju" class="stock-sell-btn">전량 매도</button>
     </div>
   </div>
@@ -1422,19 +1426,22 @@
     const cooldownSec = onCooldown ? Math.ceil((s.tradeCooldownUntil - Date.now())/1000) : 0;
     const buyBtn = document.getElementById("stockBuy-" + key);
     const buyAllBtn = document.getElementById("stockBuyAll-" + key);
+    const sellHalfBtn = document.getElementById("stockSellHalf-" + key);
     const sellBtn = document.getElementById("stockSell-" + key);
-    buyBtn.disabled = onCooldown || state.money < 100000;
+    buyBtn.disabled = onCooldown || state.money < s.price;
     buyAllBtn.disabled = onCooldown || state.money < s.price;
+    sellHalfBtn.disabled = onCooldown || s.shares <= 0;
     sellBtn.disabled = onCooldown || s.shares <= 0;
-    buyBtn.textContent = onCooldown ? `대기 ${cooldownSec}초` : "10만원 매수";
+    buyBtn.textContent = onCooldown ? `대기 ${cooldownSec}초` : "25% 매수";
     buyAllBtn.textContent = onCooldown ? `대기 ${cooldownSec}초` : "전액 매수";
+    sellHalfBtn.textContent = onCooldown ? `대기 ${cooldownSec}초` : "50% 매도";
     sellBtn.textContent = onCooldown ? `대기 ${cooldownSec}초` : "전량 매도";
   }
 
   function buyStock(key, budget){
     const s = state.stocks[key];
     if(Date.now() < s.tradeCooldownUntil) return;
-    if(budget <= 0 || state.money < Math.min(budget, 100000)) return;
+    if(budget <= 0 || state.money < Math.min(budget, s.price)) return;
     const askPrice = s.price * (1 + TRADE_FEE);
     const shares = Math.floor(Math.min(budget, state.money) / askPrice);
     if(shares <= 0) return;
@@ -1445,30 +1452,34 @@
     s.avgPrice = (oldCostBasis + cost) / s.shares;
     s.tradeCooldownUntil = Date.now() + TRADE_COOLDOWN_MS;
     log(`${s.name} ${shares}주 매수 (수수료 포함 평단가 ${fmt(s.avgPrice)})`, "gain");
+    pulseMoney("spend");
     render();
   }
 
-  function sellStock(key){
+  function sellStock(key, fraction){
     const s = state.stocks[key];
     if(Date.now() < s.tradeCooldownUntil) return;
     if(s.shares <= 0) return;
+    const sellShares = fraction >= 1 ? s.shares : Math.max(1, Math.floor(s.shares * fraction));
     const bidPrice = s.price * (1 - TRADE_FEE);
-    const proceeds = Math.round(s.shares * bidPrice);
-    const costBasis = s.avgPrice * s.shares;
+    const proceeds = Math.round(sellShares * bidPrice);
+    const costBasis = s.avgPrice * sellShares;
     const profit = proceeds - costBasis;
     state.money += proceeds;
-    log(`${s.name} ${s.shares}주 전량 매도 (수수료 제외 ${fmt(proceeds)}, 손익 ${profit>=0?"+":""}${fmt(profit)})`, profit >= 0 ? "gain" : "loss");
-    s.shares = 0;
-    s.avgPrice = 0;
+    const label = sellShares >= s.shares ? "전량" : `${sellShares}주(50%)`;
+    log(`${s.name} ${label} 매도 (수수료 제외 ${fmt(proceeds)}, 손익 ${profit>=0?"+":""}${fmt(profit)})`, profit >= 0 ? "gain" : "loss");
+    s.shares -= sellShares;
+    if(s.shares <= 0){ s.shares = 0; s.avgPrice = 0; }
     s.tradeCooldownUntil = Date.now() + TRADE_COOLDOWN_MS;
     pulseMoney(profit >= 0 ? "gain" : "spend");
     render();
   }
 
   Object.keys(state.stocks).forEach(key => {
-    document.getElementById("stockBuy-" + key).addEventListener("click", ()=> buyStock(key, 100000));
+    document.getElementById("stockBuy-" + key).addEventListener("click", ()=> buyStock(key, state.money * 0.25));
     document.getElementById("stockBuyAll-" + key).addEventListener("click", ()=> buyStock(key, state.money));
-    document.getElementById("stockSell-" + key).addEventListener("click", ()=> sellStock(key));
+    document.getElementById("stockSellHalf-" + key).addEventListener("click", ()=> sellStock(key, 0.5));
+    document.getElementById("stockSell-" + key).addEventListener("click", ()=> sellStock(key, 1));
   });
 
   function drawStockChart(key, hoverIdx){
