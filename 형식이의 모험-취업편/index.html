@@ -520,6 +520,21 @@
   }
   .lotto-result.win{ color:var(--ink-green); font-weight:800; }
   .lotto-odds{ margin-top:8px; font-size:10px; color:var(--text-sub); text-align:center; line-height:1.6; }
+  .auto-toggle{
+    display:flex; align-items:center; gap:8px; margin-top:10px; font-size:11.5px;
+    color:var(--text-sub); cursor:pointer; user-select:none;
+  }
+  .auto-toggle input{ position:absolute; opacity:0; width:0; height:0; }
+  .auto-toggle-switch{
+    position:relative; flex:0 0 auto; width:34px; height:19px; border-radius:10px;
+    background:var(--paper-line); transition:background .2s ease;
+  }
+  .auto-toggle-switch::before{
+    content:""; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:transform .2s ease;
+  }
+  .auto-toggle input:checked + .auto-toggle-switch{ background:var(--brass); }
+  .auto-toggle input:checked + .auto-toggle-switch::before{ transform:translateX(15px); }
 
   /* ---- Readability boost: bigger card, bigger text ---- */
   .book{ max-width:520px; }
@@ -730,6 +745,11 @@
   <div class="ledger">
     <div class="ledger-head">복권방 · 인생 한 방</div>
     <button class="lotto-btn" id="lottoBtn">🎟️ 로또 한 장 사기 (1,000원)</button>
+    <label class="auto-toggle">
+      <input type="checkbox" id="lottoAutoToggle">
+      <span class="auto-toggle-switch"></span>
+      자동구매 (쿨다운마다 자동으로 삼)
+    </label>
     <div class="lotto-result" id="lottoResult">긁지 않은 복권...</div>
     <div class="lotto-odds">1등 20억원 (1/1,000,000) · 2등 3천만원 (1/100,000) · 3등 150만원 (1/5,000) · 4등 5만원 (1/300) · 5등 5천원 (1/20)</div>
   </div>
@@ -831,6 +851,7 @@
     syncCode: "",
     streak: 0,
     lastVisitDate: "",
+    lottoAutoBuy: false,
     pendingMarriage: false,
     pendingChildbirth: false,
     modalOpen:false,
@@ -1713,11 +1734,19 @@
       btn.disabled = true;
       btn.textContent = `잠시만요... (${(remainMs/1000).toFixed(1)}초)`;
     } else {
+      if(state.lottoAutoBuy && state.money >= LOTTO_COST){
+        drawLotto();
+        return;
+      }
       btn.disabled = state.money < LOTTO_COST;
       btn.textContent = "🎟️ 로또 한 장 사기 (1,000원)";
     }
   }
   document.getElementById("lottoBtn").addEventListener("click", drawLotto);
+  document.getElementById("lottoAutoToggle").addEventListener("change", (e)=>{
+    state.lottoAutoBuy = e.target.checked;
+    save();
+  });
   setInterval(updateLottoButton, 150);
 
   const events = [
@@ -1929,6 +1958,7 @@
   });
 
   setInterval(()=>{
+    if(document.hidden) return;
     state.lastActiveAt = Date.now();
     if(currentCps() > 0){
       state.money += currentCps() / 5;
@@ -2017,6 +2047,14 @@
   }
   setInterval(save, 5000);
   window.addEventListener("beforeunload", save);
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.hidden){
+      save();
+    } else {
+      applyOfflineEarnings();
+      render();
+    }
+  });
 
   const OFFLINE_CAP_SEC = 24 * 3600;
   let pendingOffline = null;
@@ -2126,6 +2164,7 @@
     if(s.historyFlags.length !== s.history.length){ s.historyFlags = s.history.map(()=>false); }
   });
   if(state.syncCode) document.getElementById("syncCodeInput").value = state.syncCode;
+  document.getElementById("lottoAutoToggle").checked = !!state.lottoAutoBuy;
   state.modalOpen = false;
   ensureDailyMissions();
   applyOfflineEarnings();
