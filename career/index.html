@@ -269,10 +269,6 @@
     position:absolute; right:-6px; bottom:-6px; width:14px; height:14px; border-radius:50%;
     background:var(--brass); border:2px solid #fff; cursor:nwse-resize; touch-action:none;
   }
-  .furniture-label{
-    font-size:8px; font-weight:700; color:var(--ink-900);
-    background:rgba(255,255,255,.72); padding:0 4px; border-radius:4px; white-space:nowrap;
-  }
   .avatar{ position:absolute; bottom:8px; display:flex; flex-direction:column; align-items:center; }
   .avatar-head{ width:20px; height:20px; border-radius:50%; background:#f0c9a0; z-index:2; }
   .avatar-body{ width:28px; height:32px; border-radius:9px 9px 4px 4px; margin-top:-4px; }
@@ -362,7 +358,7 @@
     background:#fffdf5; font-size:20px; cursor:pointer;
   }
   .mg-memory-display{ text-align:center; font-size:28px; min-height:40px; display:flex; align-items:center; justify-content:center; }
-  .mg-memory-row{ display:flex; gap:8px; justify-content:center; }
+  .mg-memory-row{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
   .mg-memory-btn{
     padding:8px 14px; border-radius:8px; border:1px solid var(--paper-line);
     background:#fffdf5; font-size:20px; cursor:pointer;
@@ -1088,7 +1084,7 @@
     }
   }
 
-  const MEMORY_ICONS = ["📄","💻","☕","📞","📊"];
+  const MEMORY_ICONS = ["📄","💻","☕","📞","📊","📈","🖊️","🗓️","✉️","🖨️"];
   const activeMinigameTimers = {};
 
   function clearMinigameTimers(){
@@ -1201,9 +1197,11 @@
   }
 
   function buildMemoryGame(container, key){
-    const sequence = shuffle(MEMORY_ICONS).slice(0, 3);
+    const seqLen = Math.min(MEMORY_ICONS.length, 3 + state.stageIndex);
+    const revealMs = Math.max(400, 700 - state.stageIndex * 60);
+    const sequence = shuffle(MEMORY_ICONS).slice(0, seqLen);
     container.innerHTML = `
-      <div class="mg-hint">준비되면 시작을 눌러 순서를 외우세요</div>
+      <div class="mg-hint">준비되면 시작을 눌러 순서를 외우세요 (${seqLen}개)</div>
       <div class="mg-memory-display" id="mdisp-${key}"></div>
       <button class="mg-play-btn" id="memstart-${key}">시작</button>
     `;
@@ -1223,7 +1221,7 @@
       e.target.remove();
       container.querySelector(".mg-hint").textContent = "순서를 기억하세요...";
       showStep();
-      activeMinigameTimers[key] = setInterval(showStep, 700);
+      activeMinigameTimers[key] = setInterval(showStep, revealMs);
     });
 
     function showButtons(){
@@ -1291,7 +1289,7 @@
         el.style.top = p.top + "%"; el.style.left = p.left + "%";
         el.style.width = p.size + "px";
         const media = f.img ? `<img src="${f.img}" draggable="false">` : f.icon;
-        el.innerHTML = media + `<span class="furniture-label">${f.name}</span><div class="furn-resize-handle"></div>`;
+        el.innerHTML = media + `<div class="furn-resize-handle"></div>`;
         layer.appendChild(el);
         makeFurnitureInteractive(el, f.key);
       });
