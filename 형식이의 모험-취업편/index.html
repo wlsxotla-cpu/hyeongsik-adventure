@@ -365,6 +365,21 @@
 
   /* ---- Stock insert ---- */
   .insert-card{ background:repeating-linear-gradient(0deg, rgba(177,135,47,.05) 0 1px, transparent 1px 26px); }
+  .stock-hint{ font-size:11px; color:var(--text-sub); margin-bottom:10px; }
+  .stock-ov-row{
+    display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--paper-line);
+  }
+  .stock-ov-row:last-child{ border-bottom:none; }
+  .stock-star-btn{
+    flex:0 0 auto; width:28px; height:28px; border-radius:50%; border:1px solid var(--paper-line);
+    background:#fffdf5; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    padding:0; opacity:.5;
+  }
+  .stock-star-btn.watched{ opacity:1; background:var(--brass-light); border-color:var(--brass); }
+  .stock-ov-name{ flex:1; font-size:13px; font-weight:700; }
+  .stock-ov-price{ font-size:13px; font-weight:700; font-family: ui-monospace, Consolas, monospace; }
+  .stock-ov-price.up{ color:var(--ink-green); }
+  .stock-ov-price.down{ color:var(--ink-red); }
   .stock-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; flex-wrap:wrap; gap:4px; }
   .stock-price{ font-size:22px; font-weight:700; font-family: ui-monospace, Consolas, monospace; }
   .stock-price.up{ color:var(--ink-green); }
@@ -679,68 +694,13 @@
     <div id="upgradeList"></div>
   </div>
 
-  <div class="ledger insert-card">
-    <div class="ledger-head">재테크 현황 · 형식전자</div>
-    <div class="stock-row">
-      <span class="stock-price mono" id="stockPrice-formsik">10,000원</span>
-      <span class="stock-hold" id="stockHold-formsik">보유 0주 · 평단가 0원</span>
-    </div>
-    <div class="stock-chart-wrap">
-      <canvas id="stockChart-formsik"></canvas>
-      <div class="stock-tooltip" id="stockTooltip-formsik"></div>
-    </div>
-    <div class="stock-pl mono" id="stockPL-formsik">평가금액 0원</div>
-    <div class="stock-btns">
-      <button id="stockBuy-formsik" class="stock-buy-btn">25% 매수</button>
-      <button id="stockBuyAll-formsik" class="stock-buyall-btn">전액 매수</button>
-    </div>
-    <div class="stock-btns">
-      <button id="stockSellHalf-formsik" class="stock-sellhalf-btn">50% 매도</button>
-      <button id="stockSell-formsik" class="stock-sell-btn">전량 매도</button>
-    </div>
+  <div class="ledger">
+    <div class="ledger-head">재테크 현황 · 전체 종목</div>
+    <div class="stock-hint">⭐ 눌러서 관심종목에 담으면 아래에 자세히 나와요</div>
+    <div id="stockOverview"></div>
   </div>
 
-  <div class="ledger insert-card">
-    <div class="ledger-head">재테크 현황 · 경태건설</div>
-    <div class="stock-row">
-      <span class="stock-price mono" id="stockPrice-anjeong">10,000원</span>
-      <span class="stock-hold" id="stockHold-anjeong">보유 0주 · 평단가 0원</span>
-    </div>
-    <div class="stock-chart-wrap">
-      <canvas id="stockChart-anjeong"></canvas>
-      <div class="stock-tooltip" id="stockTooltip-anjeong"></div>
-    </div>
-    <div class="stock-pl mono" id="stockPL-anjeong">평가금액 0원</div>
-    <div class="stock-btns">
-      <button id="stockBuy-anjeong" class="stock-buy-btn">25% 매수</button>
-      <button id="stockBuyAll-anjeong" class="stock-buyall-btn">전액 매수</button>
-    </div>
-    <div class="stock-btns">
-      <button id="stockSellHalf-anjeong" class="stock-sellhalf-btn">50% 매도</button>
-      <button id="stockSell-anjeong" class="stock-sell-btn">전량 매도</button>
-    </div>
-  </div>
-
-  <div class="ledger insert-card">
-    <div class="ledger-head">재테크 현황 · 성주바이오</div>
-    <div class="stock-row">
-      <span class="stock-price mono" id="stockPrice-japju">10,000원</span>
-      <span class="stock-hold" id="stockHold-japju">보유 0주 · 평단가 0원</span>
-    </div>
-    <div class="stock-chart-wrap">
-      <canvas id="stockChart-japju"></canvas>
-      <div class="stock-tooltip" id="stockTooltip-japju"></div>
-    </div>
-    <div class="stock-pl mono" id="stockPL-japju">평가금액 0원</div>
-    <div class="stock-btns">
-      <button id="stockBuy-japju" class="stock-buy-btn">25% 매수</button>
-      <button id="stockBuyAll-japju" class="stock-buyall-btn">전액 매수</button>
-    </div>
-    <div class="stock-btns">
-      <button id="stockSellHalf-japju" class="stock-sellhalf-btn">50% 매도</button>
-      <button id="stockSell-japju" class="stock-sell-btn">전량 매도</button>
-    </div>
-  </div>
+  <div id="stockDetails"></div>
 
   <div class="ledger">
     <div class="ledger-head">복권방 · 인생 한 방</div>
@@ -824,9 +784,16 @@
     cpsBase: 700,
     cpsMult: 1,
     stocks: {
-      formsik: { name:"형식전자",   price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:5.5, tradeCooldownUntil:0 },
-      anjeong: { name:"경태건설",   price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:2,   tradeCooldownUntil:0 },
-      japju:   { name:"성주바이오", price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:12,  tradeCooldownUntil:0 }
+      formsik: { name:"형식전자",     price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:5.5, tradeCooldownUntil:0, watched:true },
+      anjeong: { name:"경태건설",     price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:2,   tradeCooldownUntil:0, watched:true },
+      japju:   { name:"성주바이오",   price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:12,  tradeCooldownUntil:0, watched:true },
+      hanbit:  { name:"한빛전력",     price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:1.5, tradeCooldownUntil:0, watched:false },
+      taebong: { name:"태봉물산",     price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:6,   tradeCooldownUntil:0, watched:false },
+      gangdong:{ name:"강동식품",     price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:2.5, tradeCooldownUntil:0, watched:false },
+      mirae:   { name:"미래로보틱스", price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:9,   tradeCooldownUntil:0, watched:false },
+      cheonggye:{ name:"청계금융",    price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:4,   tradeCooldownUntil:0, watched:false },
+      dongyang:{ name:"동양조선",     price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:7,   tradeCooldownUntil:0, watched:false },
+      byeolbit:{ name:"별빛게임즈",   price:10000, shares:0, avgPrice:0, dir:1, history:[], historyFlags:[], volatility:10,  tradeCooldownUntil:0, watched:false }
     },
     stageIndex: 0,
     currentJob: "인턴사원 재직중 · 미혼",
@@ -1364,7 +1331,8 @@
       document.getElementById("missionResetNote").textContent = "미션은 매일 자정에 새로 고침됩니다";
     }
 
-    Object.keys(state.stocks).forEach(renderStock);
+    renderStockOverview();
+    renderStockDetails();
 
     const formsikVal = state.stocks.formsik.shares * state.stocks.formsik.price;
     const anjeongVal = state.stocks.anjeong.shares * state.stocks.anjeong.price;
@@ -1552,12 +1520,74 @@
     render();
   }
 
-  Object.keys(state.stocks).forEach(key => {
-    document.getElementById("stockBuy-" + key).addEventListener("click", ()=> buyStock(key, state.money * 0.25));
-    document.getElementById("stockBuyAll-" + key).addEventListener("click", ()=> buyStock(key, state.money));
-    document.getElementById("stockSellHalf-" + key).addEventListener("click", ()=> sellStock(key, 0.5));
-    document.getElementById("stockSell-" + key).addEventListener("click", ()=> sellStock(key, 1));
-  });
+  function toggleWatch(key){
+    state.stocks[key].watched = !state.stocks[key].watched;
+    save();
+    render();
+  }
+
+  function renderStockOverview(){
+    const list = document.getElementById("stockOverview");
+    list.innerHTML = "";
+    Object.entries(state.stocks).forEach(([key, s]) => {
+      const row = document.createElement("div");
+      row.className = "stock-ov-row";
+      row.innerHTML = `
+        <button class="stock-star-btn${s.watched ? " watched" : ""}" data-key="${key}">⭐</button>
+        <span class="stock-ov-name">${s.name}</span>
+        <span class="stock-ov-price mono ${s.dir >= 0 ? "up" : "down"}">${fmt(s.price)}</span>
+      `;
+      list.appendChild(row);
+    });
+    list.querySelectorAll(".stock-star-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=> toggleWatch(btn.getAttribute("data-key")));
+    });
+  }
+
+  let stockDetailsSignature = null;
+
+  function renderStockDetails(){
+    const watchedKeys = Object.keys(state.stocks).filter(k => state.stocks[k].watched);
+    const sig = watchedKeys.join(",");
+    const container = document.getElementById("stockDetails");
+    if(sig !== stockDetailsSignature){
+      stockDetailsSignature = sig;
+      container.innerHTML = "";
+      watchedKeys.forEach(key => {
+        const s = state.stocks[key];
+        const card = document.createElement("div");
+        card.className = "ledger insert-card";
+        card.innerHTML = `
+          <div class="ledger-head">재테크 현황 · ${s.name}</div>
+          <div class="stock-row">
+            <span class="stock-price mono" id="stockPrice-${key}">10,000원</span>
+            <span class="stock-hold" id="stockHold-${key}">보유 0주 · 평단가 0원</span>
+          </div>
+          <div class="stock-chart-wrap">
+            <canvas id="stockChart-${key}"></canvas>
+            <div class="stock-tooltip" id="stockTooltip-${key}"></div>
+          </div>
+          <div class="stock-pl mono" id="stockPL-${key}">평가금액 0원</div>
+          <div class="stock-btns">
+            <button id="stockBuy-${key}" class="stock-buy-btn">25% 매수</button>
+            <button id="stockBuyAll-${key}" class="stock-buyall-btn">전액 매수</button>
+          </div>
+          <div class="stock-btns">
+            <button id="stockSellHalf-${key}" class="stock-sellhalf-btn">50% 매도</button>
+            <button id="stockSell-${key}" class="stock-sell-btn">전량 매도</button>
+          </div>
+        `;
+        container.appendChild(card);
+        document.getElementById("stockBuy-" + key).addEventListener("click", ()=> buyStock(key, state.money * 0.25));
+        document.getElementById("stockBuyAll-" + key).addEventListener("click", ()=> buyStock(key, state.money));
+        document.getElementById("stockSellHalf-" + key).addEventListener("click", ()=> sellStock(key, 0.5));
+        document.getElementById("stockSell-" + key).addEventListener("click", ()=> sellStock(key, 1));
+        setupStockChartHover(key);
+        drawStockChart(key);
+      });
+    }
+    watchedKeys.forEach(renderStock);
+  }
 
   function drawStockChart(key, hoverIdx){
     const canvas = document.getElementById("stockChart-" + key);
@@ -2169,7 +2199,6 @@
   ensureDailyMissions();
   applyOfflineEarnings();
   render();
-  Object.keys(state.stocks).forEach(setupStockChartHover);
   if(isNewGame){
     openNameModal({
       seal:"입사",
@@ -2183,7 +2212,6 @@
       }
     });
   }
-  Object.keys(state.stocks).forEach(key => drawStockChart(key));
   log("통장을 개설했습니다. 형식이의 커리어를 응원해주세요.", "event");
 })();
 </script>
