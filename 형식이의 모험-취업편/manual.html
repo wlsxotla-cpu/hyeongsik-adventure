@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>형식이의 모험 설명서</title>
+<meta name="description" content="형식이의 모험 취업편 — 미션, 재테크, 우리집, 인생이벤트까지 한 페이지로 정리한 플레이 가이드">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="형식이의 모험 설명서">
+<meta property="og:description" content="인턴사원부터 퇴사·창업까지, 손 안 대도 돈이 쌓이는 커리어 적립통장 게임 사용설명서">
+<meta property="og:image" content="https://wlsxotla-cpu.github.io/hyeongsik-adventure/%ED%98%95%EC%8B%9D%EC%9D%B4%EC%9D%98%20%EB%AA%A8%ED%97%98-%EC%B7%A8%EC%97%85%ED%8E%B8/assets/icons/icon-512.png">
+<meta property="og:url" content="https://wlsxotla-cpu.github.io/hyeongsik-adventure/%ED%98%95%EC%8B%9D%EC%9D%B4%EC%9D%98%20%EB%AA%A8%ED%97%98-%EC%B7%A8%EC%97%85%ED%8E%B8/manual.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="형식이의 모험 설명서">
+<meta name="twitter:description" content="인턴사원부터 퇴사·창업까지, 손 안 대도 돈이 쌓이는 커리어 적립통장 게임 사용설명서">
+<meta name="twitter:image" content="https://wlsxotla-cpu.github.io/hyeongsik-adventure/%ED%98%95%EC%8B%9D%EC%9D%B4%EC%9D%98%20%EB%AA%A8%ED%97%98-%EC%B7%A8%EC%97%85%ED%8E%B8/assets/icons/icon-512.png">
+
+<link rel="icon" href="assets/icons/icon-32.png" sizes="32x32">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --ink-900:#0f2038;
+    --ink-700:#1b3457;
+    --ink-600:#274571;
+    --paper:#f5efdc;
+    --paper-line:#d9cead;
+    --paper-shadow:#e6dcbc;
+    --brass:#b1872f;
+    --brass-light:#d9b45c;
+    --ink-red:#a53a32;
+    --ink-green:#2e6b48;
+    --backdrop:#e9e2cd;
+    --backdrop-2:#d8cfae;
+    --text:#241d0f;
+    --text-sub:#7a6f52;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      radial-gradient(ellipse at 30% -10%, var(--backdrop-2), transparent 60%),
+      var(--backdrop);
+    color:var(--text);
+    font-family:"Noto Sans KR", sans-serif;
+    display:flex; justify-content:center;
+    padding:40px 16px 64px;
+  }
+  .mono{ font-family:"Space Grotesk", ui-monospace, monospace; font-variant-numeric:tabular-nums; }
+
+  .book{
+    width:100%; max-width:560px;
+    border-radius:20px; overflow:hidden;
+    box-shadow:0 30px 70px rgba(15,32,56,.32), 0 6px 16px rgba(15,32,56,.18);
+    background:var(--paper);
+  }
+
+  .cover{
+    position:relative;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 2px, transparent 2px 6px),
+      linear-gradient(160deg, var(--ink-600), var(--ink-900) 70%);
+    color:#f2ead0;
+    padding:36px 30px 30px;
+  }
+  .cover-top{
+    display:flex; justify-content:space-between; font-size:11px;
+    letter-spacing:.08em; color:var(--brass-light); margin-bottom:26px;
+  }
+  .cover h1{
+    font-family:"Noto Serif KR", serif; font-weight:800;
+    font-size:clamp(28px,7vw,38px); margin:0 0 8px; text-wrap:balance;
+  }
+  .cover .sub{ margin:0 0 24px; font-size:14px; color:#cdd8ea; line-height:1.6; }
+  .badge-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .badge{
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
+    border-radius:20px; padding:6px 13px; font-size:12px; font-weight:500;
+  }
+
+  .perforation{
+    height:14px; background:var(--paper);
+    background-image:radial-gradient(circle, var(--backdrop) 2.6px, transparent 2.7px);
+    background-size:16px 14px; background-position:8px center;
+    border-bottom:1px dashed var(--paper-line);
+  }
+
+  .sec{ padding:26px 28px; border-bottom:1px solid var(--paper-line); }
+  .sec:last-of-type{ border-bottom:none; }
+  .sec-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+  .sec-icon{ font-size:20px; line-height:1; }
+  .sec-title{ font-family:"Noto Serif KR", serif; font-weight:700; font-size:19px; color:var(--ink-900); }
+  .sec-desc{ font-size:13.5px; color:var(--text-sub); line-height:1.7; margin:0 0 14px; }
+
+  .stat-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .stat{
+    flex:1; min-width:100px; background:linear-gradient(180deg, var(--paper-shadow), var(--paper) 80%);
+    border:1px solid var(--paper-line); border-radius:10px; padding:10px 12px;
+  }
+  .stat-num{ font-size:19px; font-weight:700; color:var(--ink-900); }
+  .stat-label{ font-size:11px; color:var(--text-sub); margin-top:2px; }
+
+  .flow{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:13px; font-weight:700; color:var(--ink-700); margin-bottom:14px; }
+  .flow span.arrow{ color:var(--brass); font-weight:400; }
+
+  .list{ display:flex; flex-direction:column; gap:9px; }
+  .item{
+    display:flex; gap:10px; padding:10px 12px; border-radius:9px;
+    background:rgba(177,135,47,.06); border-left:3px solid var(--brass);
+  }
+  .item-emoji{ font-size:16px; line-height:1.4; }
+  .item-name{ font-weight:700; font-size:13.5px; color:var(--ink-900); }
+  .item-desc{ font-size:12px; color:var(--text-sub); margin-top:1px; line-height:1.5; }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  @media (max-width:420px){ .grid2{ grid-template-columns:1fr; } }
+  .mini-card{ background:var(--paper-shadow); border-radius:9px; padding:10px 12px; border:1px solid var(--paper-line); }
+  .mini-card .t{ font-weight:700; font-size:13px; color:var(--ink-900); }
+  .mini-card .d{ font-size:11.5px; color:var(--text-sub); margin-top:2px; }
+
+  .gauge-demo{ margin:6px 0 16px; }
+  .gauge-track{ position:relative; height:14px; border-radius:8px; overflow:hidden; background:#fffdf5; border:1px solid var(--paper-line); }
+  .gauge-fill{ position:relative; height:100%; width:62%; background:linear-gradient(90deg, var(--brass), var(--brass-light)); }
+  .gauge-fill::after{
+    content:""; position:absolute; inset:0; left:-40%; width:40%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+    animation:shimmer 2.4s ease-in-out infinite;
+  }
+  @keyframes shimmer{ 0%{left:-40%;} 100%{left:110%;} }
+  @media (prefers-reduced-motion:reduce){ .gauge-fill::after{ animation:none; } }
+
+  .cta{ padding:32px 28px 36px; text-align:center; background:linear-gradient(180deg, var(--paper), var(--paper-shadow)); }
+  .cta h2{ font-family:"Noto Serif KR", serif; font-size:21px; margin:0 0 8px; color:var(--ink-900); }
+  .cta p{ font-size:13px; color:var(--text-sub); margin:0 0 20px; }
+  .cta-link{
+    display:inline-block; background:var(--ink-700); color:#f2ead0; text-decoration:none;
+    font-weight:700; font-size:14px; padding:14px 26px; border-radius:10px;
+    box-shadow:0 10px 24px rgba(27,52,87,.3);
+  }
+  .cta-note{ margin-top:14px; font-size:11.5px; color:var(--text-sub); }
+  a{ color:var(--ink-700); }
+</style>
+</head>
+<body>
+
+<div class="book">
+  <div class="cover">
+    <div class="cover-top">
+      <span>형식저축은행 발행</span>
+      <span class="mono">No. HS-JOB · 사용설명서</span>
+    </div>
+    <h1>형식이의 모험</h1>
+    <p class="sub">인턴사원으로 입사해서 정규직 → 대리 → 과장(이직) → 차장 → 퇴사 후 창업까지,<br>손 안 대도 돈이 쌓이는 커리어 적립통장 게임입니다.</p>
+    <div class="badge-row">
+      <span class="badge">⏱️ 하루 5분</span>
+      <span class="badge">📱 폰·PC 동기화</span>
+      <span class="badge">🏠 홈 화면 설치</span>
+    </div>
+  </div>
+
+  <div class="perforation"></div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-icon">💰</span><span class="sec-title">기본 흐름</span></div>
+    <p class="sec-desc">가만히 둬도 초당 자동으로 급여가 쌓입니다. 잔액이 목표에 닿으면 다음 커리어 단계로 승진해요.</p>
+    <div class="gauge-demo">
+      <div class="gauge-track"><div class="gauge-fill"></div></div>
+    </div>
+    <div class="flow">
+      <span>인턴사원</span><span class="arrow">→</span><span>정규직</span><span class="arrow">→</span><span>대리</span><span class="arrow">→</span><span>과장(이직)</span><span class="arrow">→</span><span>차장</span><span class="arrow">→</span><span>퇴사·창업</span>
+    </div>
+    <p class="sec-desc" style="margin-bottom:0">완주 후에도 목표가 계속 올라가는 <b>엔드리스 모드</b>로 이어집니다. 단계마다 통장 포인트 컬러도 함께 바뀌어요.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-icon">🎯</span><span class="sec-title">오늘의 미션</span></div>
+    <p class="sec-desc">매일 자정에 미션 3개가 새로 배정됩니다. 각 미션은 서로 다른 미니게임으로 결과가 갈려요.</p>
+    <div class="list">
+      <div class="item">
+        <span class="item-emoji">✂️</span>
+        <div><div class="item-name">가위바위보</div><div class="item-desc">상사를 이기면 3배, 비기면 1배, 지면 0원</div></div>
+      </div>
+      <div class="item">
+        <span class="item-emoji">🧠</span>
+        <div><div class="item-name">순서 기억</div><div class="item-desc">아이콘 순서를 외워서 그대로 눌러야 완벽 보상</div></div>
+      </div>
+      <div class="item">
+        <span class="item-emoji">🎯</span>
+        <div><div class="item-name">타이밍 바</div><div class="item-desc">움직이는 막대가 정중앙일 때 탭 — 정확도로 배율 결정</div></div>
+      </div>
+    </div>
+    <p class="sec-desc" style="margin:14px 0 0">연속 출석 3일부터 미션 보상에 <b>+10~50% 스트릭 보너스</b>가 붙습니다. 하루도 거르지 마세요.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-icon">📈</span><span class="sec-title">재테크</span></div>
+    <p class="sec-desc">위험자산과 안전자산을 같이 굴릴 수 있어요.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-num mono">10종목</div><div class="stat-label">주식 · 관심등록해야 상세 표시</div></div>
+      <div class="stat"><div class="stat-num mono">3~45%</div><div class="stat-label">적금 · 3/7/14일 만기 이자</div></div>
+    </div>
+    <div class="grid2">
+      <div class="mini-card"><div class="t">주식</div><div class="d">매수/매도 수수료 1.5%, 거래 후 45초 쿨다운 — 붙어있지 않아도 됩니다</div></div>
+      <div class="mini-card"><div class="t">적금</div><div class="d">중도해지 시 원금 3% 손실. 만기까지 묶어두면 이득</div></div>
+      <div class="mini-card"><div class="t">로또</div><div class="d">실제 6/45 확률 그대로. 자동구매 토글 있음</div></div>
+      <div class="mini-card"><div class="t">선택 이벤트</div><div class="d">가끔 뜨는 2지선다 팝업 — 몰빵할지 안전하게 갈지는 본인 선택</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-icon">🛋️</span><span class="sec-title">우리 집</span></div>
+    <p class="sec-desc">가구 12종을 사면 방을 꾸밀 수 있고, 전부 실제 효과가 있습니다. 드래그로 위치, 모서리로 크기 조절 가능.</p>
+    <div class="grid2">
+      <div class="mini-card"><div class="t">📖 책상 · 책장</div><div class="d">미션 보상↑ · 업그레이드 비용↓</div></div>
+      <div class="mini-card"><div class="t">🛋️ 소파 · 침대</div><div class="d">오프라인 수입 상한↑ · 출석 보너스↑</div></div>
+      <div class="mini-card"><div class="t">📺 TV · 💻 컴퓨터</div><div class="d">주식 쿨다운↓ · 적금 이자↑</div></div>
+      <div class="mini-card"><div class="t">🪴 화분 · 냉장고</div><div class="d">미션 실패 보장↑ · 손실 이벤트↓</div></div>
+    </div>
+    <p class="sec-desc" style="margin:14px 0 0">방 배경은 실제 시각에 맞춰 아침/저녁/밤으로 자동 전환됩니다.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-icon">💍</span><span class="sec-title">인생 이벤트</span></div>
+    <p class="sec-desc">과장으로 이직하면 결혼, 완주하면 득남·득녀 — 배우자와 아기 이름을 직접 지어주고 우리 집에서 만날 수 있어요.</p>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><span class="sec-icon">🔄</span><span class="sec-title">폰 ↔ PC 동기화</span></div>
+    <p class="sec-desc">"기록" 탭에서 6자리 코드를 만들면, 다른 기기에서 같은 코드로 불러와 이어할 수 있습니다. 로그인 없이 코드만 있으면 돼요.</p>
+  </div>
+
+  <div class="cta">
+    <h2>지금 시작하기</h2>
+    <p>주소를 눌러 브라우저에서 바로 플레이하세요.<br>홈 화면에 추가하면 앱처럼 아이콘으로도 실행됩니다.</p>
+    <a class="cta-link" href="./index.html">형식이의 모험 시작하기 →</a>
+    <div class="cta-note">진행 상황은 브라우저에 자동 저장됩니다</div>
+  </div>
+</div>
+
+</body>
+</html>
