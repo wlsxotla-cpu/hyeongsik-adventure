@@ -1213,7 +1213,7 @@
     if(s && item.actualDir !== 0){
       s.price = Math.max(1000, Math.round(s.price * (1 + item.actualDir * item.magnitude)));
       s.dir = item.actualDir;
-      clampToStockLimit(s);
+      trackStockExtreme(s);
       pushStockHistory(item.stockKey, s.price, true);
       drawStockChart(item.stockKey);
     }
@@ -1797,24 +1797,17 @@
     return Math.max(5000, TRADE_COOLDOWN_MS + furnitureEffect("stockCooldownSec") * 1000);
   }
 
-  const STOCK_LIMIT_PCT = 0.30; // KRX-style price band: rangeOpenPrice ± 30%, refreshed hourly
-  function ensureStockRangeOpen(s){
-    const hourKey = currentHourKey();
-    if(s.rangeHourKey !== hourKey){
-      s.rangeHourKey = hourKey;
-      s.rangeOpenPrice = s.price;
-    }
-  }
+  // 상한가/하한가 here are purely informational: the highest and lowest price
+  // this stock has ever reached, as a reference for the player's own judgment —
+  // not a clamp on where the price is allowed to move.
   function stockLimits(s){
-    ensureStockRangeOpen(s);
-    return {
-      upper: Math.round(s.rangeOpenPrice * (1 + STOCK_LIMIT_PCT)),
-      lower: Math.max(1000, Math.round(s.rangeOpenPrice * (1 - STOCK_LIMIT_PCT)))
-    };
+    if(s.allTimeHigh == null) s.allTimeHigh = s.price;
+    if(s.allTimeLow == null) s.allTimeLow = s.price;
+    return { upper: s.allTimeHigh, lower: s.allTimeLow };
   }
-  function clampToStockLimit(s){
-    const { upper, lower } = stockLimits(s);
-    s.price = Math.min(upper, Math.max(lower, s.price));
+  function trackStockExtreme(s){
+    if(s.allTimeHigh == null || s.price > s.allTimeHigh) s.allTimeHigh = s.price;
+    if(s.allTimeLow == null || s.price < s.allTimeLow) s.allTimeLow = s.price;
   }
 
   function stockTick(){
@@ -1823,7 +1816,7 @@
       const changePct = (Math.random() * 2 - 1) * (s.volatility / 100);
       s.dir = changePct >= 0 ? 1 : -1;
       s.price = Math.max(1000, Math.round(s.price * (1 + changePct)));
-      clampToStockLimit(s);
+      trackStockExtreme(s);
       pushStockHistory(key, s.price, false);
       drawStockChart(key);
     });
@@ -1849,7 +1842,7 @@
       "보유 " + s.shares.toLocaleString("ko-KR") + "주 · 평단가 " + fmt(s.avgPrice);
     const limits = stockLimits(s);
     document.getElementById("stockLimit-" + key).textContent =
-      "상한가 " + fmt(limits.upper) + " · 하한가 " + fmt(limits.lower) + " (매시 정각 갱신)";
+      "상한가 " + fmt(limits.upper) + " · 하한가 " + fmt(limits.lower) + " (역대 최고·최저가)";
 
     const plEl = document.getElementById("stockPL-" + key);
     if(s.shares > 0){
@@ -2344,7 +2337,7 @@
       const s = state.stocks[key];
       s.price = ev.stockDir > 0 ? Math.round(s.price*1.15) : Math.max(1000, Math.round(s.price*0.85));
       s.dir = ev.stockDir;
-      clampToStockLimit(s);
+      trackStockExtreme(s);
       pushStockHistory(key, s.price, true);
       logText = `${ev.stockDir>0?"📈":"📉"} ${s.name} 주식이 ${ev.stockDir>0?"급등":"급락"}했다 (${fmt(s.price)})`;
       drawStockChart(key);
