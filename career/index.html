@@ -1236,7 +1236,10 @@
 
   function ensureNews(){
     resolveNewsIfDue();
-    if(!state.news.current || Date.now() >= state.news.nextAt){
+    // !state.news.nextAt also catches saves from before nextAt existed
+    // (old hourKey-based shape), where the comparison below would silently
+    // stay false forever since Date.now() >= undefined is always false.
+    if(!state.news.current || !state.news.nextAt || Date.now() >= state.news.nextAt){
       generateNews();
     }
   }
