@@ -229,7 +229,7 @@
 
   /* ---- Mini room ---- */
   .room-box{
-    position:relative; height:230px; border-radius:10px; overflow:hidden;
+    position:relative; height:290px; border-radius:10px; overflow:hidden;
     border:1px solid var(--paper-line); transition:background 1s ease;
   }
   .room-box.tod-day{ background:linear-gradient(180deg, #bfe4ee 0%, #d8ecdf 55%, #d8ecdf 68%, #b9d9c4 68%, #b9d9c4 100%); }
@@ -287,7 +287,9 @@
   .avatar-baby .avatar-body{ background:var(--brass); }
   .avatar-name{ font-size:9px; font-weight:700; color:var(--ink-900); margin-top:2px; background:rgba(255,255,255,.7); padding:0 4px; border-radius:4px; }
 
-  .furn-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px dashed var(--paper-line); }
+  .furn-item{ display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px dashed var(--paper-line); }
+  .furn-item > div{ flex:1; min-width:0; }
+  .furn-effect{ display:block; font-size:10.5px; color:var(--text-sub); margin-top:1px; }
   .furn-item:last-child{ border-bottom:none; }
   .furn-name{ font-size:13px; font-weight:700; }
   .furn-price{ font-size:11px; color:var(--text-sub); font-family: ui-monospace, Consolas, monospace; }
@@ -847,20 +849,49 @@
   };
 
   const FURNITURE = [
-    { key:"desk",   name:"책상",   cost:150000, top:"34%", left:"3%",
+    { key:"desk",     name:"책상",       cost:150000,  top:"32%", left:"3%",
+      effect:"missionRewardPct", effectValue:0.05, effectDesc:"미션 기본 보상 +5%",
       icon:'<svg viewBox="0 0 48 48"><rect x="4" y="16" width="40" height="7" rx="2" fill="#a9764a"/><rect x="4" y="21" width="40" height="2" fill="#8a5f3a"/><rect x="9" y="23" width="5" height="17" rx="1" fill="#7a5233"/><rect x="34" y="23" width="5" height="17" rx="1" fill="#7a5233"/><rect x="16" y="24" width="12" height="7" rx="1" fill="#c78f5c"/></svg>' },
-    { key:"plant",  name:"화분",   cost:80000,  top:"32%", left:"20%",
+    { key:"plant",    name:"화분",       cost:80000,   top:"30%", left:"20%",
+      effect:"missionFailFloor", effectValue:0.3, effectDesc:"미션 완전 실패해도 최소 30% 보상 보장",
       icon:'<svg viewBox="0 0 48 48"><path d="M14 28 L34 28 L30 42 L18 42 Z" fill="#b97b46"/><rect x="14" y="26" width="20" height="4" rx="1" fill="#a5713f"/><ellipse cx="24" cy="16" rx="12" ry="12" fill="#357a53"/><ellipse cx="15" cy="20" rx="7" ry="7" fill="#48945f"/><ellipse cx="33" cy="20" rx="7" ry="7" fill="#48945f"/><ellipse cx="24" cy="10" rx="7" ry="7" fill="#4aa06a"/></svg>' },
-    { key:"tv",     name:"TV",     cost:350000, top:"34%", left:"37%",
+    { key:"tv",       name:"TV",         cost:350000,  top:"32%", left:"37%",
+      effect:"stockCooldownSec", effectValue:-5, effectDesc:"주식 거래 쿨다운 5초 감소",
       icon:'<svg viewBox="0 0 48 48"><rect x="3" y="7" width="42" height="25" rx="2" fill="#2b2b2b"/><rect x="8" y="11" width="32" height="17" rx="1" fill="#4a90d9"/><rect x="20" y="33" width="8" height="6" fill="#444"/><rect x="14" y="40" width="20" height="3" rx="1" fill="#333"/></svg>' },
-    { key:"sofa",   name:"소파",   cost:250000, top:"38%", left:"53%",
+    { key:"sofa",     name:"소파",       cost:250000,  top:"36%", left:"53%",
+      effect:"offlineCapHours", effectValue:4, effectDesc:"오프라인 수입 상한 +4시간",
       icon:'<svg viewBox="0 0 48 48"><rect x="2" y="20" width="44" height="16" rx="5" fill="#2f5488"/><rect x="2" y="12" width="44" height="12" rx="5" fill="#254470"/><rect x="0" y="20" width="10" height="18" rx="4" fill="#1e3a63"/><rect x="38" y="20" width="10" height="18" rx="4" fill="#1e3a63"/><rect x="10" y="22" width="12" height="8" rx="2" fill="#3a63a0" opacity=".5"/></svg>' },
-    { key:"fridge", name:"냉장고", cost:450000, top:"30%", left:"70%",
+    { key:"fridge",   name:"냉장고",     cost:450000,  top:"28%", left:"70%",
+      effect:"lossEventPct", effectValue:-0.15, effectDesc:"손실형 랜덤이벤트 금액 15% 감소",
       icon:'<svg viewBox="0 0 48 48"><rect x="10" y="2" width="28" height="44" rx="4" fill="#e4e4e4" stroke="#bbb" stroke-width="1"/><rect x="10" y="2" width="28" height="14" rx="4" fill="#efefef"/><line x1="10" y1="16" x2="38" y2="16" stroke="#bbb" stroke-width="1.5"/><rect x="32" y="5" width="3" height="8" rx="1.5" fill="#999"/><rect x="32" y="20" width="3" height="12" rx="1.5" fill="#999"/></svg>' },
-    { key:"bed",    name:"침대",   cost:550000, top:"36%", left:"86%",
-      icon:'<svg viewBox="0 0 48 48"><rect x="2" y="20" width="44" height="16" rx="3" fill="#b3536b"/><rect x="2" y="20" width="44" height="6" rx="3" fill="#c9647c"/><rect x="4" y="12" width="14" height="12" rx="3" fill="#f5efdc"/><rect x="2" y="34" width="44" height="5" rx="1.5" fill="#8a3b4e"/></svg>' }
+    { key:"bed",      name:"침대",       cost:550000,  top:"34%", left:"86%",
+      effect:"streakBonusFlat", effectValue:0.05, effectDesc:"연속 출석 보너스 +5%p",
+      icon:'<svg viewBox="0 0 48 48"><rect x="2" y="20" width="44" height="16" rx="3" fill="#b3536b"/><rect x="2" y="20" width="44" height="6" rx="3" fill="#c9647c"/><rect x="4" y="12" width="14" height="12" rx="3" fill="#f5efdc"/><rect x="2" y="34" width="44" height="5" rx="1.5" fill="#8a3b4e"/></svg>' },
+    { key:"bookshelf",name:"책장",       cost:280000,  top:"58%", left:"3%",
+      effect:"upgradeCostPct", effectValue:-0.03, effectDesc:"커리어 업그레이드 비용 3% 할인",
+      icon:'<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="2" fill="#8a5f3a"/><rect x="7" y="8" width="6" height="30" fill="#a53a32"/><rect x="15" y="8" width="6" height="30" fill="#2e6b48"/><rect x="23" y="8" width="6" height="30" fill="#274571"/><rect x="31" y="8" width="6" height="30" fill="#b1872f"/></svg>' },
+    { key:"lamp",     name:"스탠드 조명", cost:120000, top:"56%", left:"20%",
+      effect:"timingTolerance", effectValue:2, effectDesc:"타이밍 미니게임 판정 범위 확대",
+      icon:'<svg viewBox="0 0 48 48"><path d="M14 8 L34 8 L30 22 L18 22 Z" fill="#f2ead0"/><rect x="22.5" y="22" width="3" height="18" fill="#7a5233"/><ellipse cx="24" cy="42" rx="12" ry="3" fill="#5c3f22"/><circle cx="24" cy="14" r="3" fill="#ffe9a8"/></svg>' },
+    { key:"desktop",  name:"컴퓨터",     cost:400000,  top:"58%", left:"37%",
+      effect:"depositRatePct", effectValue:0.02, effectDesc:"적금 이자율 +2%p",
+      icon:'<svg viewBox="0 0 48 48"><rect x="4" y="8" width="24" height="18" rx="2" fill="#2b2b2b"/><rect x="7" y="11" width="18" height="12" fill="#4a90d9"/><rect x="13" y="26" width="6" height="4" fill="#444"/><rect x="34" y="6" width="10" height="30" rx="2" fill="#dcdcdc" stroke="#aaa" stroke-width="1"/><circle cx="39" cy="14" r="1.5" fill="#4a90d9"/></svg>' },
+    { key:"painting", name:"액자",       cost:200000,  top:"56%", left:"53%",
+      effect:"lottoPrizePct", effectValue:0.05, effectDesc:"로또 당첨금 +5%",
+      icon:'<svg viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="30" rx="2" fill="#7a5233"/><rect x="10" y="10" width="28" height="22" fill="#cfe3ea"/><path d="M12 30 L20 18 L27 26 L32 16 L36 30 Z" fill="#8fb9a8"/><circle cx="30" cy="15" r="3" fill="#f2d675"/></svg>' },
+    { key:"clock",    name:"시계",       cost:180000,  top:"58%", left:"70%",
+      effect:"cpsFlat", effectValue:50, effectDesc:"자동 수입 +50원/초",
+      icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="19" fill="#f5efdc" stroke="#7a5233" stroke-width="3"/><line x1="24" y1="24" x2="24" y2="12" stroke="#241d0f" stroke-width="2.5" stroke-linecap="round"/><line x1="24" y1="24" x2="32" y2="26" stroke="#241d0f" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="24" r="2" fill="#a53a32"/></svg>' },
+    { key:"rug",      name:"러그",       cost:100000,  top:"60%", left:"86%",
+      effect:"furnitureCostPct", effectValue:-0.05, effectDesc:"다른 가구 구매 비용 5% 할인",
+      icon:'<svg viewBox="0 0 48 48"><ellipse cx="24" cy="30" rx="22" ry="12" fill="#a5445a"/><ellipse cx="24" cy="30" rx="16" ry="8" fill="none" stroke="#f2ead0" stroke-width="2"/><ellipse cx="24" cy="30" rx="9" ry="4.5" fill="none" stroke="#f2ead0" stroke-width="2"/></svg>' }
   ];
-  const FURNITURE_DEFAULT_SIZE = 44;
+  const FURNITURE_DEFAULT_SIZE = 40;
+
+  function furnitureEffect(effectKey){
+    const f = FURNITURE.find(x => x.effect === effectKey);
+    return (f && state.furniture[f.key]) ? f.effectValue : 0;
+  }
 
   Object.values(state.upgrades).forEach(u => u.cost = u.baseCost);
   const defaultUpgrades = JSON.parse(JSON.stringify(state.upgrades));
@@ -933,7 +964,7 @@
     document.getElementById("statusSub").textContent = state.currentJob;
   }
 
-  function currentCps(){ return state.cpsBase * state.cpsMult; }
+  function currentCps(){ return (state.cpsBase + furnitureEffect("cpsFlat")) * state.cpsMult; }
 
   // ---- Daily missions ----
   const MISSION_POOL = [
@@ -969,17 +1000,18 @@
 
   function streakBonusMult(){
     const s = state.streak || 1;
-    if(s >= 30) return 1.5;
-    if(s >= 14) return 1.3;
-    if(s >= 7) return 1.2;
-    if(s >= 3) return 1.1;
-    return 1.0;
+    let base = 1.0;
+    if(s >= 30) base = 1.5;
+    else if(s >= 14) base = 1.3;
+    else if(s >= 7) base = 1.2;
+    else if(s >= 3) base = 1.1;
+    return base + furnitureEffect("streakBonusFlat");
   }
 
   function pickMissions(){
     const pool = shuffle(MISSION_POOL).slice(0, 3);
     const games = shuffle(MINIGAME_TYPES);
-    const rewardMult = (1 + state.stageIndex * 0.6) * streakBonusMult();
+    const rewardMult = (1 + state.stageIndex * 0.6) * streakBonusMult() * (1 + furnitureEffect("missionRewardPct"));
     return pool.map((m, idx) => ({
       key: "m" + idx,
       text: m.text,
@@ -1022,14 +1054,20 @@
   function resolveMission(key, multiplier, resultLabel){
     const m = state.missions.items.find(x => x.key === key);
     if(!m || m.done) return;
-    const payout = multiplier > 0 ? Math.max(100, Math.round(m.reward * multiplier / 100) * 100) : 0;
+    let payout;
+    if(multiplier > 0){
+      payout = Math.max(100, Math.round(m.reward * multiplier / 100) * 100);
+    } else {
+      const failFloor = furnitureEffect("missionFailFloor");
+      payout = failFloor > 0 ? Math.round(m.reward * failFloor / 100) * 100 : 0;
+    }
     m.done = true;
     m.finalReward = payout;
     m.resultLabel = resultLabel;
     state.money += payout;
     log(`[미션] ${m.text} - ${resultLabel} (+${fmt(payout)})`, payout > 0 ? "gain" : "loss");
     if(multiplier >= 3) showToast(`${resultLabel}! +${fmt(payout)}`, "gain");
-    if(multiplier === 0) showToast(`${resultLabel}... 0원`, "warn");
+    if(multiplier === 0) showToast(`${resultLabel}... ${payout > 0 ? "그래도 +"+fmt(payout) : "0원"}`, "warn");
     pulseMoney(payout > 0 ? "gain" : "spend");
     if(activeMinigameTimers[key]){ clearInterval(activeMinigameTimers[key]); delete activeMinigameTimers[key]; }
     render();
@@ -1088,8 +1126,9 @@
     }, 30);
     container.querySelector(`#tapbtn-${key}`).addEventListener("click", ()=>{
       const dist = Math.abs(pos - 50);
-      if(dist <= 4) resolveMission(key, 3, "완벽한 타이밍");
-      else if(dist <= 15) resolveMission(key, 1, "적당히 성공");
+      const tol = furnitureEffect("timingTolerance");
+      if(dist <= 4 + tol) resolveMission(key, 3, "완벽한 타이밍");
+      else if(dist <= 15 + tol) resolveMission(key, 1, "적당히 성공");
       else resolveMission(key, 0, "완전히 놓침");
     });
   }
@@ -1223,22 +1262,30 @@
     shop.innerHTML = "";
     FURNITURE.forEach(f => {
       const owned = !!state.furniture[f.key];
+      const cost = effectiveFurnitureCost(f);
       const row = document.createElement("div");
       row.className = "furn-item";
       row.innerHTML = `
-        <span class="furn-name">${f.name}</span>
-        <span class="furn-price mono">${owned ? "보유중" : fmt(f.cost)}</span>
+        <div>
+          <span class="furn-name">${f.name}</span>
+          <span class="furn-effect">${f.effectDesc}</span>
+        </div>
+        <span class="furn-price mono">${owned ? "보유중" : fmt(cost)}</span>
       `;
       if(!owned){
         const btn = document.createElement("button");
         btn.className = "buy-btn";
         btn.textContent = "구매";
-        btn.disabled = state.money < f.cost;
+        btn.disabled = state.money < cost;
         btn.addEventListener("click", ()=> buyFurniture(f.key));
         row.appendChild(btn);
       }
       shop.appendChild(row);
     });
+  }
+
+  function effectiveFurnitureCost(f){
+    return Math.max(1000, Math.round(f.cost * (1 + furnitureEffect("furnitureCostPct"))));
   }
 
   function makeFurnitureInteractive(el, key){
@@ -1302,8 +1349,9 @@
   function buyFurniture(key){
     const f = FURNITURE.find(x => x.key === key);
     if(!f || state.furniture[key]) return;
-    if(state.money < f.cost) return;
-    state.money -= f.cost;
+    const cost = effectiveFurnitureCost(f);
+    if(state.money < cost) return;
+    state.money -= cost;
     state.furniture[key] = true;
     log(`${f.name}을(를) 우리 집에 들였다`, "event");
     render();
@@ -1378,6 +1426,10 @@
 
   const UNLOCK_LABELS = ["정규직 전환", "대리 진급", "이직(과장)", "차장 승진", "퇴사 후 창업"];
 
+  function effectiveUpgradeCost(u){
+    return Math.max(1, Math.round(u.cost * (1 + furnitureEffect("upgradeCostPct"))));
+  }
+
   function renderUpgrades(){
     const list = document.getElementById("upgradeList");
     list.innerHTML = "";
@@ -1406,8 +1458,8 @@
             </span>
             <span class="upg-leader"></span>
             <span class="upg-right">
-              <button class="buy-btn" data-key="${key}" ${(state.money < u.cost || maxed) ? "disabled" : ""}>
-                ${maxed ? "MAX" : fmt(u.cost)}
+              <button class="buy-btn" data-key="${key}" ${(state.money < effectiveUpgradeCost(u) || maxed) ? "disabled" : ""}>
+                ${maxed ? "MAX" : fmt(effectiveUpgradeCost(u))}
               </button>
             </span>
           </div>
@@ -1425,9 +1477,10 @@
     if(!u) return;
     if(u.unlock > state.stageIndex) return;
     if(u.maxLevel && u.level >= u.maxLevel) return;
-    if(state.money < u.cost) return;
+    const chargeCost = effectiveUpgradeCost(u);
+    if(state.money < chargeCost) return;
 
-    state.money -= u.cost;
+    state.money -= chargeCost;
     u.level += 1;
 
     if(u.isMult) state.cpsMult += u.value;
@@ -1443,6 +1496,9 @@
   const STOCK_HISTORY_MAX = 40;
   const TRADE_FEE = 0.015;
   const TRADE_COOLDOWN_MS = 45000;
+  function currentTradeCooldownMs(){
+    return Math.max(5000, TRADE_COOLDOWN_MS + furnitureEffect("stockCooldownSec") * 1000);
+  }
 
   function stockTick(){
     Object.keys(state.stocks).forEach(key => {
@@ -1514,7 +1570,7 @@
     const oldCostBasis = s.avgPrice * s.shares;
     s.shares += shares;
     s.avgPrice = (oldCostBasis + cost) / s.shares;
-    s.tradeCooldownUntil = Date.now() + TRADE_COOLDOWN_MS;
+    s.tradeCooldownUntil = Date.now() + currentTradeCooldownMs();
     log(`${s.name} ${shares}주 매수 (수수료 포함 평단가 ${fmt(s.avgPrice)})`, "gain");
     pulseMoney("spend");
     render();
@@ -1534,7 +1590,7 @@
     log(`${s.name} ${label} 매도 (수수료 제외 ${fmt(proceeds)}, 손익 ${profit>=0?"+":""}${fmt(profit)})`, profit >= 0 ? "gain" : "loss");
     s.shares -= sellShares;
     if(s.shares <= 0){ s.shares = 0; s.avgPrice = 0; }
-    s.tradeCooldownUntil = Date.now() + TRADE_COOLDOWN_MS;
+    s.tradeCooldownUntil = Date.now() + currentTradeCooldownMs();
     pulseMoney(profit >= 0 ? "gain" : "spend");
     render();
   }
@@ -1545,6 +1601,7 @@
     { key:"d14", label:"14일 적금", days:14, rate:0.45 }
   ];
   const DEPOSIT_EARLY_PENALTY = 0.03;
+  function effectiveDepositRate(plan){ return plan.rate + furnitureEffect("depositRatePct"); }
 
   function startDeposit(planKey){
     if(state.deposit) return;
@@ -1563,7 +1620,7 @@
     if(!state.deposit) return;
     const plan = DEPOSIT_PLANS.find(p => p.key === state.deposit.planKey);
     if(Date.now() < state.deposit.maturesAt) return;
-    const payout = Math.round(state.deposit.amount * (1 + plan.rate));
+    const payout = Math.round(state.deposit.amount * (1 + effectiveDepositRate(plan)));
     state.money += payout;
     log(`${plan.label} 만기 수령 (+${fmt(payout)})`, "gain");
     showToast(`💰 ${plan.label} 만기! +${fmt(payout)}`, "gain");
@@ -1591,7 +1648,7 @@
         <div class="deposit-plan">
           <div>
             <div class="deposit-plan-name">${p.label}</div>
-            <div class="deposit-plan-desc">만기 시 원금의 +${Math.round(p.rate*100)}% (중도해지 시 원금 ${Math.round(DEPOSIT_EARLY_PENALTY*100)}% 손실)</div>
+            <div class="deposit-plan-desc">만기 시 원금의 +${Math.round(effectiveDepositRate(p)*100)}% (중도해지 시 원금 ${Math.round(DEPOSIT_EARLY_PENALTY*100)}% 손실)</div>
           </div>
           <button class="buy-btn" data-plan="${p.key}" ${state.money < 10000 ? "disabled" : ""}>잔고 50% 가입</button>
         </div>
@@ -1605,7 +1662,7 @@
       const elapsed = Math.min(total, Date.now() - state.deposit.startAt);
       const pct = total > 0 ? Math.min(100, (elapsed / total * 100)) : 100;
       const matured = Date.now() >= state.deposit.maturesAt;
-      const expected = Math.round(state.deposit.amount * (1 + plan.rate));
+      const expected = Math.round(state.deposit.amount * (1 + effectiveDepositRate(plan)));
       el.innerHTML = `
         <div class="deposit-active">
           <div class="deposit-plan-name">${plan.label} 가입중 · 원금 ${fmt(state.deposit.amount)}</div>
@@ -1842,15 +1899,16 @@
 
     const resultEl = document.getElementById("lottoResult");
     if(hit){
-      state.money += hit.prize;
-      resultEl.textContent = `🎉 ${hit.label} 당첨! +${fmt(hit.prize)}`;
+      const prize = Math.round(hit.prize * (1 + furnitureEffect("lottoPrizePct")));
+      state.money += prize;
+      resultEl.textContent = `🎉 ${hit.label} 당첨! +${fmt(prize)}`;
       resultEl.className = "lotto-result win";
       pulseMoney("gain");
       if(hit.prize >= LOTTO_TIERS[2].prize){
-        log(`로또 ${hit.label} 당첨! +${fmt(hit.prize)}`, "gain");
-        showToast(`🎉 로또 ${hit.label} 당첨! +${fmt(hit.prize)}`, "gain", 5000);
+        log(`로또 ${hit.label} 당첨! +${fmt(prize)}`, "gain");
+        showToast(`🎉 로또 ${hit.label} 당첨! +${fmt(prize)}`, "gain", 5000);
       } else {
-        log(`로또 ${hit.label} 당첨 (+${fmt(hit.prize)})`, "gain");
+        log(`로또 ${hit.label} 당첨 (+${fmt(prize)})`, "gain");
       }
     } else {
       resultEl.textContent = "꽝... 다음 기회에 😢";
@@ -1904,7 +1962,8 @@
         state.money += raw;
         logText += ` (+${fmt(raw)})`;
       } else {
-        const delta = Math.min(state.money, raw);
+        const reduced = raw * (1 + furnitureEffect("lossEventPct"));
+        const delta = Math.min(state.money, reduced);
         state.money -= delta;
         logText += ` (-${fmt(delta)})`;
       }
@@ -2190,6 +2249,9 @@
   });
 
   const OFFLINE_CAP_SEC = 24 * 3600;
+  function currentOfflineCapSec(){
+    return OFFLINE_CAP_SEC + furnitureEffect("offlineCapHours") * 3600;
+  }
   let pendingOffline = null;
 
   function offlineTimeText(elapsedSec){
@@ -2213,7 +2275,7 @@
     let elapsedSec = Math.floor((now - last) / 1000);
     state.lastActiveAt = now;
     if(elapsedSec < 30) return;
-    elapsedSec = Math.min(elapsedSec, OFFLINE_CAP_SEC);
+    elapsedSec = Math.min(elapsedSec, currentOfflineCapSec());
     const income = currentCps() * elapsedSec;
     if(income > 0){
       pendingOffline = { income, elapsedSec };
