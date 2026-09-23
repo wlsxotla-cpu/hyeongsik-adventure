@@ -424,6 +424,7 @@
   .stock-price.up{ color:var(--ink-green); }
   .stock-price.down{ color:var(--ink-red); }
   .stock-hold{ font-size:11.5px; color:var(--text-sub); font-family: ui-monospace, Consolas, monospace; }
+  .stock-limit{ font-size:10.5px; color:var(--text-sub); margin-bottom:10px; font-family: ui-monospace, Consolas, monospace; }
   .stock-pl{ font-size:12px; font-weight:600; color:var(--text-sub); margin:0 0 12px; font-family: ui-monospace, Consolas, monospace; }
   .stock-pl.gain{ color:var(--ink-green); }
   .stock-pl.loss{ color:var(--ink-red); }
@@ -1633,12 +1634,33 @@
     return Math.max(5000, TRADE_COOLDOWN_MS + furnitureEffect("stockCooldownSec") * 1000);
   }
 
+  const STOCK_LIMIT_PCT = 0.30; // KRX-style daily price band: dayOpenPrice ± 30%
+  function ensureStockDayOpen(s){
+    const dayKey = todayKey();
+    if(s.dayKey !== dayKey){
+      s.dayKey = dayKey;
+      s.dayOpenPrice = s.price;
+    }
+  }
+  function stockLimits(s){
+    ensureStockDayOpen(s);
+    return {
+      upper: Math.round(s.dayOpenPrice * (1 + STOCK_LIMIT_PCT)),
+      lower: Math.max(1000, Math.round(s.dayOpenPrice * (1 - STOCK_LIMIT_PCT)))
+    };
+  }
+  function clampToStockLimit(s){
+    const { upper, lower } = stockLimits(s);
+    s.price = Math.min(upper, Math.max(lower, s.price));
+  }
+
   function stockTick(){
     Object.keys(state.stocks).forEach(key => {
       const s = state.stocks[key];
       const changePct = (Math.random() * 2 - 1) * (s.volatility / 100);
       s.dir = changePct >= 0 ? 1 : -1;
       s.price = Math.max(1000, Math.round(s.price * (1 + changePct)));
+      clampToStockLimit(s);
       pushStockHistory(key, s.price, false);
       drawStockChart(key);
     });
@@ -1662,6 +1684,9 @@
     const holdVal = s.shares * s.price;
     document.getElementById("stockHold-" + key).textContent =
       "보유 " + s.shares.toLocaleString("ko-KR") + "주 · 평단가 " + fmt(s.avgPrice);
+    const limits = stockLimits(s);
+    document.getElementById("stockLimit-" + key).textContent =
+      "상한가 " + fmt(limits.upper) + " · 하한가 " + fmt(limits.lower);
 
     const plEl = document.getElementById("stockPL-" + key);
     if(s.shares > 0){
@@ -1905,6 +1930,7 @@
             <span class="stock-price mono" id="stockPrice-${key}">10,000원</span>
             <span class="stock-hold" id="stockHold-${key}">보유 0주 · 평단가 0원</span>
           </div>
+          <div class="stock-limit mono" id="stockLimit-${key}">상한가 0원 · 하한가 0원</div>
           <div class="stock-chart-wrap">
             <canvas id="stockChart-${key}"></canvas>
             <div class="stock-tooltip" id="stockTooltip-${key}"></div>
@@ -2155,6 +2181,7 @@
       const s = state.stocks[key];
       s.price = ev.stockDir > 0 ? Math.round(s.price*1.15) : Math.max(1000, Math.round(s.price*0.85));
       s.dir = ev.stockDir;
+      clampToStockLimit(s);
       pushStockHistory(key, s.price, true);
       logText = `${ev.stockDir>0?"📈":"📉"} ${s.name} 주식이 ${ev.stockDir>0?"급등":"급락"}했다 (${fmt(s.price)})`;
       drawStockChart(key);
