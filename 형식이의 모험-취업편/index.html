@@ -380,6 +380,16 @@
   .stock-ov-price{ font-size:13px; font-weight:700; font-family: ui-monospace, Consolas, monospace; }
   .stock-ov-price.up{ color:var(--ink-green); }
   .stock-ov-price.down{ color:var(--ink-red); }
+
+  .deposit-plan{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 0; border-bottom:1px dashed var(--paper-line);
+  }
+  .deposit-plan:last-child{ border-bottom:none; }
+  .deposit-plan-name{ font-size:13px; font-weight:700; }
+  .deposit-plan-desc{ font-size:11px; color:var(--text-sub); margin-top:1px; }
+  .deposit-active .deposit-plan-name{ font-size:14px; }
+  .deposit-active .deposit-plan-desc{ margin-top:8px; font-size:12px; }
   .stock-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; flex-wrap:wrap; gap:4px; }
   .stock-price{ font-size:22px; font-weight:700; font-family: ui-monospace, Consolas, monospace; }
   .stock-price.up{ color:var(--ink-green); }
@@ -703,6 +713,11 @@
   <div id="stockDetails"></div>
 
   <div class="ledger">
+    <div class="ledger-head">적금 · 안전자산</div>
+    <div id="depositContent"></div>
+  </div>
+
+  <div class="ledger">
     <div class="ledger-head">복권방 · 인생 한 방</div>
     <button class="lotto-btn" id="lottoBtn">🎟️ 로또 한 장 사기 (1,000원)</button>
     <label class="auto-toggle">
@@ -819,6 +834,7 @@
     streak: 0,
     lastVisitDate: "",
     lottoAutoBuy: false,
+    deposit: null,
     pendingMarriage: false,
     pendingChildbirth: false,
     modalOpen:false,
@@ -1333,6 +1349,7 @@
 
     renderStockOverview();
     renderStockDetails();
+    renderDeposit();
 
     const formsikVal = state.stocks.formsik.shares * state.stocks.formsik.price;
     const anjeongVal = state.stocks.anjeong.shares * state.stocks.anjeong.price;
@@ -1518,6 +1535,90 @@
     s.tradeCooldownUntil = Date.now() + TRADE_COOLDOWN_MS;
     pulseMoney(profit >= 0 ? "gain" : "spend");
     render();
+  }
+
+  const DEPOSIT_PLANS = [
+    { key:"d3",  label:"3일 적금",  days:3,  rate:0.08 },
+    { key:"d7",  label:"7일 적금",  days:7,  rate:0.20 },
+    { key:"d14", label:"14일 적금", days:14, rate:0.45 }
+  ];
+  const DEPOSIT_EARLY_PENALTY = 0.03;
+
+  function startDeposit(planKey){
+    if(state.deposit) return;
+    const plan = DEPOSIT_PLANS.find(p => p.key === planKey);
+    const amount = Math.round(state.money * 0.5);
+    if(amount < 10000) return;
+    state.money -= amount;
+    state.deposit = { planKey, amount, startAt: Date.now(), maturesAt: Date.now() + plan.days * 86400000 };
+    log(`${plan.label} 가입 (원금 ${fmt(amount)})`, "event");
+    pulseMoney("spend");
+    save();
+    render();
+  }
+
+  function claimDeposit(){
+    if(!state.deposit) return;
+    const plan = DEPOSIT_PLANS.find(p => p.key === state.deposit.planKey);
+    if(Date.now() < state.deposit.maturesAt) return;
+    const payout = Math.round(state.deposit.amount * (1 + plan.rate));
+    state.money += payout;
+    log(`${plan.label} 만기 수령 (+${fmt(payout)})`, "gain");
+    showToast(`💰 ${plan.label} 만기! +${fmt(payout)}`, "gain");
+    pulseMoney("gain");
+    state.deposit = null;
+    save();
+    render();
+  }
+
+  function breakDeposit(){
+    if(!state.deposit) return;
+    const refund = Math.round(state.deposit.amount * (1 - DEPOSIT_EARLY_PENALTY));
+    state.money += refund;
+    log(`적금 중도 해지 (원금 손실 ${fmt(state.deposit.amount - refund)})`, "loss");
+    pulseMoney("spend");
+    state.deposit = null;
+    save();
+    render();
+  }
+
+  function renderDeposit(){
+    const el = document.getElementById("depositContent");
+    if(!state.deposit){
+      el.innerHTML = DEPOSIT_PLANS.map(p => `
+        <div class="deposit-plan">
+          <div>
+            <div class="deposit-plan-name">${p.label}</div>
+            <div class="deposit-plan-desc">만기 시 원금의 +${Math.round(p.rate*100)}% (중도해지 시 원금 ${Math.round(DEPOSIT_EARLY_PENALTY*100)}% 손실)</div>
+          </div>
+          <button class="buy-btn" data-plan="${p.key}" ${state.money < 10000 ? "disabled" : ""}>잔고 50% 가입</button>
+        </div>
+      `).join("");
+      el.querySelectorAll("button[data-plan]").forEach(btn=>{
+        btn.addEventListener("click", ()=> startDeposit(btn.getAttribute("data-plan")));
+      });
+    } else {
+      const plan = DEPOSIT_PLANS.find(p => p.key === state.deposit.planKey);
+      const total = state.deposit.maturesAt - state.deposit.startAt;
+      const elapsed = Math.min(total, Date.now() - state.deposit.startAt);
+      const pct = total > 0 ? Math.min(100, (elapsed / total * 100)) : 100;
+      const matured = Date.now() >= state.deposit.maturesAt;
+      const expected = Math.round(state.deposit.amount * (1 + plan.rate));
+      el.innerHTML = `
+        <div class="deposit-active">
+          <div class="deposit-plan-name">${plan.label} 가입중 · 원금 ${fmt(state.deposit.amount)}</div>
+          <div class="gauge-track" style="margin:10px 0;"><div class="gauge-fill" style="width:${pct.toFixed(1)}%"></div></div>
+          <div class="deposit-plan-desc">${matured ? "만기 도달! 수령할 수 있어요" : `만기 시 +${fmt(expected)} 예정`}</div>
+          <div class="stock-btns" style="margin-top:10px;">
+            ${matured
+              ? `<button class="buy-btn" id="claimDepositBtn">만기 수령 (+${fmt(expected)})</button>`
+              : `<button class="stock-sell-btn" id="breakDepositBtn">중도 해지 (손실 ${Math.round(DEPOSIT_EARLY_PENALTY*100)}%)</button>`}
+          </div>
+        </div>
+      `;
+      if(matured) document.getElementById("claimDepositBtn").addEventListener("click", claimDeposit);
+      else document.getElementById("breakDepositBtn").addEventListener("click", breakDeposit);
+    }
   }
 
   function toggleWatch(key){
