@@ -1797,19 +1797,19 @@
     return Math.max(5000, TRADE_COOLDOWN_MS + furnitureEffect("stockCooldownSec") * 1000);
   }
 
-  const STOCK_LIMIT_PCT = 0.30; // KRX-style daily price band: dayOpenPrice ± 30%
-  function ensureStockDayOpen(s){
-    const dayKey = todayKey();
-    if(s.dayKey !== dayKey){
-      s.dayKey = dayKey;
-      s.dayOpenPrice = s.price;
+  const STOCK_LIMIT_PCT = 0.30; // KRX-style price band: rangeOpenPrice ± 30%, refreshed hourly
+  function ensureStockRangeOpen(s){
+    const hourKey = currentHourKey();
+    if(s.rangeHourKey !== hourKey){
+      s.rangeHourKey = hourKey;
+      s.rangeOpenPrice = s.price;
     }
   }
   function stockLimits(s){
-    ensureStockDayOpen(s);
+    ensureStockRangeOpen(s);
     return {
-      upper: Math.round(s.dayOpenPrice * (1 + STOCK_LIMIT_PCT)),
-      lower: Math.max(1000, Math.round(s.dayOpenPrice * (1 - STOCK_LIMIT_PCT)))
+      upper: Math.round(s.rangeOpenPrice * (1 + STOCK_LIMIT_PCT)),
+      lower: Math.max(1000, Math.round(s.rangeOpenPrice * (1 - STOCK_LIMIT_PCT)))
     };
   }
   function clampToStockLimit(s){
@@ -1849,7 +1849,7 @@
       "보유 " + s.shares.toLocaleString("ko-KR") + "주 · 평단가 " + fmt(s.avgPrice);
     const limits = stockLimits(s);
     document.getElementById("stockLimit-" + key).textContent =
-      "상한가 " + fmt(limits.upper) + " · 하한가 " + fmt(limits.lower);
+      "상한가 " + fmt(limits.upper) + " · 하한가 " + fmt(limits.lower) + " (매시 정각 갱신)";
 
     const plEl = document.getElementById("stockPL-" + key);
     if(s.shares > 0){
