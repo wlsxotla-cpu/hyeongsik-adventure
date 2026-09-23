@@ -425,6 +425,28 @@
   .stock-price.down{ color:var(--ink-red); }
   .stock-hold{ font-size:11.5px; color:var(--text-sub); font-family: ui-monospace, Consolas, monospace; }
   .stock-limit{ font-size:10.5px; color:var(--text-sub); margin-bottom:10px; font-family: ui-monospace, Consolas, monospace; }
+
+  /* ---- News tab ---- */
+  .news-hint{ font-size:11px; color:var(--text-sub); margin-bottom:10px; }
+  .news-card{ border:1px solid var(--paper-line); border-radius:10px; padding:12px 14px; background:#fffdf5; }
+  .news-badge{
+    display:inline-block; font-size:11px; font-weight:800; padding:2px 8px; border-radius:20px;
+    margin-bottom:7px; background:rgba(177,135,47,.15); color:var(--brass);
+  }
+  .news-badge.hit{ background:rgba(46,107,72,.15); color:var(--ink-green); }
+  .news-badge.trap{ background:rgba(165,58,50,.15); color:var(--ink-red); }
+  .news-badge.noise{ background:rgba(122,111,82,.15); color:var(--text-sub); }
+  .news-headline{ font-size:15px; font-weight:800; color:var(--text-on-paper); line-height:1.4; }
+  .news-sub{ font-size:11.5px; color:var(--text-sub); margin-top:6px; }
+  .news-feed-empty{ font-size:12px; color:var(--text-sub); text-align:center; padding:10px 0; }
+  .news-feed-item{
+    display:flex; align-items:flex-start; gap:8px; padding:8px 0; border-bottom:1px dashed var(--paper-line);
+    font-size:12px;
+  }
+  .news-feed-item:last-child{ border-bottom:none; }
+  .news-feed-icon{ flex:0 0 auto; font-size:15px; }
+  .news-feed-text{ flex:1; color:var(--text-sub); line-height:1.4; }
+  .news-feed-text b{ color:var(--text-on-paper); }
   .stock-pl{ font-size:12px; font-weight:600; color:var(--text-sub); margin:0 0 12px; font-family: ui-monospace, Consolas, monospace; }
   .stock-pl.gain{ color:var(--ink-green); }
   .stock-pl.loss{ color:var(--ink-red); }
@@ -667,6 +689,7 @@
     <button class="tab-btn active" data-tab="home">🏠 홈</button>
     <button class="tab-btn" data-tab="room">🛋️ 우리집</button>
     <button class="tab-btn" data-tab="grow">📈 성장</button>
+    <button class="tab-btn" data-tab="news">📰 뉴스</button>
     <button class="tab-btn" data-tab="log">📜 기록</button>
   </div>
 
@@ -766,6 +789,19 @@
   </div>
   </div>
 
+  <div class="tab-panel" data-panel="news">
+  <div class="ledger">
+    <div class="ledger-head">📰 속보</div>
+    <div class="news-hint">투자 힌트일 수도, 낚시성 잡담일 수도 있어요 · 매시 정각 새 소식</div>
+    <div id="newsCurrent"></div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head">지난 소식</div>
+    <div id="newsFeed" class="news-feed-empty">아직 지난 소식이 없어요</div>
+  </div>
+  </div>
+
   <div class="tab-panel" data-panel="log">
   <div class="ledger">
     <div class="ledger-head">휴대폰 ↔ PC 동기화</div>
@@ -861,6 +897,7 @@
       venture:    { name:"사업 확장",       desc:"자동 수입 +400원/초",         baseCost:6000000, cost:0, level:0, scale:1.55, value:400, unlock:5, maxLevel:12 }
     },
     missions: { date:"", items:[] },
+    news: { hourKey:"", current:null, feed:[] },
     playerName: "",
     married: false,
     spouseName: "",
@@ -1113,6 +1150,89 @@
     }
   }
 
+  // ---- News ----
+  const NEWS_UP_TEMPLATES = [
+    "{stock}, 대형 계약 체결 임박설",
+    "{stock}, 예상 뛰어넘는 실적 기대감",
+    "{stock} 경영진, 대규모 투자 계획 시사",
+    "{stock}, 신제품 반응 심상치 않다",
+    "업계 관계자 \"{stock} 조만간 좋은 소식 있을 것\"",
+    "{stock}, 해외 투자자 매수세 포착"
+  ];
+  const NEWS_DOWN_TEMPLATES = [
+    "{stock}, 주요 거래처 이탈설 솔솔",
+    "{stock}, 내부 갈등설에 시장 술렁",
+    "{stock} 실적 전망 하향 조정 소식",
+    "{stock}, 규제 리스크 부각",
+    "업계 관계자 \"{stock}, 당분간 어려울듯\"",
+    "{stock}, 노조 파업 예고에 우려 확산"
+  ];
+  const NEWS_RESOLVE_MIN_MS = 10 * 60 * 1000;
+  const NEWS_RESOLVE_MAX_MS = 40 * 60 * 1000;
+  const NEWS_MOVE_MIN_PCT = 0.10;
+  const NEWS_MOVE_MAX_PCT = 0.18;
+
+  function pickNewsOutcome(){
+    const r = Math.random();
+    if(r < 0.5) return "hit";
+    if(r < 0.7) return "trap";
+    return "noise";
+  }
+
+  function generateNews(){
+    const keys = Object.keys(state.stocks);
+    const stockKey = keys[Math.floor(Math.random() * keys.length)];
+    const stockName = state.stocks[stockKey].name;
+    const flavor = Math.random() < 0.5 ? "up" : "down";
+    const pool = flavor === "up" ? NEWS_UP_TEMPLATES : NEWS_DOWN_TEMPLATES;
+    const template = pool[Math.floor(Math.random() * pool.length)];
+    const outcome = pickNewsOutcome();
+    const impliedDir = flavor === "up" ? 1 : -1;
+    const actualDir = outcome === "noise" ? 0 : (outcome === "hit" ? impliedDir : -impliedDir);
+    const now = Date.now();
+    const item = {
+      headline: template.replace("{stock}", stockName),
+      stockKey, stockName, flavor, outcome, actualDir,
+      magnitude: NEWS_MOVE_MIN_PCT + Math.random() * (NEWS_MOVE_MAX_PCT - NEWS_MOVE_MIN_PCT),
+      createdAt: now,
+      resolveAt: now + NEWS_RESOLVE_MIN_MS + Math.random() * (NEWS_RESOLVE_MAX_MS - NEWS_RESOLVE_MIN_MS),
+      resolved: false
+    };
+    if(state.news.current){
+      state.news.feed.unshift(state.news.current);
+      state.news.feed = state.news.feed.slice(0, 8);
+    }
+    state.news.current = item;
+  }
+
+  function resolveNewsIfDue(){
+    const item = state.news.current;
+    if(!item || item.resolved || Date.now() < item.resolveAt) return;
+    item.resolved = true;
+    const s = state.stocks[item.stockKey];
+    if(s && item.actualDir !== 0){
+      s.price = Math.max(1000, Math.round(s.price * (1 + item.actualDir * item.magnitude)));
+      s.dir = item.actualDir;
+      clampToStockLimit(s);
+      pushStockHistory(item.stockKey, s.price, true);
+      drawStockChart(item.stockKey);
+    }
+    const resultLabel = item.outcome === "hit" ? "예측 적중" : item.outcome === "trap" ? "낚시였다" : "가격엔 무관했다";
+    log(`📰 [뉴스 결과] ${item.stockName} 관련 소식 - ${resultLabel}`, item.outcome === "trap" ? "loss" : (item.outcome === "hit" ? "gain" : "event"));
+    if(item.outcome !== "noise"){
+      showToast(`📰 "${item.headline}" - ${resultLabel}`, item.outcome === "hit" ? "gain" : "warn");
+    }
+  }
+
+  function ensureNews(){
+    resolveNewsIfDue();
+    const hourKey = currentHourKey();
+    if(state.news.hourKey !== hourKey){
+      state.news.hourKey = hourKey;
+      generateNews();
+    }
+  }
+
   function checkInAvailable(){
     return state.lastVisitDate !== todayKey();
   }
@@ -1179,6 +1299,47 @@
     pulseMoney(payout > 0 ? "gain" : "spend");
     if(activeMinigameTimers[key]){ clearInterval(activeMinigameTimers[key]); delete activeMinigameTimers[key]; }
     render();
+  }
+
+  let newsRenderSignature = null;
+
+  function renderNews(){
+    const cur = state.news.current;
+    const sig = (cur ? (cur.createdAt + "|" + cur.resolved) : "none") + "|" + state.news.feed.length;
+    if(sig === newsRenderSignature) return;
+    newsRenderSignature = sig;
+
+    const curEl = document.getElementById("newsCurrent");
+    if(!cur){
+      curEl.innerHTML = `<div class="news-card"><div class="news-headline">아직 속보가 없어요...</div></div>`;
+    } else {
+      let badgeClass = "", badgeText = "🔴 속보", subText = "시장 반응을 지켜보는 중...";
+      if(cur.resolved){
+        if(cur.outcome === "hit"){ badgeClass = "hit"; badgeText = "✅ 적중"; subText = `${cur.stockName} 실제로 ${cur.actualDir>0?"급등":"급락"}했다`; }
+        else if(cur.outcome === "trap"){ badgeClass = "trap"; badgeText = "🎣 낚시"; subText = `예상과 반대로 ${cur.actualDir>0?"급등":"급락"}했다`; }
+        else { badgeClass = "noise"; badgeText = "💬 잡담"; subText = "가격에는 별 영향이 없었다"; }
+      }
+      curEl.innerHTML = `
+        <div class="news-card">
+          <span class="news-badge ${badgeClass}">${badgeText}</span>
+          <div class="news-headline">${cur.headline}</div>
+          <div class="news-sub">${subText}</div>
+        </div>
+      `;
+    }
+
+    const feedEl = document.getElementById("newsFeed");
+    if(state.news.feed.length === 0){
+      feedEl.className = "news-feed-empty";
+      feedEl.textContent = "아직 지난 소식이 없어요";
+    } else {
+      feedEl.className = "";
+      feedEl.innerHTML = state.news.feed.map(it => {
+        const icon = !it.resolved ? "⏳" : (it.outcome === "hit" ? "✅" : it.outcome === "trap" ? "🎣" : "💬");
+        const label = !it.resolved ? "미확정으로 넘어감" : (it.outcome === "hit" ? "예측 적중" : it.outcome === "trap" ? "낚시였다" : "가격엔 무관했다");
+        return `<div class="news-feed-item"><span class="news-feed-icon">${icon}</span><span class="news-feed-text"><b>${it.headline}</b><br>${label}</span></div>`;
+      }).join("");
+    }
   }
 
   let missionsRenderSignature = null;
@@ -1492,6 +1653,7 @@
 
   function render(){
     ensureDailyMissions();
+    ensureNews();
     document.documentElement.setAttribute("data-stage", Math.min(state.stageIndex, 4));
     document.getElementById("moneyDisplay").textContent = Math.floor(state.money).toLocaleString("ko-KR");
     document.getElementById("incomeDisplay").textContent = "+" + fmt(currentCps()) + " / 초 (자동 급여)";
@@ -1545,6 +1707,7 @@
 
     renderUpgrades();
     renderMissions();
+    renderNews();
     renderRoom();
     updateLottoButton();
     updateCheckInButton();
@@ -2570,6 +2733,7 @@
   document.getElementById("lottoAutoToggle").checked = !!state.lottoAutoBuy;
   state.modalOpen = false;
   ensureDailyMissions();
+  ensureNews();
   applyOfflineEarnings();
   render();
   log("통장을 개설했습니다. 형식이의 커리어를 응원해주세요.", "event");
