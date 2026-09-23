@@ -997,6 +997,42 @@
 
   function currentCps(){ return (state.cpsBase + furnitureEffect("cpsFlat")) * state.cpsMult; }
 
+  function netWorth(s){
+    let total = s.money;
+    Object.values(s.stocks).forEach(st => total += st.shares * st.price);
+    if(s.deposit) total += s.deposit.amount;
+    return total;
+  }
+
+  // Cuts `amount` proportionally across cash, stock holdings and deposit principal
+  // (instead of cash alone), so parking cash into assets can't dodge a loss event
+  // that was sized against total net worth. Returns the amount actually deducted.
+  function deductFromNetWorth(amount){
+    const nw = netWorth(state);
+    if(nw <= 0 || amount <= 0) return 0;
+    const pct = Math.min(1, amount / nw);
+    const cashCut = state.money * pct;
+    state.money -= cashCut;
+    let actualCut = cashCut;
+    Object.values(state.stocks).forEach(st => {
+      if(st.shares > 0){
+        const sellShares = Math.round(st.shares * pct);
+        if(sellShares > 0){
+          actualCut += sellShares * st.price;
+          st.shares -= sellShares;
+          if(st.shares <= 0){ st.shares = 0; st.avgPrice = 0; }
+        }
+      }
+    });
+    if(state.deposit){
+      const cut = state.deposit.amount * pct;
+      state.deposit.amount -= cut;
+      actualCut += cut;
+      if(state.deposit.amount < 1000) state.deposit = null;
+    }
+    return Math.round(actualCut);
+  }
+
   // ---- Daily missions ----
   const MISSION_POOL = [
     { text:"아침 지각하지 않기",             base:400 },
@@ -2087,17 +2123,17 @@
   setInterval(updateLottoButton, 150);
 
   const events = [
-    { text:"명절 상여금이 들어왔다", type:"gain", amountFn: s => Math.max(50000, s.money*0.02) },
-    { text:"팀 회식비를 냈다", type:"loss", amountFn: s => Math.max(15000, s.money*0.01) },
-    { text:"경조사비를 지출했다", type:"loss", amountFn: s => Math.max(30000, s.money*0.015) },
+    { text:"명절 상여금이 들어왔다", type:"gain", amountFn: s => Math.max(50000, netWorth(s)*0.02) },
+    { text:"팀 회식비를 냈다", type:"loss", amountFn: s => Math.max(15000, netWorth(s)*0.01) },
+    { text:"경조사비를 지출했다", type:"loss", amountFn: s => Math.max(30000, netWorth(s)*0.015) },
     { text:null, type:"gain", toast:true, stockDir:1 },
     { text:null, type:"loss", toast:true, stockDir:-1 },
-    { text:"부모님이 용돈을 주셨다", type:"gain", amountFn: s => Math.max(30000, s.money*0.01) },
-    { text:"회사에서 성과급이 나왔다", type:"gain", toast:true, amountFn: s => Math.max(200000, s.money*0.04) },
-    { text:"헤드헌터에게 좋은 제안을 받았다", type:"gain", toast:true, amountFn: s => Math.max(100000, s.money*0.025) },
-    { text:"⚠️ 야근 택시비가 나갔다", type:"loss", amountFn: s => Math.max(15000, s.money*0.008) },
-    { text:"⚠️ 몸살로 병원비를 지출했다", type:"loss", toast:true, amountFn: s => Math.max(100000, s.money*0.03) },
-    { text:"⚠️ 연말정산 추가 납부금이 나갔다", type:"loss", toast:true, amountFn: s => Math.max(150000, s.money*0.035) }
+    { text:"부모님이 용돈을 주셨다", type:"gain", amountFn: s => Math.max(30000, netWorth(s)*0.01) },
+    { text:"회사에서 성과급이 나왔다", type:"gain", toast:true, amountFn: s => Math.max(200000, netWorth(s)*0.04) },
+    { text:"헤드헌터에게 좋은 제안을 받았다", type:"gain", toast:true, amountFn: s => Math.max(100000, netWorth(s)*0.025) },
+    { text:"⚠️ 야근 택시비가 나갔다", type:"loss", amountFn: s => Math.max(15000, netWorth(s)*0.008) },
+    { text:"⚠️ 몸살로 병원비를 지출했다", type:"loss", toast:true, amountFn: s => Math.max(100000, netWorth(s)*0.03) },
+    { text:"⚠️ 연말정산 추가 납부금이 나갔다", type:"loss", toast:true, amountFn: s => Math.max(150000, netWorth(s)*0.035) }
   ];
   function randomEvent(){
     const ev = events[Math.floor(Math.random()*events.length)];
@@ -2109,8 +2145,7 @@
         logText += ` (+${fmt(raw)})`;
       } else {
         const reduced = raw * (1 + furnitureEffect("lossEventPct"));
-        const delta = Math.min(state.money, reduced);
-        state.money -= delta;
+        const delta = deductFromNetWorth(reduced);
         logText += ` (-${fmt(delta)})`;
       }
       pulseMoney(ev.type === "gain" ? "gain" : "spend");
