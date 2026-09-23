@@ -400,6 +400,13 @@
   .stock-star-btn.watched{ opacity:1; background:var(--brass-light); border-color:var(--brass); }
   .stock-ov-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
   .stock-ov-name{ font-size:13px; font-weight:700; }
+  .stock-risk-badge{
+    display:inline-block; font-size:9px; font-weight:800; padding:1px 6px; border-radius:20px;
+    vertical-align:middle; margin-left:2px;
+  }
+  .stock-risk-badge.risk-low{ background:rgba(46,107,72,.15); color:var(--ink-green); }
+  .stock-risk-badge.risk-mid{ background:rgba(177,135,47,.18); color:var(--brass); }
+  .stock-risk-badge.risk-high{ background:rgba(165,58,50,.15); color:var(--ink-red); }
   .stock-ov-sub{
     font-size:10.5px; font-weight:600; font-family: ui-monospace, Consolas, monospace;
     white-space:normal; word-break:keep-all; line-height:1.35;
@@ -792,7 +799,7 @@
   <div class="tab-panel" data-panel="news">
   <div class="ledger">
     <div class="ledger-head">📰 속보</div>
-    <div class="news-hint">투자 힌트일 수도, 낚시성 잡담일 수도 있어요 · 매시 정각 새 소식</div>
+    <div class="news-hint">투자 힌트일 수도, 낚시성 잡담일 수도 있어요 · 15분마다 새 소식</div>
     <div id="newsCurrent"></div>
   </div>
 
@@ -897,7 +904,7 @@
       venture:    { name:"사업 확장",       desc:"자동 수입 +400원/초",         baseCost:6000000, cost:0, level:0, scale:1.55, value:400, unlock:5, maxLevel:12 }
     },
     missions: { date:"", items:[] },
-    news: { hourKey:"", current:null, feed:[] },
+    news: { nextAt:0, current:null, feed:[] },
     playerName: "",
     married: false,
     spouseName: "",
@@ -1167,8 +1174,9 @@
     "업계 관계자 \"{stock}, 당분간 어려울듯\"",
     "{stock}, 노조 파업 예고에 우려 확산"
   ];
-  const NEWS_RESOLVE_MIN_MS = 10 * 60 * 1000;
-  const NEWS_RESOLVE_MAX_MS = 40 * 60 * 1000;
+  const NEWS_INTERVAL_MS = 15 * 60 * 1000;
+  const NEWS_RESOLVE_MIN_MS = 3 * 60 * 1000;
+  const NEWS_RESOLVE_MAX_MS = 10 * 60 * 1000;
   const NEWS_MOVE_MIN_PCT = 0.10;
   const NEWS_MOVE_MAX_PCT = 0.18;
 
@@ -1180,12 +1188,14 @@
   }
 
   function generateNews(){
-    const keys = Object.keys(state.stocks);
-    const stockKey = keys[Math.floor(Math.random() * keys.length)];
+    const allKeys = Object.keys(state.stocks);
+    const liveKeys = allKeys.filter(k => !state.stocks[k].delisted);
+    const stockPool = liveKeys.length > 0 ? liveKeys : allKeys;
+    const stockKey = stockPool[Math.floor(Math.random() * stockPool.length)];
     const stockName = state.stocks[stockKey].name;
     const flavor = Math.random() < 0.5 ? "up" : "down";
-    const pool = flavor === "up" ? NEWS_UP_TEMPLATES : NEWS_DOWN_TEMPLATES;
-    const template = pool[Math.floor(Math.random() * pool.length)];
+    const templatePool = flavor === "up" ? NEWS_UP_TEMPLATES : NEWS_DOWN_TEMPLATES;
+    const template = templatePool[Math.floor(Math.random() * templatePool.length)];
     const outcome = pickNewsOutcome();
     const impliedDir = flavor === "up" ? 1 : -1;
     const actualDir = outcome === "noise" ? 0 : (outcome === "hit" ? impliedDir : -impliedDir);
@@ -1203,6 +1213,7 @@
       state.news.feed = state.news.feed.slice(0, 8);
     }
     state.news.current = item;
+    state.news.nextAt = now + NEWS_INTERVAL_MS;
   }
 
   function resolveNewsIfDue(){
@@ -1210,10 +1221,9 @@
     if(!item || item.resolved || Date.now() < item.resolveAt) return;
     item.resolved = true;
     const s = state.stocks[item.stockKey];
-    if(s && item.actualDir !== 0){
-      s.price = Math.max(1000, Math.round(s.price * (1 + item.actualDir * item.magnitude)));
+    if(s && !s.delisted && item.actualDir !== 0){
       s.dir = item.actualDir;
-      trackStockExtreme(s);
+      applyStockPrice(item.stockKey, s.price * (1 + item.actualDir * item.magnitude));
       pushStockHistory(item.stockKey, s.price, true);
       drawStockChart(item.stockKey);
     }
@@ -1226,9 +1236,7 @@
 
   function ensureNews(){
     resolveNewsIfDue();
-    const hourKey = currentHourKey();
-    if(state.news.hourKey !== hourKey){
-      state.news.hourKey = hourKey;
+    if(!state.news.current || Date.now() >= state.news.nextAt){
       generateNews();
     }
   }
@@ -1654,6 +1662,7 @@
   function render(){
     ensureDailyMissions();
     ensureNews();
+    ensureRelistings();
     document.documentElement.setAttribute("data-stage", Math.min(state.stageIndex, 4));
     document.getElementById("moneyDisplay").textContent = Math.floor(state.money).toLocaleString("ko-KR");
     document.getElementById("incomeDisplay").textContent = "+" + fmt(currentCps()) + " / 초 (자동 급여)";
@@ -1810,13 +1819,66 @@
     if(s.allTimeLow == null || s.price < s.allTimeLow) s.allTimeLow = s.price;
   }
 
+  const DELIST_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+
+  function delistStock(key){
+    const s = state.stocks[key];
+    if(s.delisted) return;
+    const hadShares = s.shares > 0;
+    const lostValue = s.shares * s.avgPrice;
+    s.delisted = true;
+    s.relistAt = Date.now() + DELIST_COOLDOWN_MS;
+    s.price = 0;
+    s.dir = -1;
+    s.shares = 0;
+    s.avgPrice = 0;
+    log(`💀 ${s.name} 상장폐지!` + (hadShares ? ` 보유 주식이 전부 휴지조각이 됐다 (-${fmt(lostValue)})` : " 다행히 보유 중은 아니었다"), "loss");
+    showToast(`💀 ${s.name} 상장폐지${hadShares ? " · 보유 주식 전량 손실" : ""}`, "warn");
+  }
+
+  function relistStock(key){
+    const s = state.stocks[key];
+    s.delisted = false;
+    s.relistAt = 0;
+    s.price = 10000;
+    s.dir = 1;
+    s.shares = 0;
+    s.avgPrice = 0;
+    s.history = [10000, 10000];
+    s.historyFlags = [false, false];
+    s.allTimeHigh = 10000;
+    s.allTimeLow = 10000;
+    log(`🎉 ${s.name}, 재상장했다!`, "gain");
+    showToast(`🎉 ${s.name} 재상장!`, "gain");
+  }
+
+  function ensureRelistings(){
+    Object.keys(state.stocks).forEach(key => {
+      const s = state.stocks[key];
+      if(s.delisted && Date.now() >= s.relistAt) relistStock(key);
+    });
+  }
+
+  // Applies a newly computed price, routing through the delist trigger
+  // (price hits 0) instead of letting price go negative or clamping it.
+  // Below this, rounding to the nearest won means percentage-based moves can
+  // never actually reach exactly 0 (e.g. Math.round(1 * 0.88) = 1 forever),
+  // so delisting triggers off a small threshold instead of a literal 0.
+  const DELIST_PRICE_THRESHOLD = 100;
+  function applyStockPrice(key, newPrice){
+    const s = state.stocks[key];
+    s.price = Math.max(0, Math.round(newPrice));
+    if(s.price <= DELIST_PRICE_THRESHOLD) delistStock(key);
+    else trackStockExtreme(s);
+  }
+
   function stockTick(){
     Object.keys(state.stocks).forEach(key => {
       const s = state.stocks[key];
+      if(s.delisted) return;
       const changePct = (Math.random() * 2 - 1) * (s.volatility / 100);
       s.dir = changePct >= 0 ? 1 : -1;
-      s.price = Math.max(1000, Math.round(s.price * (1 + changePct)));
-      trackStockExtreme(s);
+      applyStockPrice(key, s.price * (1 + changePct));
       pushStockHistory(key, s.price, false);
       drawStockChart(key);
     });
@@ -1835,6 +1897,28 @@
   function renderStock(key){
     const s = state.stocks[key];
     const priceEl = document.getElementById("stockPrice-" + key);
+    const buyBtn = document.getElementById("stockBuy-" + key);
+    const buyAllBtn = document.getElementById("stockBuyAll-" + key);
+    const sellHalfBtn = document.getElementById("stockSellHalf-" + key);
+    const sellBtn = document.getElementById("stockSell-" + key);
+    const plEl = document.getElementById("stockPL-" + key);
+
+    if(s.delisted){
+      const remainSec = Math.max(0, Math.ceil((s.relistAt - Date.now())/1000));
+      const mins = Math.floor(remainSec/60), secs = remainSec%60;
+      priceEl.textContent = "상장폐지";
+      priceEl.className = "stock-price mono down";
+      document.getElementById("stockHold-" + key).textContent =
+        `재상장까지 ${mins}분 ${secs}초`;
+      const limits = stockLimits(s);
+      document.getElementById("stockLimit-" + key).textContent =
+        "상한가 " + fmt(limits.upper) + " · 하한가 " + fmt(limits.lower) + " (역대 최고·최저가)";
+      plEl.textContent = "거래 불가";
+      plEl.className = "stock-pl mono loss";
+      [buyBtn, buyAllBtn, sellHalfBtn, sellBtn].forEach(b => { b.disabled = true; b.textContent = "상장폐지"; });
+      return;
+    }
+
     priceEl.textContent = fmt(s.price);
     priceEl.className = "stock-price mono " + (s.dir >= 0 ? "up" : "down");
     const holdVal = s.shares * s.price;
@@ -1844,7 +1928,6 @@
     document.getElementById("stockLimit-" + key).textContent =
       "상한가 " + fmt(limits.upper) + " · 하한가 " + fmt(limits.lower) + " (역대 최고·최저가)";
 
-    const plEl = document.getElementById("stockPL-" + key);
     if(s.shares > 0){
       const costBasis = s.avgPrice * s.shares;
       const pl = holdVal - costBasis;
@@ -1858,10 +1941,6 @@
 
     const onCooldown = Date.now() < s.tradeCooldownUntil;
     const cooldownSec = onCooldown ? Math.ceil((s.tradeCooldownUntil - Date.now())/1000) : 0;
-    const buyBtn = document.getElementById("stockBuy-" + key);
-    const buyAllBtn = document.getElementById("stockBuyAll-" + key);
-    const sellHalfBtn = document.getElementById("stockSellHalf-" + key);
-    const sellBtn = document.getElementById("stockSell-" + key);
     buyBtn.disabled = onCooldown || state.money < s.price;
     buyAllBtn.disabled = onCooldown || state.money < s.price;
     sellHalfBtn.disabled = onCooldown || s.shares <= 0;
@@ -1874,7 +1953,7 @@
 
   function buyStock(key, budget){
     const s = state.stocks[key];
-    if(Date.now() < s.tradeCooldownUntil) return;
+    if(s.delisted || Date.now() < s.tradeCooldownUntil) return;
     if(budget <= 0 || state.money < Math.min(budget, s.price)) return;
     const askPrice = s.price * (1 + TRADE_FEE);
     const shares = Math.floor(Math.min(budget, state.money) / askPrice);
@@ -2047,27 +2126,43 @@
     render();
   }
 
+  function riskTier(volatility){
+    if(volatility <= 3) return { label:"안정형", cls:"risk-low" };
+    if(volatility <= 7) return { label:"보통", cls:"risk-mid" };
+    return { label:"고위험", cls:"risk-high" };
+  }
+
   function renderStockOverview(){
     const list = document.getElementById("stockOverview");
     list.innerHTML = "";
     Object.entries(state.stocks).forEach(([key, s]) => {
       const row = document.createElement("div");
       row.className = "stock-ov-row";
+      const tier = riskTier(s.volatility);
+      const riskBadge = `<span class="stock-risk-badge ${tier.cls}">${tier.label}</span>`;
       let subHtml = "";
-      if(s.shares > 0){
-        const holdVal = s.shares * s.price;
-        const costBasis = s.avgPrice * s.shares;
-        const pl = holdVal - costBasis;
-        const plPct = costBasis > 0 ? (pl / costBasis * 100) : 0;
-        subHtml = `<span class="stock-ov-sub ${pl >= 0 ? "gain" : "loss"}">평가 ${fmt(holdVal)} · ${pl>=0?"+":""}${fmt(pl)} (${plPct>=0?"+":""}${plPct.toFixed(1)}%)</span>`;
+      let priceHtml;
+      if(s.delisted){
+        const remainSec = Math.max(0, Math.ceil((s.relistAt - Date.now())/1000));
+        subHtml = `<span class="stock-ov-sub loss">재상장까지 ${Math.floor(remainSec/60)}분</span>`;
+        priceHtml = `<span class="stock-ov-price mono down">상장폐지</span>`;
+      } else {
+        if(s.shares > 0){
+          const holdVal = s.shares * s.price;
+          const costBasis = s.avgPrice * s.shares;
+          const pl = holdVal - costBasis;
+          const plPct = costBasis > 0 ? (pl / costBasis * 100) : 0;
+          subHtml = `<span class="stock-ov-sub ${pl >= 0 ? "gain" : "loss"}">평가 ${fmt(holdVal)} · ${pl>=0?"+":""}${fmt(pl)} (${plPct>=0?"+":""}${plPct.toFixed(1)}%)</span>`;
+        }
+        priceHtml = `<span class="stock-ov-price mono ${s.dir >= 0 ? "up" : "down"}">${fmt(s.price)}</span>`;
       }
       row.innerHTML = `
         <button class="stock-star-btn${s.watched ? " watched" : ""}" data-key="${key}">⭐</button>
         <div class="stock-ov-info">
-          <span class="stock-ov-name">${s.name}</span>
+          <span class="stock-ov-name">${s.name} ${riskBadge}</span>
           ${subHtml}
         </div>
-        <span class="stock-ov-price mono ${s.dir >= 0 ? "up" : "down"}">${fmt(s.price)}</span>
+        ${priceHtml}
       `;
       list.appendChild(row);
     });
@@ -2089,8 +2184,9 @@
         const s = state.stocks[key];
         const card = document.createElement("div");
         card.className = "ledger insert-card";
+        const tier = riskTier(s.volatility);
         card.innerHTML = `
-          <div class="ledger-head">재테크 현황 · ${s.name}</div>
+          <div class="ledger-head">재테크 현황 · ${s.name} <span class="stock-risk-badge ${tier.cls}">${tier.label}</span></div>
           <div class="stock-row">
             <span class="stock-price mono" id="stockPrice-${key}">10,000원</span>
             <span class="stock-hold" id="stockHold-${key}">보유 0주 · 평단가 0원</span>
@@ -2138,9 +2234,8 @@
     const s = state.stocks[key];
     const prices = s.history;
     if(prices.length < 2) return;
-    const { upper: allTimeHigh, lower: allTimeLow } = stockLimits(s);
 
-    const min = Math.min(...prices, allTimeLow), max = Math.max(...prices, allTimeHigh);
+    const min = Math.min(...prices), max = Math.max(...prices);
     const pad = (max - min) * 0.18 || Math.max(max * 0.05, 10);
     const yMin = min - pad, yMax = max + pad;
     const stepX = w / (prices.length - 1);
@@ -2153,22 +2248,6 @@
       const gy = Math.round(h * (g / 4)) + 0.5;
       ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
     }
-
-    ctx.save();
-    ctx.setLineDash([4, 3]);
-    ctx.lineWidth = 1;
-    ctx.font = "9px ui-monospace, Consolas, monospace";
-    const highY = Math.round(yAt(allTimeHigh)) + 0.5;
-    ctx.strokeStyle = "rgba(46,107,72,.55)";
-    ctx.beginPath(); ctx.moveTo(0, highY); ctx.lineTo(w, highY); ctx.stroke();
-    ctx.fillStyle = "rgba(46,107,72,.85)";
-    ctx.fillText("최고 " + allTimeHigh.toLocaleString("ko-KR"), 4, Math.max(9, highY - 3));
-    const lowY = Math.round(yAt(allTimeLow)) + 0.5;
-    ctx.strokeStyle = "rgba(165,58,50,.55)";
-    ctx.beginPath(); ctx.moveTo(0, lowY); ctx.lineTo(w, lowY); ctx.stroke();
-    ctx.fillStyle = "rgba(165,58,50,.85)";
-    ctx.fillText("최저 " + allTimeLow.toLocaleString("ko-KR"), 4, Math.min(h - 3, lowY + 10));
-    ctx.restore();
 
     const trendUp = prices[prices.length - 1] >= prices[0];
     const lineColor = trendUp ? "#2e6b48" : "#a53a32";
@@ -2358,12 +2437,13 @@
       }
       pulseMoney(ev.type === "gain" ? "gain" : "spend");
     } else if(ev.stockDir){
-      const keys = Object.keys(state.stocks);
+      const allKeys = Object.keys(state.stocks);
+      const liveKeys = allKeys.filter(k => !state.stocks[k].delisted);
+      const keys = liveKeys.length > 0 ? liveKeys : allKeys;
       const key = keys[Math.floor(Math.random()*keys.length)];
       const s = state.stocks[key];
-      s.price = ev.stockDir > 0 ? Math.round(s.price*1.15) : Math.max(1000, Math.round(s.price*0.85));
       s.dir = ev.stockDir;
-      trackStockExtreme(s);
+      applyStockPrice(key, ev.stockDir > 0 ? s.price*1.15 : s.price*0.85);
       pushStockHistory(key, s.price, true);
       logText = `${ev.stockDir>0?"📈":"📉"} ${s.name} 주식이 ${ev.stockDir>0?"급등":"급락"}했다 (${fmt(s.price)})`;
       drawStockChart(key);
@@ -2753,6 +2833,7 @@
   state.modalOpen = false;
   ensureDailyMissions();
   ensureNews();
+  ensureRelistings();
   applyOfflineEarnings();
   render();
   log("통장을 개설했습니다. 형식이의 커리어를 응원해주세요.", "event");
