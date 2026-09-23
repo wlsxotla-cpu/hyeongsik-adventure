@@ -372,6 +372,26 @@
   /* ---- Stock insert ---- */
   .insert-card{ background:repeating-linear-gradient(0deg, rgba(177,135,47,.05) 0 1px, transparent 1px 26px); }
   .stock-hint{ font-size:11px; color:var(--text-sub); margin-bottom:10px; }
+  .stock-summary{
+    background:#fffdf5; border:1px solid var(--paper-line); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px; display:flex; flex-direction:column; gap:5px;
+  }
+  .stock-summary-row{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-sub); }
+  .stock-summary-row .mono{ font-weight:700; font-family: ui-monospace, Consolas, monospace; color:var(--text-on-paper); }
+  .stock-summary-row .mono.gain{ color:var(--ink-green); }
+  .stock-summary-row .mono.loss{ color:var(--ink-red); }
+  .sell-all-btn{
+    width:100%; padding:12px; border-radius:10px; border:none; margin-bottom:10px;
+    background:linear-gradient(135deg, #c24b41, var(--ink-red));
+    color:#fff8ec; font-weight:800; font-size:13.5px; cursor:pointer; font-family:inherit;
+    box-shadow:0 4px 12px rgba(165,58,50,.32); letter-spacing:.2px;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  }
+  .sell-all-btn:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 6px 16px rgba(165,58,50,.4); }
+  .sell-all-btn:active:not(:disabled){ transform:translateY(0); box-shadow:0 2px 6px rgba(165,58,50,.3); }
+  .sell-all-btn:disabled{
+    background:#e3ddc8; color:#a89f89; box-shadow:none; cursor:not-allowed;
+  }
   .stock-ov-row{
     display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--paper-line);
   }
@@ -718,7 +738,12 @@
   <div class="ledger">
     <div class="ledger-head">재테크 현황 · 전체 종목</div>
     <div class="stock-hint">⭐ 눌러서 관심종목에 담으면 아래에 자세히 나와요</div>
-    <button class="stock-sell-btn" id="sellAllStocksBtn" style="width:100%; margin-bottom:10px;">보유 종목 전량 매도</button>
+    <div class="stock-summary" id="stockSummary" style="display:none;">
+      <div class="stock-summary-row"><span>내 투자금액</span><span class="mono" id="ssInvested">0원</span></div>
+      <div class="stock-summary-row"><span>평가금액</span><span class="mono" id="ssValuation">0원</span></div>
+      <div class="stock-summary-row"><span>평균 손익</span><span class="mono" id="ssPL">0원 (0%)</span></div>
+    </div>
+    <button class="sell-all-btn" id="sellAllStocksBtn">💰 보유 종목 전량 매도</button>
     <div id="stockOverview"></div>
   </div>
 
@@ -1649,14 +1674,26 @@
 
   function updateSellAllStocksBtn(){
     const btn = document.getElementById("sellAllStocksBtn");
+    const summary = document.getElementById("stockSummary");
     const heldKeys = Object.keys(state.stocks).filter(k => state.stocks[k].shares > 0);
     if(heldKeys.length === 0){
       btn.disabled = true;
-      btn.textContent = "보유 종목 전량 매도";
+      btn.textContent = "💰 보유 종목 전량 매도";
+      summary.style.display = "none";
     } else {
-      const total = heldKeys.reduce((sum, k) => sum + state.stocks[k].shares * state.stocks[k].price, 0);
+      const invested = heldKeys.reduce((sum, k) => sum + state.stocks[k].avgPrice * state.stocks[k].shares, 0);
+      const valuation = heldKeys.reduce((sum, k) => sum + state.stocks[k].price * state.stocks[k].shares, 0);
+      const pl = valuation - invested;
+      const plPct = invested > 0 ? (pl / invested * 100) : 0;
+      const plClass = pl >= 0 ? "gain" : "loss";
+      document.getElementById("ssInvested").textContent = fmt(invested);
+      document.getElementById("ssValuation").textContent = fmt(valuation);
+      const plEl = document.getElementById("ssPL");
+      plEl.textContent = `${pl>=0?"+":""}${fmt(pl)} (${plPct>=0?"+":""}${plPct.toFixed(1)}%)`;
+      plEl.className = "mono " + plClass;
+      summary.style.display = "flex";
       btn.disabled = false;
-      btn.textContent = `보유 종목 전량 매도 (${heldKeys.length}종목 · ${fmt(total)})`;
+      btn.textContent = `💰 보유 종목 전량 매도 (${heldKeys.length}종목 · ${fmt(valuation)})`;
     }
   }
   document.getElementById("sellAllStocksBtn").addEventListener("click", sellAllStocks);
