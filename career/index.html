@@ -349,7 +349,7 @@
     background:#fffdf5; border:1px solid var(--paper-line); overflow:hidden;
   }
   .mg-timing-target{
-    position:absolute; left:46%; width:8%; height:100%;
+    position:absolute; left:39%; width:22%; height:100%;
     background:rgba(46,107,72,.35); border-left:1px solid var(--ink-green); border-right:1px solid var(--ink-green);
   }
   .mg-timing-marker{
@@ -614,10 +614,8 @@
 </div>
 <div class="asset-panel" id="assetPanel">
   <div class="asset-panel-row"><span>현금</span><span class="mono" id="apCash">0원</span></div>
-  <div class="asset-panel-row"><span>형식전자</span><span class="mono" id="apFormsik">0원</span></div>
-  <div class="asset-panel-row"><span>경태건설</span><span class="mono" id="apAnjeong">0원</span></div>
-  <div class="asset-panel-row"><span>성주바이오</span><span class="mono" id="apJapju">0원</span></div>
-  <div class="asset-panel-row asset-panel-total"><span>전량 매도 시 총액</span><span class="mono" id="apTotal">0원</span></div>
+  <div id="apHoldings"></div>
+  <div class="asset-panel-row asset-panel-total"><span>전량 매도·해지 시 총액</span><span class="mono" id="apTotal">0원</span></div>
 </div>
 
 <div class="book">
@@ -673,10 +671,10 @@
   </div>
 
   <div class="ledger">
-    <div class="ledger-head">오늘의 미션 <span class="streak-badge" id="streakBadge"></span></div>
+    <div class="ledger-head">이번 시간 미션 <span class="streak-badge" id="streakBadge"></span></div>
     <button class="offline-btn" id="offlineBtn" style="display:none;"></button>
     <div id="missionList"></div>
-    <div class="mission-reset-note" id="missionResetNote">미션은 매일 자정에 새로 고침됩니다</div>
+    <div class="mission-reset-note" id="missionResetNote">미션은 매시 정각에 새로 고침됩니다</div>
   </div>
   </div>
 
@@ -968,23 +966,28 @@
 
   // ---- Daily missions ----
   const MISSION_POOL = [
-    { text:"아침 지각하지 않기",             base:3000 },
-    { text:"점심값 아끼고 도시락 싸오기",     base:5000 },
-    { text:"업무 보고서 기한 내 제출하기",    base:8000 },
-    { text:"회의에서 아이디어 하나 내기",     base:9000 },
-    { text:"야근 없이 칼퇴하기",              base:6000 },
-    { text:"커피 대신 물 마시기 (절약)",      base:2000 },
-    { text:"동료 부탁으로 회식 자리 참석하기", base:7000 },
-    { text:"자기계발 강의 30분 듣기",         base:9000 },
-    { text:"상사에게 주간 업무 브리핑하기",   base:10000 },
-    { text:"재택근무 날 집중력 유지하기",     base:5000 },
-    { text:"이력서 업데이트하기",             base:15000 },
-    { text:"링크드인 프로필 정리하기",        base:10000 }
+    { text:"아침 지각하지 않기",             base:400 },
+    { text:"점심값 아끼고 도시락 싸오기",     base:600 },
+    { text:"업무 보고서 기한 내 제출하기",    base:1000 },
+    { text:"회의에서 아이디어 하나 내기",     base:1100 },
+    { text:"야근 없이 칼퇴하기",              base:800 },
+    { text:"커피 대신 물 마시기 (절약)",      base:250 },
+    { text:"동료 부탁으로 회식 자리 참석하기", base:900 },
+    { text:"자기계발 강의 30분 듣기",         base:1100 },
+    { text:"상사에게 주간 업무 브리핑하기",   base:1250 },
+    { text:"재택근무 날 집중력 유지하기",     base:600 },
+    { text:"이력서 업데이트하기",             base:1900 },
+    { text:"링크드인 프로필 정리하기",        base:1250 }
   ];
 
   function todayKey(){
     const d = new Date();
     return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+
+  function currentHourKey(){
+    const d = new Date();
+    return todayKey() + "-" + String(d.getHours()).padStart(2,"0");
   }
 
   function shuffle(arr){
@@ -1029,16 +1032,19 @@
   }
 
   function ensureDailyMissions(){
-    const key = todayKey();
-    if(state.missions.date !== key){
+    const dayKey = todayKey();
+    if(state.lastVisitDate !== dayKey){
       if(!state.lastVisitDate) state.streak = 1;
       else {
-        const diff = daysBetween(state.lastVisitDate, key);
+        const diff = daysBetween(state.lastVisitDate, dayKey);
         if(diff === 1) state.streak = (state.streak || 1) + 1;
         else if(diff > 1) state.streak = 1;
       }
-      state.lastVisitDate = key;
-      state.missions.date = key;
+      state.lastVisitDate = dayKey;
+    }
+    const hourKey = currentHourKey();
+    if(state.missions.date !== hourKey){
+      state.missions.date = hourKey;
       state.missions.items = pickMissions();
     }
   }
@@ -1127,8 +1133,8 @@
     container.querySelector(`#tapbtn-${key}`).addEventListener("click", ()=>{
       const dist = Math.abs(pos - 50);
       const tol = furnitureEffect("timingTolerance");
-      if(dist <= 4 + tol) resolveMission(key, 3, "완벽한 타이밍");
-      else if(dist <= 15 + tol) resolveMission(key, 1, "적당히 성공");
+      if(dist <= 11 + tol) resolveMission(key, 3, "완벽한 타이밍");
+      else if(dist <= 20 + tol) resolveMission(key, 1, "적당히 성공");
       else resolveMission(key, 0, "완전히 놓침");
     });
   }
@@ -1158,8 +1164,9 @@
   function buildMemoryGame(container, key){
     const sequence = shuffle(MEMORY_ICONS).slice(0, 3);
     container.innerHTML = `
-      <div class="mg-hint">순서를 기억하세요...</div>
+      <div class="mg-hint">준비되면 시작을 눌러 순서를 외우세요</div>
       <div class="mg-memory-display" id="mdisp-${key}"></div>
+      <button class="mg-play-btn" id="memstart-${key}">시작</button>
     `;
     const disp = container.querySelector(`#mdisp-${key}`);
     let step = 0;
@@ -1173,8 +1180,12 @@
       disp.textContent = sequence[step];
       step++;
     };
-    showStep();
-    activeMinigameTimers[key] = setInterval(showStep, 700);
+    container.querySelector(`#memstart-${key}`).addEventListener("click", (e)=>{
+      e.target.remove();
+      container.querySelector(".mg-hint").textContent = "순서를 기억하세요...";
+      showStep();
+      activeMinigameTimers[key] = setInterval(showStep, 700);
+    });
 
     function showButtons(){
       const buttons = shuffle(sequence);
@@ -1393,25 +1404,39 @@
       streakBadge.textContent = `🔥 ${state.streak}일 연속`;
       const bonusPct = Math.round((streakBonusMult() - 1) * 100);
       document.getElementById("missionResetNote").textContent =
-        bonusPct > 0 ? `미션은 매일 자정에 새로 고침됩니다 · 연속 출석 보너스 +${bonusPct}%` : "미션은 매일 자정에 새로 고침됩니다";
+        bonusPct > 0 ? `미션은 매시 정각에 새로 고침됩니다 · 연속 출석 보너스 +${bonusPct}%` : "미션은 매시 정각에 새로 고침됩니다";
     } else {
       streakBadge.textContent = "";
-      document.getElementById("missionResetNote").textContent = "미션은 매일 자정에 새로 고침됩니다";
+      document.getElementById("missionResetNote").textContent = "미션은 매시 정각에 새로 고침됩니다";
     }
 
     renderStockOverview();
     renderStockDetails();
     renderDeposit();
 
-    const formsikVal = state.stocks.formsik.shares * state.stocks.formsik.price;
-    const anjeongVal = state.stocks.anjeong.shares * state.stocks.anjeong.price;
-    const japjuVal = state.stocks.japju.shares * state.stocks.japju.price;
     document.getElementById("assetPillAmount").textContent = fmt(state.money);
     document.getElementById("apCash").textContent = fmt(state.money);
-    document.getElementById("apFormsik").textContent = fmt(formsikVal);
-    document.getElementById("apAnjeong").textContent = fmt(anjeongVal);
-    document.getElementById("apJapju").textContent = fmt(japjuVal);
-    document.getElementById("apTotal").textContent = fmt(state.money + formsikVal + anjeongVal + japjuVal);
+    let assetTotal = state.money;
+    const holdingsEl = document.getElementById("apHoldings");
+    holdingsEl.innerHTML = "";
+    Object.values(state.stocks).forEach(s => {
+      if(s.shares > 0){
+        const val = s.shares * s.price;
+        assetTotal += val;
+        const row = document.createElement("div");
+        row.className = "asset-panel-row";
+        row.innerHTML = `<span>${s.name}</span><span class="mono">${fmt(val)}</span>`;
+        holdingsEl.appendChild(row);
+      }
+    });
+    if(state.deposit){
+      assetTotal += state.deposit.amount;
+      const row = document.createElement("div");
+      row.className = "asset-panel-row";
+      row.innerHTML = `<span>적금</span><span class="mono">${fmt(state.deposit.amount)}</span>`;
+      holdingsEl.appendChild(row);
+    }
+    document.getElementById("apTotal").textContent = fmt(assetTotal);
 
     renderUpgrades();
     renderMissions();
