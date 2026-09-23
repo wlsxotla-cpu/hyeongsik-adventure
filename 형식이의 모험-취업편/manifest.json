@@ -1,0 +1,12 @@
+{
+  "name": "형식이의 모험 — 첫 출근부터 퇴사까지",
+  "short_name": "형식이의 모험",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#e9e2cd",
+  "theme_color": "#0f2038",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>형식이의 모험 — 첫 출근부터 퇴사까지</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f2038">
+<link rel="icon" href="assets/icons/icon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -1365,8 +1369,6 @@
     renderMissions();
     renderRoom();
     updateLottoButton();
-    document.getElementById("holderName").textContent = "예금주 · " + (state.playerName || "형식");
-    document.getElementById("gameTitle").textContent = (state.playerName || "형식") + "의 모험";
 
     if(!state.modalOpen && state.money >= goal){
       state.modalOpen = true;
@@ -2289,7 +2291,7 @@
     location.reload();
   });
 
-  const isNewGame = load();
+  load();
   Object.values(state.stocks).forEach(s => {
     if(s.history.length < 2){ s.history = [s.price, s.price]; }
     if(s.historyFlags.length !== s.history.length){ s.historyFlags = s.history.map(()=>false); }
@@ -2300,19 +2302,6 @@
   ensureDailyMissions();
   applyOfflineEarnings();
   render();
-  if(isNewGame){
-    openNameModal({
-      seal:"입사",
-      title:"주인공 이름을 지어주세요",
-      desc:"이 통장의 주인공 이름입니다. 나중에 결혼/육아 이벤트에도 반영돼요.",
-      placeholder:"형식",
-      onConfirm: (val)=>{
-        state.playerName = val;
-        log(`${val}(이)가 사회생활을 시작했다`, "event");
-        render();
-      }
-    });
-  }
   log("통장을 개설했습니다. 형식이의 커리어를 응원해주세요.", "event");
 })();
 </script>
