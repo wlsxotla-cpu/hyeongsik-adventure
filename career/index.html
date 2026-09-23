@@ -1910,15 +1910,18 @@
   }
 
   function sellAllStocks(){
-    const keys = Object.keys(state.stocks).filter(k =>
-      state.stocks[k].shares > 0 && Date.now() >= state.stocks[k].tradeCooldownUntil
-    );
-    if(keys.length === 0){
-      showToast("매도할 수 있는 보유 종목이 없어요 (쿨다운 중일 수 있어요)", "warn");
+    const heldKeys = Object.keys(state.stocks).filter(k => state.stocks[k].shares > 0);
+    if(heldKeys.length === 0){
+      showToast("매도할 보유 종목이 없어요", "warn");
       return;
     }
-    keys.forEach(k => sellStock(k, 1));
-    showToast(`보유 종목 ${keys.length}개 전량 매도 완료`, "gain");
+    const cooldownKeys = heldKeys.filter(k => Date.now() < state.stocks[k].tradeCooldownUntil);
+    if(cooldownKeys.length > 0){
+      showToast(`${cooldownKeys.length}개 종목이 쿨다운 중이라 전량 매도할 수 없어요`, "warn");
+      return;
+    }
+    heldKeys.forEach(k => sellStock(k, 1));
+    showToast(`보유 종목 ${heldKeys.length}개 전량 매도 완료`, "gain");
   }
 
   function updateSellAllStocksBtn(){
@@ -1941,8 +1944,14 @@
       plEl.textContent = `${pl>=0?"+":""}${fmt(pl)} (${plPct>=0?"+":""}${plPct.toFixed(1)}%)`;
       plEl.className = "mono " + plClass;
       summary.style.display = "flex";
-      btn.disabled = false;
-      btn.textContent = `💰 보유 종목 전량 매도 (${heldKeys.length}종목 · ${fmt(valuation)})`;
+      const onCooldown = heldKeys.some(k => Date.now() < state.stocks[k].tradeCooldownUntil);
+      if(onCooldown){
+        btn.disabled = true;
+        btn.textContent = "⏳ 일부 종목 쿨다운 중 (전량 매도 불가)";
+      } else {
+        btn.disabled = false;
+        btn.textContent = `💰 보유 종목 전량 매도 (${heldKeys.length}종목 · ${fmt(valuation)})`;
+      }
     }
   }
   document.getElementById("sellAllStocksBtn").addEventListener("click", sellAllStocks);
@@ -2129,8 +2138,9 @@
     const s = state.stocks[key];
     const prices = s.history;
     if(prices.length < 2) return;
+    const { upper: allTimeHigh, lower: allTimeLow } = stockLimits(s);
 
-    const min = Math.min(...prices), max = Math.max(...prices);
+    const min = Math.min(...prices, allTimeLow), max = Math.max(...prices, allTimeHigh);
     const pad = (max - min) * 0.18 || Math.max(max * 0.05, 10);
     const yMin = min - pad, yMax = max + pad;
     const stepX = w / (prices.length - 1);
@@ -2143,6 +2153,22 @@
       const gy = Math.round(h * (g / 4)) + 0.5;
       ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
     }
+
+    ctx.save();
+    ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 1;
+    ctx.font = "9px ui-monospace, Consolas, monospace";
+    const highY = Math.round(yAt(allTimeHigh)) + 0.5;
+    ctx.strokeStyle = "rgba(46,107,72,.55)";
+    ctx.beginPath(); ctx.moveTo(0, highY); ctx.lineTo(w, highY); ctx.stroke();
+    ctx.fillStyle = "rgba(46,107,72,.85)";
+    ctx.fillText("최고 " + allTimeHigh.toLocaleString("ko-KR"), 4, Math.max(9, highY - 3));
+    const lowY = Math.round(yAt(allTimeLow)) + 0.5;
+    ctx.strokeStyle = "rgba(165,58,50,.55)";
+    ctx.beginPath(); ctx.moveTo(0, lowY); ctx.lineTo(w, lowY); ctx.stroke();
+    ctx.fillStyle = "rgba(165,58,50,.85)";
+    ctx.fillText("최저 " + allTimeLow.toLocaleString("ko-KR"), 4, Math.min(h - 3, lowY + 10));
+    ctx.restore();
 
     const trendUp = prices[prices.length - 1] >= prices[0];
     const lineColor = trendUp ? "#2e6b48" : "#a53a32";
