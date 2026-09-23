@@ -718,6 +718,7 @@
   <div class="ledger">
     <div class="ledger-head">재테크 현황 · 전체 종목</div>
     <div class="stock-hint">⭐ 눌러서 관심종목에 담으면 아래에 자세히 나와요</div>
+    <button class="stock-sell-btn" id="sellAllStocksBtn" style="width:100%; margin-bottom:10px;">보유 종목 전량 매도</button>
     <div id="stockOverview"></div>
   </div>
 
@@ -826,12 +827,14 @@
     postGoal: null,
     upgrades: {
       license:    { name:"자격증 취득",     desc:"자동 수입 +30원/초",          baseCost:150000,  cost:0, level:0, scale:1.50, value:30,  unlock:0, maxLevel:8 },
+      networking: { name:"인맥 관리",       desc:"자동 수입 +45원/초",          baseCost:250000,  cost:0, level:0, scale:1.45, value:45,  unlock:0, maxLevel:10 },
       sidejob:    { name:"자기계발 부업",   desc:"자동 수입 +60원/초",          baseCost:360000,  cost:0, level:0, scale:1.50, value:60,  unlock:0, maxLevel:8 },
-      reputation: { name:"사내 평판 관리",  desc:"모든 수입 x1.03배",           baseCost:500000,  cost:0, level:0, scale:1.70, value:0.03, isMult:true, unlock:0, maxLevel:5 },
-      portfolio:  { name:"포트폴리오 강화", desc:"자동 수입 +75원/초",          baseCost:600000,  cost:0, level:0, scale:1.55, value:75,  unlock:1, maxLevel:6 },
-      promotion:  { name:"진급 (대리)",     desc:"자동 수입 +110원/초",         baseCost:1100000, cost:0, level:0, scale:1.60, value:110, unlock:2, maxLevel:5 },
-      jobchange:  { name:"이직 성공",       desc:"자동 수입 +150원/초",         baseCost:2250000, cost:0, level:0, scale:1.65, value:150, unlock:3, maxLevel:4 },
-      executive:  { name:"임원 승진",       desc:"자동 수입 +200원/초",         baseCost:4000000, cost:0, level:0, scale:1.70, value:200, unlock:4, maxLevel:3 }
+      reputation: { name:"사내 평판 관리",  desc:"모든 수입 x1.03배",           baseCost:500000,  cost:0, level:0, scale:1.70, value:0.03, isMult:true, unlock:0, maxLevel:6 },
+      portfolio:  { name:"포트폴리오 강화", desc:"자동 수입 +75원/초",          baseCost:600000,  cost:0, level:0, scale:1.55, value:75,  unlock:1, maxLevel:9 },
+      promotion:  { name:"진급 (대리)",     desc:"자동 수입 +110원/초",         baseCost:1100000, cost:0, level:0, scale:1.60, value:110, unlock:2, maxLevel:8 },
+      jobchange:  { name:"이직 성공",       desc:"자동 수입 +150원/초",         baseCost:2250000, cost:0, level:0, scale:1.65, value:150, unlock:3, maxLevel:7 },
+      executive:  { name:"임원 승진",       desc:"자동 수입 +200원/초",         baseCost:4000000, cost:0, level:0, scale:1.70, value:200, unlock:4, maxLevel:6 },
+      venture:    { name:"사업 확장",       desc:"자동 수입 +400원/초",         baseCost:6000000, cost:0, level:0, scale:1.55, value:400, unlock:5, maxLevel:12 }
     },
     missions: { date:"", items:[] },
     playerName: "",
@@ -1423,6 +1426,7 @@
 
     renderStockOverview();
     renderStockDetails();
+    updateSellAllStocksBtn();
     renderDeposit();
 
     document.getElementById("assetPillAmount").textContent = fmt(state.money);
@@ -1630,6 +1634,32 @@
     pulseMoney(profit >= 0 ? "gain" : "spend");
     render();
   }
+
+  function sellAllStocks(){
+    const keys = Object.keys(state.stocks).filter(k =>
+      state.stocks[k].shares > 0 && Date.now() >= state.stocks[k].tradeCooldownUntil
+    );
+    if(keys.length === 0){
+      showToast("매도할 수 있는 보유 종목이 없어요 (쿨다운 중일 수 있어요)", "warn");
+      return;
+    }
+    keys.forEach(k => sellStock(k, 1));
+    showToast(`보유 종목 ${keys.length}개 전량 매도 완료`, "gain");
+  }
+
+  function updateSellAllStocksBtn(){
+    const btn = document.getElementById("sellAllStocksBtn");
+    const heldKeys = Object.keys(state.stocks).filter(k => state.stocks[k].shares > 0);
+    if(heldKeys.length === 0){
+      btn.disabled = true;
+      btn.textContent = "보유 종목 전량 매도";
+    } else {
+      const total = heldKeys.reduce((sum, k) => sum + state.stocks[k].shares * state.stocks[k].price, 0);
+      btn.disabled = false;
+      btn.textContent = `보유 종목 전량 매도 (${heldKeys.length}종목 · ${fmt(total)})`;
+    }
+  }
+  document.getElementById("sellAllStocksBtn").addEventListener("click", sellAllStocks);
 
   const DEPOSIT_PLANS = [
     { key:"d3",  label:"10분 적금", minutes:10, rate:0.08 },
