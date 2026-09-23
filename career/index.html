@@ -386,7 +386,7 @@
   .stock-ov-name{ font-size:13px; font-weight:700; }
   .stock-ov-sub{
     font-size:10.5px; font-weight:600; font-family: ui-monospace, Consolas, monospace;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    white-space:normal; word-break:keep-all; line-height:1.35;
   }
   .stock-ov-sub.gain{ color:var(--ink-green); }
   .stock-ov-sub.loss{ color:var(--ink-red); }
@@ -825,13 +825,13 @@
     currentJob: "인턴사원 재직중 · 미혼",
     postGoal: null,
     upgrades: {
-      license:    { name:"자격증 취득",     desc:"자동 수입 +30원/초",          baseCost:150000,  cost:0, level:0, scale:1.30, value:30,  unlock:0, maxLevel:8 },
-      sidejob:    { name:"자기계발 부업",   desc:"자동 수입 +60원/초",          baseCost:360000,  cost:0, level:0, scale:1.30, value:60,  unlock:0, maxLevel:8 },
-      reputation: { name:"사내 평판 관리",  desc:"모든 수입 x1.03배",           baseCost:500000,  cost:0, level:0, scale:1.50, value:0.03, isMult:true, unlock:0, maxLevel:5 },
-      portfolio:  { name:"포트폴리오 강화", desc:"자동 수입 +75원/초",          baseCost:600000,  cost:0, level:0, scale:1.35, value:75,  unlock:1, maxLevel:6 },
-      promotion:  { name:"진급 (대리)",     desc:"자동 수입 +110원/초",         baseCost:1100000, cost:0, level:0, scale:1.40, value:110, unlock:2, maxLevel:5 },
-      jobchange:  { name:"이직 성공",       desc:"자동 수입 +150원/초",         baseCost:2250000, cost:0, level:0, scale:1.45, value:150, unlock:3, maxLevel:4 },
-      executive:  { name:"임원 승진",       desc:"자동 수입 +200원/초",         baseCost:4000000, cost:0, level:0, scale:1.50, value:200, unlock:4, maxLevel:3 }
+      license:    { name:"자격증 취득",     desc:"자동 수입 +30원/초",          baseCost:150000,  cost:0, level:0, scale:1.50, value:30,  unlock:0, maxLevel:8 },
+      sidejob:    { name:"자기계발 부업",   desc:"자동 수입 +60원/초",          baseCost:360000,  cost:0, level:0, scale:1.50, value:60,  unlock:0, maxLevel:8 },
+      reputation: { name:"사내 평판 관리",  desc:"모든 수입 x1.03배",           baseCost:500000,  cost:0, level:0, scale:1.70, value:0.03, isMult:true, unlock:0, maxLevel:5 },
+      portfolio:  { name:"포트폴리오 강화", desc:"자동 수입 +75원/초",          baseCost:600000,  cost:0, level:0, scale:1.55, value:75,  unlock:1, maxLevel:6 },
+      promotion:  { name:"진급 (대리)",     desc:"자동 수입 +110원/초",         baseCost:1100000, cost:0, level:0, scale:1.60, value:110, unlock:2, maxLevel:5 },
+      jobchange:  { name:"이직 성공",       desc:"자동 수입 +150원/초",         baseCost:2250000, cost:0, level:0, scale:1.65, value:150, unlock:3, maxLevel:4 },
+      executive:  { name:"임원 승진",       desc:"자동 수입 +200원/초",         baseCost:4000000, cost:0, level:0, scale:1.70, value:200, unlock:4, maxLevel:3 }
     },
     missions: { date:"", items:[] },
     playerName: "",
@@ -1018,14 +1018,18 @@
     return base + furnitureEffect("streakBonusFlat");
   }
 
+  const MISSION_CPS_BASELINE = 700; // cpsBase at game start; calibrates MISSION_POOL.base to "current cps" scale
+
   function pickMissions(){
     const pool = shuffle(MISSION_POOL).slice(0, 3);
     const games = shuffle(MINIGAME_TYPES);
-    const rewardMult = (1 + state.stageIndex * 0.6) * streakBonusMult() * (1 + furnitureEffect("missionRewardPct"));
+    const cps = currentCps();
+    const stageBonus = 1 + state.stageIndex * 0.15;
+    const rewardMult = stageBonus * streakBonusMult() * (1 + furnitureEffect("missionRewardPct"));
     return pool.map((m, idx) => ({
       key: "m" + idx,
       text: m.text,
-      reward: Math.round(m.base * rewardMult / 100) * 100,
+      reward: Math.max(100, Math.round(cps * (m.base / MISSION_CPS_BASELINE) * rewardMult / 100) * 100),
       game: games[idx],
       done: false,
       finalReward: 0,
@@ -1628,9 +1632,9 @@
   }
 
   const DEPOSIT_PLANS = [
-    { key:"d3",  label:"3일 적금",  days:3,  rate:0.08 },
-    { key:"d7",  label:"7일 적금",  days:7,  rate:0.20 },
-    { key:"d14", label:"14일 적금", days:14, rate:0.45 }
+    { key:"d3",  label:"10분 적금", minutes:10, rate:0.08 },
+    { key:"d7",  label:"30분 적금", minutes:30, rate:0.20 },
+    { key:"d14", label:"60분 적금", minutes:60, rate:0.45 }
   ];
   const DEPOSIT_EARLY_PENALTY = 0.03;
   function effectiveDepositRate(plan){ return plan.rate + furnitureEffect("depositRatePct"); }
@@ -1641,7 +1645,7 @@
     const amount = Math.round(state.money * 0.5);
     if(amount < 10000) return;
     state.money -= amount;
-    state.deposit = { planKey, amount, startAt: Date.now(), maturesAt: Date.now() + plan.days * 86400000 };
+    state.deposit = { planKey, amount, startAt: Date.now(), maturesAt: Date.now() + plan.minutes * 60000 };
     log(`${plan.label} 가입 (원금 ${fmt(amount)})`, "event");
     pulseMoney("spend");
     save();
