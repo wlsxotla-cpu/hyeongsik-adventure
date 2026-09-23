@@ -382,7 +382,14 @@
     padding:0; opacity:.5;
   }
   .stock-star-btn.watched{ opacity:1; background:var(--brass-light); border-color:var(--brass); }
-  .stock-ov-name{ flex:1; font-size:13px; font-weight:700; }
+  .stock-ov-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .stock-ov-name{ font-size:13px; font-weight:700; }
+  .stock-ov-sub{
+    font-size:10.5px; font-weight:600; font-family: ui-monospace, Consolas, monospace;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .stock-ov-sub.gain{ color:var(--ink-green); }
+  .stock-ov-sub.loss{ color:var(--ink-red); }
   .stock-ov-price{ font-size:13px; font-weight:700; font-family: ui-monospace, Consolas, monospace; }
   .stock-ov-price.up{ color:var(--ink-green); }
   .stock-ov-price.down{ color:var(--ink-red); }
@@ -1717,9 +1724,20 @@
     Object.entries(state.stocks).forEach(([key, s]) => {
       const row = document.createElement("div");
       row.className = "stock-ov-row";
+      let subHtml = "";
+      if(s.shares > 0){
+        const holdVal = s.shares * s.price;
+        const costBasis = s.avgPrice * s.shares;
+        const pl = holdVal - costBasis;
+        const plPct = costBasis > 0 ? (pl / costBasis * 100) : 0;
+        subHtml = `<span class="stock-ov-sub ${pl >= 0 ? "gain" : "loss"}">평가 ${fmt(holdVal)} · ${pl>=0?"+":""}${fmt(pl)} (${plPct>=0?"+":""}${plPct.toFixed(1)}%)</span>`;
+      }
       row.innerHTML = `
         <button class="stock-star-btn${s.watched ? " watched" : ""}" data-key="${key}">⭐</button>
-        <span class="stock-ov-name">${s.name}</span>
+        <div class="stock-ov-info">
+          <span class="stock-ov-name">${s.name}</span>
+          ${subHtml}
+        </div>
         <span class="stock-ov-price mono ${s.dir >= 0 ? "up" : "down"}">${fmt(s.price)}</span>
       `;
       list.appendChild(row);
