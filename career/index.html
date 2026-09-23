@@ -693,6 +693,8 @@
     <div class="stage-stamp" id="stageText">통장 잔고를 조금씩 채우는 중...</div>
   </div>
 
+  <button class="offline-btn" id="checkInBtn" style="display:none;"></button>
+
   <div class="ledger">
     <div class="ledger-head">이번 시간 미션 <span class="streak-badge" id="streakBadge"></span></div>
     <button class="offline-btn" id="offlineBtn" style="display:none;"></button>
@@ -1067,22 +1069,50 @@
   }
 
   function ensureDailyMissions(){
-    const dayKey = todayKey();
-    if(state.lastVisitDate !== dayKey){
-      if(!state.lastVisitDate) state.streak = 1;
-      else {
-        const diff = daysBetween(state.lastVisitDate, dayKey);
-        if(diff === 1) state.streak = (state.streak || 1) + 1;
-        else if(diff > 1) state.streak = 1;
-      }
-      state.lastVisitDate = dayKey;
-    }
     const hourKey = currentHourKey();
     if(state.missions.date !== hourKey){
       state.missions.date = hourKey;
       state.missions.items = pickMissions();
     }
   }
+
+  function checkInAvailable(){
+    return state.lastVisitDate !== todayKey();
+  }
+
+  function nextStreakValue(){
+    const dayKey = todayKey();
+    if(!state.lastVisitDate) return 1;
+    return daysBetween(state.lastVisitDate, dayKey) === 1 ? (state.streak || 1) + 1 : 1;
+  }
+
+  function checkInBonusAmount(){
+    return Math.max(100, Math.round(currentCps() * 15 / 100) * 100);
+  }
+
+  function updateCheckInButton(){
+    const btn = document.getElementById("checkInBtn");
+    if(checkInAvailable()){
+      btn.textContent = `✅ 출석체크 (${nextStreakValue()}일차 · +${fmt(checkInBonusAmount())})`;
+      btn.style.display = "block";
+    } else {
+      btn.style.display = "none";
+    }
+  }
+
+  function doCheckIn(){
+    if(!checkInAvailable()) return;
+    state.streak = nextStreakValue();
+    state.lastVisitDate = todayKey();
+    const bonus = checkInBonusAmount();
+    state.money += bonus;
+    log(`✅ 출석체크 완료 (${state.streak}일 연속, +${fmt(bonus)})`, "gain");
+    showToast(`🔥 ${state.streak}일 연속 출석! +${fmt(bonus)}`, "gain");
+    pulseMoney("gain");
+    save();
+    render();
+  }
+  document.getElementById("checkInBtn").addEventListener("click", doCheckIn);
 
   const MEMORY_ICONS = ["📄","💻","☕","📞","📊","📈","🖊️","🗓️","✉️","🖨️"];
   const activeMinigameTimers = {};
@@ -1480,6 +1510,7 @@
     renderMissions();
     renderRoom();
     updateLottoButton();
+    updateCheckInButton();
 
     if(!state.modalOpen && state.money >= goal){
       state.modalOpen = true;
@@ -1514,10 +1545,13 @@
           </div>
         `;
       } else {
+        const cumText = u.level > 0
+          ? (u.isMult ? ` · 현재 x${(1 + u.level * u.value).toFixed(2)}배` : ` · 현재 +${fmt(u.level * u.value)}/초`)
+          : "";
         wrap.innerHTML = `
           <div class="upg-item">
             <span class="upg-name">${u.name} <span class="upg-lv mono">Lv.${u.level}</span>
-              <span class="upg-desc">${u.desc}</span>
+              <span class="upg-desc">${u.desc}${cumText}</span>
             </span>
             <span class="upg-leader"></span>
             <span class="upg-right">
