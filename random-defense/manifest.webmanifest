@@ -1,0 +1,17 @@
+{
+  "name": "Merge Guard",
+  "short_name": "Merge Guard",
+  "description": "유닛을 소환하고 합쳐서 몰려오는 몬스터를 막는 랜덤 디펜스",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1226",
+  "theme_color": "#0a1226",
+  "icons": [
+    { "src": "icons/icon-192.png?v=1", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png?v=1", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png?v=1", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
