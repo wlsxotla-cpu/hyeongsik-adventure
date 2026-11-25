@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzu';
+  const BUILD = '20261125zzw';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -573,6 +573,7 @@
     for (const mm of G.mons) { if (mm.dead || mm.def.boss || !(mm.hit > 0) || mm.hp >= mm.maxhp || mm.prov <= 0) continue; const w = 38, x = mm.x - w / 2, y = mm.y - mm.def.h - 12; c.fillStyle = 'rgba(0,0,0,.7)'; c.fillRect(x - 1.5, y - 1.5, w + 3, 7); c.fillStyle = '#ff4a5a'; c.fillRect(x, y, w * mm.hp / mm.maxhp, 4); c.font = 'bold 9px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = 2.4; const nm = `Lv.${mm.def.lv} ${mm.def.n}`; c.strokeText(nm, mm.x, y - 3); c.fillText(nm, mm.x, y - 3); }
     drawFx(c);
     c.restore();
+    if (Art.drawAtmos) Art.drawAtmos(c, G, cx, cy, VW, VH, time);
     // 어둠
     const th = m.theme, dk = ({ cave: 0.5, cave2: 0.6, temple: 0.42, forest: 0.18 })[th];
     if (dk) { const sx = p.x - cx, sy = p.y - 20 - cy; const g = c.createRadialGradient(sx, sy, 40, sx, sy, 270); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(6,2,14,${dk})`); c.fillStyle = g; c.fillRect(0, 0, VW, VH); }

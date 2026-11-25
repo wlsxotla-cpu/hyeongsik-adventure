@@ -361,11 +361,13 @@
     const phase2 = m.hp < m.maxhp * (tree ? 0.5 : 0.45);
     if (phase2 && !m.p2) { m.p2 = true; ev(G, { t: 'msg', text: `${def.n}이(가) 분노했다!` }); G.shake = 12; ev(G, { t: 'sfx', n: 'roar' }); }
     const sp = def.speed * (phase2 ? 1.5 : 1);
-    m.t -= dt;
+    // 보스 템포: 평소엔 1.25배, 분노하면 1.6배, 체력 25% 이하 폭주 시 2배 빠르게 움직인다 (공격 간격·예고가 짧아짐)
+    const enr = m.hp < m.maxhp * 0.25; const tempo = enr ? 2.0 : phase2 ? 1.6 : 1.25; if (enr && !m.p3) { m.p3 = true; ev(G, { t: 'msg', text: `${def.n}이(가) 폭주한다!` }); G.shake = 14; ev(G, { t: 'sfx', n: 'roar' }); }
+    m.t -= dt * tempo;
     if (m.st === 'walk' || m.st === 'idle') {
       const dx = p.x - m.x; m.face = dx >= 0 ? 1 : -1;
       if (Math.abs(dx) > 40 && !p.dead) m.vx = m.face * sp; else m.vx = 0;
-      m.cd -= dt;
+      m.cd -= dt * tempo;
       if (m.cd <= 0 && !p.dead) {
         m.st = 'wind'; m.vx = 0;
         const r = rand(G);

@@ -289,7 +289,7 @@
       c.fillStyle = OUT; c.beginPath(); c.arc(13, -5, 1.2, 0, TAU); c.fill();
     },
     stump(c, m, t) {
-      const h = m.def.hue; const wood = ({ dark: '#54405e', axe: '#8f5e34', sky: '#8aa8d0', ice: '#6a98c0' })[h] || '#9a6a3c', ring = ({ dark: '#8a6aa0', sky: '#e8f2ff', ice: '#dff4ff' })[h] || '#d9a86a';
+      const h = m.def.hue; const wood = ({ dark: '#54405e', axe: '#8f5e34', sky: '#6f98cc', ice: '#6a98c0' })[h] || '#9a6a3c', ring = ({ dark: '#8a6aa0', sky: '#e8f2ff', ice: '#dff4ff' })[h] || '#d9a86a';
       const sq = Math.sin(t * 5 + m.seed) * 1.4; const wd = m.def.w * 0.5, ht = m.def.h;
       c.save(); c.translate(0, -sq * 0.3);
       c.beginPath(); c.moveTo(-wd, 0); c.quadraticCurveTo(-wd - 3, -ht * 0.5, -wd + 3, -ht + 6); c.lineTo(wd - 3, -ht + 6); c.quadraticCurveTo(wd + 3, -ht * 0.5, wd, 0); c.closePath(); fillStroke(c, wood, 2.2);
@@ -309,7 +309,8 @@
       c.restore();
     },
     woodmask(c, m, t) {
-      const base = ({ flame: '#c4503a', stone: '#8d939c', sky: '#e4efff', ice: '#9ad8ff', shadow: '#5a4a6e' })[m.def.hue] || '#b4854a'; const hop = m.y < m.py - 2 ? 0 : Math.abs(Math.sin(t * 6 + m.seed)) * 2;
+      const base = ({ flame: '#c4503a', stone: '#8d939c', sky: '#86bdf2', ice: '#9ad8ff', shadow: '#5a4a6e' })[m.def.hue] || '#b4854a'; const st = ['stone', 'ice', 'shadow'].includes(m.def.hue); /* 갈라진 금·푸른 눈 표시용 */
+      const hop = m.y < m.py - 2 ? 0 : Math.abs(Math.sin(t * 6 + m.seed)) * 2;
       c.save(); c.translate(0, -hop);
       c.beginPath(); rrect(c, -9, -10, 6, 10, 2); fillStroke(c, shade(base, -0.25), 1.6); c.beginPath(); rrect(c, 3, -10, 6, 10, 2); fillStroke(c, shade(base, -0.25), 1.6);
       c.beginPath(); c.moveTo(0, -42); c.quadraticCurveTo(15, -40, 15, -24); c.quadraticCurveTo(14, -10, 0, -8); c.quadraticCurveTo(-14, -10, -15, -24); c.quadraticCurveTo(-15, -40, 0, -42); c.closePath(); fillStroke(c, base, 2.2);
@@ -333,7 +334,7 @@
       if (h === 'soldier') { c.fillStyle = '#e8c04a'; c.beginPath(); c.rect(-17, -13, 3, 6); c.fill(); }
     },
     boar(c, m, t) {
-      const BP = ({ lava: ['#35283a', '#4d3548', '#1f1620'], cloud: ['#e8f2ff', '#f6fbff', '#8aa0c8'], ice: ['#6ab0e8', '#8ac8f8', '#3a6090'] })[m.def.hue] || ['#c4452d', '#d65a3a', '#7a2a1c']; const B1 = BP[0], B2 = BP[1], B3 = BP[2]; const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 60) * 1.5 : 0; const run = m.st === 'dash';
+      const BP = ({ lava: ['#35283a', '#4d3548', '#1f1620'], cloud: ['#9cc4ff', '#c6dcff', '#3f5f9a'], ice: ['#6ab0e8', '#8ac8f8', '#3a6090'] })[m.def.hue] || ['#c4452d', '#d65a3a', '#7a2a1c']; const B1 = BP[0], B2 = BP[1], B3 = BP[2]; const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 60) * 1.5 : 0; const run = m.st === 'dash';
       c.save(); c.translate(sh, 0);
       c.strokeStyle = OUT; c.lineWidth = 2; const lg = Math.sin(t * (run ? 24 : 10));
       c.beginPath(); rrect(c, -14, -9, 6, 9 + lg * 1.5, 2); fillStroke(c, B3, 1.6); c.beginPath(); rrect(c, 8, -9, 6, 9 - lg * 1.5, 2); fillStroke(c, B3, 1.6);
@@ -463,7 +464,7 @@
     lava: { sky: ['#2a0c10', '#5a1a14', '#d0602a'], far: '#4a1c1c', mid: '#6a2a22', near: '#8a3a2a', grass: '#8a5a2a', soil: '#4a2a22', rock: '#3a1c1a', kind: 'mesa', dust: true },
     quarry: { sky: ['#e8884a', '#f4b46a', '#ffe0a0'], far: '#b86a4a', mid: '#9a5440', near: '#7a4032', grass: '#c4a45a', soil: '#8a5a40', rock: '#6a4030', kind: 'mesa', dust: true },
     sea: { sky: ['#4aa8e8', '#8accf4', '#e8f6ff'], far: '#8ab8d8', mid: '#6aa0c8', near: '#4a80a8', grass: '#c8a064', soil: '#8a6644', rock: '#6a4a30', sun: true, kind: 'mesa' },
-    sky: { sky: ['#9acbff', '#d0e8ff', '#fff2d8'], far: '#c4d8f0', mid: '#aac4e4', near: '#90b0d8', grass: '#e8f0ff', soil: '#b4c4e0', rock: '#98acd0', sun: true, kind: 'mesa' },
+    sky: { sky: ['#3a86e4', '#7ab8f4', '#c8e4fa'], far: '#c4d8f0', mid: '#aac4e4', near: '#90b0d8', grass: '#7ed05e', soil: '#b49a78', rock: '#7e8eb6', sun: true, kind: 'mesa' },
     ice: { sky: ['#14284a', '#2c4a7c', '#8ab8e8'], far: '#4a6a98', mid: '#3a5a88', near: '#2c4a78', grass: '#e4f6ff', soil: '#8aa8c8', rock: '#6a88b0', kind: 'mesa', dust: true },
     temple: { sky: ['#140e24', '#2a1a48', '#4a2a68'], far: '#2a1d48', mid: '#3a2a60', near: '#4a3878', grass: '#8a78c0', soil: '#4a3a66', rock: '#352850', kind: 'temple' },
   };
@@ -475,6 +476,7 @@
     c.lineTo(w, h); c.closePath(); c.fillStyle = col; c.fill();
   }
   A.buildBg = function (map, vw, vh) {
+    if (A.customBg && ['sky', 'sea', 'ice', 'lava'].includes(map.theme)) { const CL = A.customBg(map, vw, vh); if (CL) return CL; } // vis.js: 하늘·바다·얼음·용암 전용 배경
     const th = THEMES[map.theme] || THEMES.rock; const rnd = seeded(map.w * 7 + map.h); const H = Math.max(vh + 120, map.h);
     const L = { th, layers: [] };
     L.sky = layer(8, 360, (c) => { const g = c.createLinearGradient(0, 0, 0, 360); g.addColorStop(0, th.sky[0]); g.addColorStop(0.55, th.sky[1]); g.addColorStop(1, th.sky[2]); c.fillStyle = g; c.fillRect(0, 0, 8, 360); });
@@ -504,6 +506,7 @@
     return L;
   };
   A.drawBg = function (c, L, camX, camY, vw, vh, t) {
+    if (L.custom) return L.custom.draw(c, camX, camY, vw, vh, t);
     const th = L.th; c.drawImage(L.sky, 0, 0, 8, 360, 0, 0, vw, vh);
     if (L.sun) { const g = c.createRadialGradient(vw * 0.78, vh * 0.2, 4, vw * 0.78, vh * 0.2, 90); g.addColorStop(0, 'rgba(255,250,210,.95)'); g.addColorStop(0.25, 'rgba(255,240,170,.55)'); g.addColorStop(1, 'rgba(255,230,150,0)'); c.fillStyle = g; c.fillRect(0, 0, vw, vh); }
     for (const cl of L.clouds) { const x = ((cl.x + t * cl.v) % (vw + 300)) - 150; c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.arc(x, cl.y, 16 * cl.s, 0, TAU); c.arc(x + 18 * cl.s, cl.y - 6 * cl.s, 20 * cl.s, 0, TAU); c.arc(x + 40 * cl.s, cl.y, 15 * cl.s, 0, TAU); c.fill(); }
@@ -518,7 +521,7 @@
     const W = map.w, Ht = map.h + 80;
     const cv = layer(W, Ht, (c) => {
       // 건물(마을)
-      if (map.town) townDecor(c, map, rnd);
+      if (map.id === 'perion') townDecor(c, map, rnd); else if ((map.town || map.ship) && A.extraDecor) A.extraDecor(c, map, rnd); // 항구·오르비스·배는 vis.js 장식
       // 사다리/밧줄
       for (const l of map.ladders) { c.strokeStyle = OUT; c.lineWidth = 6; c.beginPath(); c.moveTo(l.x, l.y1); c.lineTo(l.x, l.y2); c.stroke(); c.strokeStyle = '#c9a56a'; c.lineWidth = 3.4; c.beginPath(); c.moveTo(l.x, l.y1); c.lineTo(l.x, l.y2); c.stroke(); c.strokeStyle = '#8a6a3a'; c.lineWidth = 1.2; for (let y = l.y1 + 6; y < l.y2; y += 10) { c.beginPath(); c.moveTo(l.x - 3.4, y); c.lineTo(l.x + 3.4, y + 3); c.stroke(); } }
       // 발판
@@ -535,6 +538,7 @@
         if (th.kind !== 'cave' && th.kind !== 'temple') for (let x = p.x + 8; x < p.x + p.w - 6; x += 22 + r2() * 30) { if (r2() < 0.45) { c.fillStyle = ['#ffd24a', '#ff8aa8', '#fff'][(r2() * 3) | 0]; c.beginPath(); c.arc(x, p.y - 5, 2, 0, TAU); c.fill(); c.fillStyle = '#3a8a2a'; c.fillRect(x - 0.5, p.y - 4, 1.2, 4); } }
         if (th.kind === 'cave' || th.kind === 'temple') for (let x = p.x + 14; x < p.x + p.w - 8; x += 40 + r2() * 40) { c.fillStyle = shade(th.rock, 0.2); c.beginPath(); c.moveTo(x, p.y); c.lineTo(x + 4, p.y - 7 - r2() * 6); c.lineTo(x + 9, p.y); c.fill(); }
       }
+      if (A.terrainFx) A.terrainFx(c, map, th, rnd);
       // 포탈 표식(고정 기둥)
       for (const pt of map.portals) { const y = map.plats[0].y; c.fillStyle = shade(th.rock, 0.1); c.beginPath(); rrect(c, pt.x - 30, y - 62, 10, 62, 3); fillStroke(c, shade(th.rock, 0.1), 2); c.beginPath(); rrect(c, pt.x + 20, y - 62, 10, 62, 3); fillStroke(c, shade(th.rock, 0.1), 2); c.beginPath(); rrect(c, pt.x - 36, y - 74, 72, 14, 4); fillStroke(c, shade(th.rock, 0.2), 2); }
     });
