@@ -26,7 +26,7 @@
   // 강화 주문서 (착용 중인 장비에 사용)
   add('scW100', { n: '무기 공격력 주문서 100%', t: 'scroll', kind: 'weapon', rate: 1, mark: '공', icon: '📜', col: '#e8b04a', price: 450, desc: '착용 중인 무기의 공격력을 조금 올려요. 성공 확률 100%! 강화 가능 횟수가 1 줄어요.' });
   add('scA100', { n: '방어구 방어력 주문서 100%', t: 'scroll', kind: 'armor', rate: 1, mark: '방', icon: '📜', col: '#7fb0d8', price: 450, desc: '착용 중인 투구·갑옷·장갑·신발의 방어력을 조금 올려요. 성공 확률 100%!' });
-  add('scW60', { n: '무기 공격력 주문서 60%', t: 'scroll', kind: 'weapon', rate: 0.6, mark: '공', icon: '📜', col: '#e5484d', price: 700, desc: '착용 중인 무기의 공격력을 올려요. 성공 확률 60%. 성공·실패와 상관없이 강화 가능 횟수가 1 줄어요.' });
+  add('scW60', { n: '무기 공격력 주문서 60%', t: 'scroll', kind: 'weapon', rate: 0.6, mark: '공', icon: '📜', col: '#e5484d', price: 700, desc: '착용 중인 무기의 공격력을 올려요. 성공 확률 60%. 성공·실패와 상관없이 강화 가능 횟수가 1 줄어요. (무기 7회 · 한벌옷 10회 · 모자·장갑·신발 5회)' });
   add('scW10', { n: '무기 공격력 주문서 10%', t: 'scroll', kind: 'weapon', rate: 0.1, mark: '공', icon: '📜', col: '#ff8a2a', price: 1500, desc: '착용 중인 무기의 공격력을 크게 올려요. 성공 확률 10%. 보스에게서 얻을 수 있어요.' });
   add('scA60', { n: '방어구 방어력 주문서 60%', t: 'scroll', kind: 'armor', rate: 0.6, mark: '방', icon: '📜', col: '#3e7bfa', price: 700, desc: '착용 중인 투구·갑옷·장갑·신발의 방어력을 올려요. 성공 확률 60%.' });
   add('scA10', { n: '방어구 방어력 주문서 10%', t: 'scroll', kind: 'armor', rate: 0.1, mark: '방', icon: '📜', col: '#8a5cff', price: 1500, desc: '착용 중인 방어구의 방어력을 크게 올려요. 성공 확률 10%. 보스에게서 얻을 수 있어요.' });

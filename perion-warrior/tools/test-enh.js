@@ -1,12 +1,13 @@
 const E = require('../engine.js'), D = require('../data.js');
 let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++; };
 const G = E.newGame('e', 4); const p = G.p;
-p.inv.scW60 = 50; p.inv.scA60 = 20; p.inv.scW10 = 1; p.inv.scRe = 3; p.inv.sw1 = 1; p.lv = 10;
+p.inv.scW60 = 50; p.inv.scA60 = 20; p.inv.scW100 = 0; p.inv.scW10 = 1; p.inv.scRe = 3; p.inv.sw1 = 1; p.lv = 10;
 E.equip(G, 'sw1');
 const base = E.stats(G).maxDmg;
 let succ = 0, tries = 0;
 while (E.enhInfo(G, 'sw1').left > 0) { const r = E.enhance(G, 'scW60', 'weapon'); tries++; if (r.success) succ++; ok(r.ok, 'scroll used #' + tries + (r.success ? ' success +' + r.bonus : ' fail')); }
-ok(tries === 3, '철검(Lv8) 강화 슬롯 3회 = ' + tries);
+ok(tries === 7, '무기 강화 횟수 7회 = ' + tries);
+ok(E.enhSlots(D.ITEMS.ar1) === 10 && E.enhSlots(D.ITEMS.hm1) === 5 && E.enhSlots(D.ITEMS.gl1) === 5 && E.enhSlots(D.ITEMS.sh1) === 5, '한벌옷 10 · 모자/장갑/신발 5');
 ok(!E.enhance(G, 'scW60', 'weapon').ok, '횟수 소진 후 거부');
 ok(p.inv.scW60 === 50 - tries, '주문서 소모 ' + p.inv.scW60);
 const after = E.stats(G).maxDmg; ok(succ === 0 ? after === base : after > base, '성공 시 공격력 증가 ' + base.toFixed(1) + '→' + after.toFixed(1));

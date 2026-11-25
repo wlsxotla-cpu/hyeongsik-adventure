@@ -119,7 +119,8 @@
     p.meso -= cost; E.addItem(G, id, n); ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
   };
   /* ───── 장비 강화(주문서) ───── */
-  E.enhSlots = (it) => 3 + Math.floor(it.lv / 10);
+  E.ENH_SLOTS = { weapon: 7, armor: 10, helmet: 5, gloves: 5, shoes: 5 }; // 메이플처럼 부위별 고정 (무기 7, 한벌옷 10, 모자·장갑·신발 5)
+  E.enhSlots = (it) => E.ENH_SLOTS[it.slot] || 5;
   E.enhInfo = function (G, id) { const it = D.ITEMS[id]; const r = (G.p.enh && G.p.enh[id]) || { n: 0, atk: 0, def: 0, ok: 0 }; const slots = E.enhSlots(it); return { slots, used: r.n, left: slots - r.n, atk: r.atk, def: r.def, ok: r.ok }; };
   E.scrollTargets = function (G, sid) {
     const sc = D.ITEMS[sid], out = [];
