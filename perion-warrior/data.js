@@ -48,6 +48,7 @@
   etc('golemcore', '골렘 조각', '💠', 340, '#6fd0e8');
   etc('treeheart', '고목의 심장', '💚', 900, '#4cc46a');
   etc('goldcore', '바위왕의 핵', '💎', 3000, '#ffd24a');
+  etc('relic', '고대 골렘의 인장', '🗿', 0, '#ffd24a'); I.relic.desc = '시련의 탑 꼭대기 고대 상자에 잠들어 있던 인장.'; I.relic.q = true;
   I.stonefrag.q = true; I.axefrag.q = true; I.treeheart.q = true; I.goldcore.q = true;
 
   // 장비. slot: weapon/helmet/armor/gloves/shoes
@@ -72,6 +73,7 @@
   eq('hm2', '철 투구', 'helmet', 8, { def: 7, price: 1100, col: '#aab2bd', desc: '튼튼한 철 투구' });
   eq('hm3', '강철 투구', 'helmet', 15, { def: 12, price: 3800, col: '#8fb6e6', hp: 40, desc: '푸른 강철 투구' });
   eq('hm4', '기사 투구', 'helmet', 22, { def: 18, price: 11000, col: '#f1d37a', hp: 90, str: 2, desc: '붉은 깃털 장식 투구' });
+  eq('hmz', '고대 골렘의 투구', 'helmet', 28, { def: 30, atk: 4, str: 6, dex: 6, hp: 300, slots: 10, price: 60000, col: '#d9b84a', desc: '시련의 탑을 정복한 자에게만 허락된 전설의 투구. 강화 가능 횟수 10회!' });
   // 갑옷
   eq('ar0', '천 옷', 'armor', 1, { def: 4, price: 80, col: '#c9b48a', desc: '모험가 기본 옷' });
   eq('ar1', '가죽 갑옷', 'armor', 5, { def: 9, price: 800, col: '#9b6a3f', desc: '가볍고 질긴 가죽 갑옷' });
@@ -150,6 +152,7 @@
       { id: 'toRock', x: 70, to: 'rock1', tx: 'back', label: '바위산 초입', lv: 'Lv 1~6', col: '#7ac' },
       { id: 'toAnt', x: 1650, to: 'ant1', tx: 'back', label: '개미굴', lv: 'Lv 12~19', col: '#c87' },
       { id: 'toQuarry', x: 2530, to: 'quarry', tx: 'back', label: '버려진 채석장', lv: 'Lv 20~28', col: '#da6' },
+      { id: 'toTrial', x: 2420, to: 'trial', tx: 'back', label: '시련의 탑 (점프맵)', lv: 'Lv 26+', col: '#fd8' },
     ],
     npcs: [
       { id: 'elder', n: '촌장 도란', x: 430, role: 'quest', look: 'elder', quests: ['q1', 'q2', 'qp'] },
@@ -158,7 +161,7 @@
       { id: 'smith', n: '대장장이 바르크', x: 1250, y: 330, role: 'shop', shop: 'smith', look: 'smith' },
       { id: 'miner', n: '광부 반장 곡', x: 1480, role: 'quest', look: 'miner', quests: ['q3', 'q6'] },
       { id: 'captain', n: '경비대장 레온', x: 1900, role: 'quest', look: 'captain', quests: ['q4', 'q5', 'q7', 'q8'] },
-      { id: 'master', n: '전사 교관 발도', x: 2180, y: 330, role: 'master', look: 'master' },
+      { id: 'master', n: '전사 교관 발도', x: 2180, y: 330, role: 'master', look: 'master', quests: ['q9'] },
     ],
   };
   maps.rock1 = {
@@ -225,6 +228,15 @@
     portals: [{ id: 'back', x: 60, to: 'quarry', tx: 'next', label: '버려진 채석장' }],
     npcs: [],
   };
+  // 점프맵: 시련의 탑 (몬스터 없음, 발판을 점프로 올라가 꼭대기 고대 상자까지)
+  (function () {
+    const pl = [P(0, 960, 1400, 1)]; let xc = 300, dir = 1, y = 960; const W = 96;
+    for (let i = 0; i < 14; i++) { const nx = xc + dir * 150; if (nx > 1150 || nx < 250) dir = -dir; else xc = nx; y -= 60; pl.push(P(xc - W / 2, y, W)); }
+    pl[pl.length - 1] = P(xc - 110, y, 220);
+    maps.trial = { id: 'trial', n: '시련의 탑', sub: '점프맵', lvTxt: 'Lv 26+ 점프맵', w: 1400, h: 1000, theme: 'temple', bgm: 'boss', plats: pl, ladders: [], spawns: [],
+      portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toTrial', label: '페리온 마을' }],
+      npcs: [{ id: 'chest', n: '고대 상자', x: xc, y, role: 'chest', look: 'chest' }] };
+  })();
   D.MAPS = maps;
 
   /* ───────── 상점 ───────── */
@@ -280,8 +292,13 @@
       doing: '채석장 오른쪽 끝 포탈이 사원으로 이어진다. 낙석과 충격파를 조심해라!',
       done: '…믿기지 않는군. 페리온의 영웅이 탄생했다! 2차 전직 소식은 발도 교관에게 들어봐라.',
       goals: [{ kill: 'bossgolem', n: 1 }, { item: 'goldcore', n: 1 }], reward: { exp: 20000, meso: 30000, items: [['ar4', 1], ['hp4', 20], ['mp3', 20], ['scW10', 1], ['scA10', 1]] } },
+    q9: { n: '고대 골렘의 시련', npc: 'master', lv: 28, pre: 'q8',
+      ask: '바위왕 골렘을 쓰러뜨렸다니, 대단하다! 하지만 전사의 길에는 끝이 없지.\n마을 오른쪽 끝의 **시련의 탑**은 점프 실력을 시험하는 곳이다. 몬스터는 없지만 발판이 좁고 높다.\n꼭대기 **고대 상자**에서 **고대 골렘의 인장**을 가져오면 전설의 투구를 내주겠다! (떨어져도 다치지 않으니 걱정 마라)',
+      doing: '시련의 탑은 마을 맨 오른쪽 문 근처의 포탈이다. 발판 끝에서 점프하고, 위층으로 계속 올라가라!',
+      done: '해냈구나! 이 투구는 고대 골렘의 힘이 깃든 전설의 투구다. 강화 횟수가 10회나 되니 아껴서 써라!',
+      goals: [{ item: 'relic', n: 1 }], reward: { exp: 12000, meso: 20000, items: [['hmz', 1], ['scRe', 2], ['scW10', 1]] } },
   };
-  D.QUEST_ORDER = ['q1', 'q2', 'qp', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'];
+  D.QUEST_ORDER = ['q1', 'q2', 'qp', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9'];
 
   root.DATA = D;
   if (typeof module !== 'undefined' && module.exports) module.exports = D;

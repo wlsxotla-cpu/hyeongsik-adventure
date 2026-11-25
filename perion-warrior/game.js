@@ -165,7 +165,7 @@
     // 힌트
     const h = hintText(); const he = $('hint'); if (h) { if (hc.hint !== h) { hc.hint = h; he.textContent = h; } he.style.display = 'block'; } else { he.style.display = 'none'; hc.hint = ''; }
     // NPC 표시
-    for (const n of G.map.npcs) { n.mark = null; if (n.role === 'quest') { let r = 0, a = 0, w = 0; for (const q of n.quests) { const s = E.qState(G, q); if (s === 'ready') r = 1; else if (s === 'avail') a = 1; else if (s === 'active') w = 1; } n.mark = r ? '?' : a ? '!' : w ? '…' : null; } }
+    for (const n of G.map.npcs) { n.mark = null; if (n.role === 'chest') { n.mark = E.qState(G, 'q9') === 'active' && !(G.p.inv.relic > 0) ? '!' : null; } else if (n.quests) { let r = 0, a = 0, w = 0; for (const q of n.quests) { const s = E.qState(G, q); if (s === 'ready') r = 1; else if (s === 'avail') a = 1; else if (s === 'active') w = 1; } n.mark = r ? '?' : a ? '!' : w ? '…' : null; } }
     // 컨텍스트 버튼
     const nb = E.nearby(G); const cb = $('bCtx'); const key = nb ? nb.type + (nb.npc ? nb.npc.id : nb.portal.id) : '';
     if (hc.ctx !== key) { hc.ctx = key; if (!nb) cb.style.display = 'none'; else { cb.style.display = 'block'; cb.textContent = nb.type === 'npc' ? `💬 ${nb.npc.n.split(' ')[0]}${nb.npc.role === 'shop' ? ' (상점)' : ''}` : `🚪 ${nb.portal.label}으로`; } }
@@ -422,6 +422,16 @@
       } else if (npc.role === 'master') {
         text = `나는 전사 교관 발도다.\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.\n· Lv 1 파워 스트라이크 · Lv 6 슬래시 블러스트\n· Lv 10 아이언 바디 · Lv 14 분노의 함성 · Lv 20 대지 가르기\n\n⚔️ 2차 전직(파이터·페이지·스피어맨)은 Lv 30 이후 준비 중이다. 기대해라!`;
       }
+      if (npc.role === 'chest') {
+        const can = E.qState(G, 'q9') === 'active' && !(G.p.inv.relic > 0);
+        text = can ? '꼭대기까지 올라왔군요! 상자 안에서 **고대 골렘의 인장**이 빛나고 있어요.' : (G.p.inv.relic > 0 ? '상자는 이미 비어 있어요. 인장을 교관 발도에게 가져가세요!' : '낡은 고대 상자예요. 굳게 잠겨 있어요…\n(마을의 **전사 교관 발도**에게 시련을 받으면 열 수 있어요)');
+        if (can) opts.push({ label: '🗿 상자 열기', cls: 'green', fn: () => { E.takeRelic(G); handleEvents(); toastBanner('고대 골렘의 인장 획득!'); updateHud(true); closeModal(); } });
+      }
+      if (npc.role !== 'quest' && npc.quests) for (const qid of npc.quests) { const s = E.qState(G, qid), q = D.QUESTS[qid];
+        if (s === 'avail') opts.push({ label: `❗ ${esc(q.n)} <small>(Lv ${q.lv})</small>`, fn: () => quest(qid) });
+        else if (s === 'ready') opts.push({ label: `✅ ${esc(q.n)} — 보상 받기`, cls: 'green', fn: () => quest(qid) });
+        else if (s === 'active') opts.push({ label: `📜 ${esc(q.n)} — 진행 중`, cls: 'gray', fn: () => quest(qid) });
+        else if (s === 'lowlv') opts.push({ label: `🔒 ${esc(q.n)} <small>(Lv ${q.lv}부터)</small>`, cls: 'gray', dis: true }); }
       opts.push({ label: '닫기', cls: 'gray', fn: close }); ctxO.opts = opts; dlg(npc, text || '...', opts);
     };
     const quest = (qid) => {

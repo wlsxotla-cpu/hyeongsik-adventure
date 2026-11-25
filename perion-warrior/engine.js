@@ -120,7 +120,7 @@
   };
   /* ───── 장비 강화(주문서) ───── */
   E.ENH_SLOTS = { weapon: 7, armor: 10, helmet: 5, gloves: 5, shoes: 5 }; // 메이플처럼 부위별 고정 (무기 7, 한벌옷 10, 모자·장갑·신발 5)
-  E.enhSlots = (it) => E.ENH_SLOTS[it.slot] || 5;
+  E.enhSlots = (it) => it.slots || E.ENH_SLOTS[it.slot] || 5;
   E.enhInfo = function (G, id) { const it = D.ITEMS[id]; const r = (G.p.enh && G.p.enh[id]) || { n: 0, atk: 0, def: 0, ok: 0 }; const slots = E.enhSlots(it); return { slots, used: r.n, left: slots - r.n, atk: r.atk, def: r.def, ok: r.ok }; };
   E.scrollTargets = function (G, sid) {
     const sc = D.ITEMS[sid], out = [];
@@ -511,6 +511,7 @@
     ev(G, { t: 'sfx', n: 'questdone' }); ev(G, { t: 'questdone', q: qid }); return true;
   };
   E.where = function (kind, id) {
+    if (id === 'relic') return { map: '시련의 탑 (점프맵)', mon: '고대 상자' };
     let mon = id;
     if (kind === 'item') { mon = Object.keys(D.MON).find((k) => D.MON[k].drops.some((d) => d[0] === id) && !D.MON[k].boss) || Object.keys(D.MON).find((k) => D.MON[k].drops.some((d) => d[0] === id)); }
     for (const mid in D.MAPS) { const mp = D.MAPS[mid]; if (mp.boss === mon || mp.spawns.some((s) => s.m === mon)) return { map: mp.n, mon: D.MON[mon].n }; }
@@ -529,6 +530,10 @@
   function npcName(id) { const t = D.MAPS.perion.npcs.find((n) => n.id === id); return t ? t.n : id; }
   E.npcName = npcName;
 
+  E.takeRelic = function (G) {
+    if (E.qState(G, 'q9') !== 'active' || (G.p.inv.relic || 0) > 0) return false;
+    E.addItem(G, 'relic', 1); ev(G, { t: 'sfx', n: 'questdone' }); ev(G, { t: 'msg', text: '고대 골렘의 인장을 손에 넣었어요!' }); return true;
+  };
   E.respawn = function (G) {
     const p = G.p; const lose = Math.floor(D.expToNext(p.lv) * 0.08); p.exp = Math.max(0, p.exp - lose);
     p.dead = false; p.buffs = {}; const st = E.stats(G); p.hp = Math.round(st.maxHp * 0.5); p.mp = Math.round(st.maxMp * 0.5); p.inv_t = 2; p.atk = null; p.vx = 0;

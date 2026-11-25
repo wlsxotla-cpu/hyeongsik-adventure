@@ -69,6 +69,7 @@
       c.beginPath(); c.moveTo(0, by - 12); c.lineTo(0, by - 3); c.strokeStyle = hi; c.lineWidth = 1.6; c.stroke();
       if (kind === 'hm2') { c.fillStyle = lo; for (let i = -3; i <= 3; i++) { c.beginPath(); c.arc(i * 3.2, by - 3.2, 0.9, 0, TAU); c.fill(); } c.beginPath(); rrect(c, 6, by - 3, 3.4, 8, 1.4); fillStroke(c, lo, 1.3); }
       if (kind === 'hm3') { c.beginPath(); c.moveTo(-9, by - 6); c.lineTo(-16, by - 15); c.lineTo(-6, by - 10); c.closePath(); fillStroke(c, '#e8eef8', 1.4); c.beginPath(); c.moveTo(9, by - 6); c.lineTo(16, by - 15); c.lineTo(6, by - 10); c.closePath(); fillStroke(c, '#e8eef8', 1.4); c.beginPath(); rrect(c, 7, by - 2, 4, 9, 1.6); fillStroke(c, lo, 1.3); c.strokeStyle = '#fff'; c.lineWidth = 1; c.beginPath(); c.arc(0, by - 1, 8.4, Math.PI * 1.2, Math.PI * 1.45); c.stroke(); }
+      if (kind === 'hmz') { c.beginPath(); c.arc(0, by - 1, 11.2, Math.PI * 0.98, Math.PI * 2.02); c.lineTo(11.2, by + 2); c.lineTo(-11.2, by + 2); c.closePath(); fillStroke(c, '#3e3652', 1.9); c.shadowColor = '#ffd24a'; c.shadowBlur = 6; c.beginPath(); c.moveTo(-10, by - 6); c.lineTo(-11, by - 17); c.lineTo(-5, by - 11); c.lineTo(-2, by - 20); c.lineTo(2, by - 11); c.lineTo(5, by - 20); c.lineTo(8, by - 11); c.lineTo(12, by - 17); c.lineTo(10, by - 6); c.closePath(); fillStroke(c, '#e8c04a', 1.6); c.shadowBlur = 0; c.beginPath(); rrect(c, -10.4, by - 5, 20.8, 3, 1); fillStroke(c, '#e8c04a', 1.2); c.shadowColor = '#ff5a3a'; c.shadowBlur = 6; c.fillStyle = '#ff6a4a'; c.beginPath(); c.arc(0, by - 10, 2.2, 0, TAU); c.fill(); c.shadowBlur = 0; c.fillStyle = '#ffd24a'; for (const x of [-6, 6]) { c.beginPath(); c.arc(x, by - 3.4, 1.1, 0, TAU); c.fill(); } }
       if (kind === 'hm4') { c.beginPath(); c.moveTo(-2, by - 11); c.quadraticCurveTo(-15, by - 24, -17, by - 8); c.quadraticCurveTo(-8, by - 14, -2, by - 8); c.closePath(); fillStroke(c, '#d6343c', 1.4); c.beginPath(); rrect(c, -9, by - 4, 18, 2.8, 1); fillStroke(c, '#e8cf7a', 1.2); c.fillStyle = OUT; c.fillRect(2, by - 0.4, 8, 1.8); c.beginPath(); rrect(c, 7, by - 2, 4, 9, 1.6); fillStroke(c, '#e8cf7a', 1.3); c.beginPath(); c.arc(0, by - 9, 1.8, 0, TAU); fillStroke(c, '#d6343c', 1); }
     }
     c.restore();
@@ -203,6 +204,15 @@
     master: { armor: '#b83a2e', pants: '#3a2a26', hair: '#1c1c20', band: '#f4d84a', belt: '#e0b83a', tier: 4, skin: '#e8bf98', weapon: { wt: 'great', col: '#e8eef8', len: 28 } },
   };
   A.drawNpc = function (c, n, t, nearby, noTag) {
+    if (n.look === 'chest') {
+      c.save(); const g = c.createRadialGradient(0, -16, 4, 0, -16, 46); g.addColorStop(0, 'rgba(255,236,150,.85)'); g.addColorStop(1, 'rgba(255,220,100,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, -16, 46, 0, TAU); c.fill();
+      ell(c, 0, 0, 22, 5); c.fillStyle = 'rgba(0,0,0,.3)'; c.fill();
+      c.beginPath(); rrect(c, -18, -22, 36, 22, 4); fillStroke(c, '#7a4a2a', 2.4); c.beginPath(); c.moveTo(-18, -22); c.quadraticCurveTo(0, -38, 18, -22); c.closePath(); fillStroke(c, '#946034', 2.4);
+      c.beginPath(); rrect(c, -3, -26, 6, 12, 2); fillStroke(c, '#ffd24a', 1.6); c.fillStyle = '#e8c04a'; c.fillRect(-18, -16, 36, 3);
+      c.font = 'bold 11px sans-serif'; c.textAlign = 'center'; if (!noTag) { const w = c.measureText(n.n).width + 12; c.fillStyle = 'rgba(20,14,10,.78)'; rrect(c, -w / 2, 6, w, 15, 6); c.fill(); c.fillStyle = '#ffe9b0'; c.fillText(n.n, 0, 17); }
+      if (n.mark) { const bob = Math.sin(t * 4) * 2.5; c.font = 'bold 22px sans-serif'; c.lineWidth = 4; c.strokeStyle = OUT; c.fillStyle = '#ffe45e'; c.strokeText(n.mark, 0, -46 + bob); c.fillText(n.mark, 0, -46 + bob); }
+      c.restore(); return;
+    }
     const l = NPCL[n.look] || NPCL.elder;
     c.save(); ell(c, 0, 0, 13, 3.6); c.fillStyle = 'rgba(0,0,0,.28)'; c.fill();
     c.save(); c.translate(0, 0);
