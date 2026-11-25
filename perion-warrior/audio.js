@@ -13,10 +13,12 @@
     if (S.track) { const t = S.track; S.track = null; S.play(t); }
   };
   S.setSound = (b) => { S.sound = b; if (S.sfxG) S.sfxG.gain.value = b ? 0.55 : 0; };
-  S.setMusic = (b) => { S.music = b; if (S.musG) S.musG.gain.value = b ? 0.16 : 0; try { if (S.yt && S.yt.playVideo) { if (b && S.ytWant) S.yt.playVideo(); else if (!b) S.yt.pauseVideo(); } } catch (e) { } };
+  S.setMusic = (b) => { S.music = b; if (S.musG) S.musG.gain.value = b ? 0.16 : 0; try { if (S.yt && S.yt.playVideo) { if (b && S.ytWant && S.ytReady) S.yt.playVideo(); else if (!b) S.yt.pauseVideo(); } } catch (e) { } };
 
   // 원곡 BGM(유튜브 임베드): 음원 파일은 게임에 넣지 않고 유튜브 플레이어로만 재생한다. 실패하면 합성 BGM으로 되돌아감.
-  S.ytId = '9lwOsX763N0'; S.ytOn = false; S.ytWant = false; S.ytFail = false; S.yt = null;
+  // 구역별 원곡: 마을=Perion(Nightmare) / 바위산 사냥터=Highland Star(불타버린 땅) / 개미굴·채석장=Ancient Remains(유적 발굴지). 나머지(숲·보스)는 합성 BGM
+  S.ytMap = { town: '9lwOsX763N0', field: 'kOhEqf0wPnE', cave: 'fdoT7nTWMO8', quarry: 'fdoT7nTWMO8' };
+  S.ytId = null; S.ytReady = false; S.ytCur = null; S.ytOn = false; S.ytWant = false; S.ytFail = false; S.yt = null;
   function ytFallback() { S.ytFail = true; S.ytWant = false; const t = S.track; S.track = null; if (t) S.play(t); }
   function ytLoad(cb) {
     if (root.YT && root.YT.Player) return cb();
@@ -26,16 +28,17 @@
     }
     S.ytq.push(cb);
   }
-  S.ytPlay = function () {
-    S.ytWant = true; if (!S.music) return;
+  function ytStart() { try { if (S.ytCur !== S.ytId) { S.ytCur = S.ytId; S.yt.loadVideoById(S.ytId); } else S.yt.playVideo(); } catch (e) { } }
+  S.ytPlay = function (id) {
+    S.ytWant = true; S.ytId = id; if (!S.music) return;
     ytLoad(() => {
       if (!S.ytWant) return;
-      if (S.yt && S.yt.playVideo) { S.yt.playVideo(); return; }
-      if (S.yt) return;
+      if (S.yt) { if (S.ytReady) ytStart(); return; }
       const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-300px;top:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1';
       const inner = document.createElement('div'); box.appendChild(inner); document.body.appendChild(box);
-      S.yt = new root.YT.Player(inner, { width: 200, height: 200, videoId: S.ytId, playerVars: { playsinline: 1, controls: 0, loop: 1, playlist: S.ytId, rel: 0, disablekb: 1, fs: 0 },
-        events: { onReady: (e) => { e.target.setVolume(70); if (S.ytWant && S.music) e.target.playVideo(); }, onError: ytFallback } });
+      S.yt = new root.YT.Player(inner, { width: 200, height: 200, videoId: S.ytId, playerVars: { playsinline: 1, controls: 0, rel: 0, disablekb: 1, fs: 0 },
+        events: { onReady: (e) => { S.ytReady = true; S.ytCur = S.ytId; e.target.setVolume(70); if (S.ytWant && S.music) ytStart(); },
+          onStateChange: (e) => { if (e.data === 0 && S.ytWant) { e.target.seekTo(0); e.target.playVideo(); } }, onError: ytFallback } });
     });
   };
   S.ytPause = function () { S.ytWant = false; try { if (S.yt && S.yt.pauseVideo) S.yt.pauseVideo(); } catch (e) { } };
@@ -95,7 +98,7 @@
   S.play = function (name) {
     if (S.track === name) return; S.track = name; if (!S.ctx) return;
     if (S.timer) clearInterval(S.timer); S.timer = null; const T = TR[name]; if (!T) return;
-    if (name === 'town' && S.ytOn && !S.ytFail) { S.ytPlay(); return; }
+    if (S.ytMap[name] && S.ytOn && !S.ytFail) { S.ytPlay(S.ytMap[name]); return; }
     S.ytPause();
     S.step = 0; S.next = S.ctx.currentTime + 0.1;
     S.timer = setInterval(() => {
