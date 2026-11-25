@@ -12,17 +12,17 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag'];
   E.newPlayer = function (name) {
     return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
-      settings: { auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: true }, pet: null, enh: {}, hp: 55, mp: 14, play: 0, tut: {} };
+      settings: { auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: false, shakeV2: true }, pet: null, enh: {}, hp: 55, mp: 14, play: 0, tut: {} };
   };
   E.newGame = function (name, seed, save) {
     const G = { rng: mulberry32(seed || (Date.now() & 0xffffffff)), t: 0, acc: 0, events: [], mons: [], drops: [], proj: [], zones: [], slots: [], map: null, mapId: null,
       input: { left: false, right: false, up: false, down: false, attack: false, jump: 0, up_e: 0, skills: [], pot: null }, p: null, boss: null, shake: 0, potCd: 0, inTown: false, bgTime: 0 };
     const base = E.newPlayer(name);
-    if (save) { for (const k of PERSIST) if (save[k] !== undefined) base[k] = JSON.parse(JSON.stringify(save[k])); if (base.inv && base.inv.scRe) { base.meso += 2000 * base.inv.scRe; delete base.inv.scRe; } for (const id of Object.keys(base.inv || {})) if (!D.ITEMS[id]) delete base.inv[id]; for (const id of Object.keys(base.enh || {})) if (!D.ITEMS[id]) delete base.enh[id]; for (const sl in base.equip || {}) if (base.equip[sl] && !D.ITEMS[base.equip[sl]]) base.equip[sl] = sl === 'weapon' ? 'sw0' : null; base.settings = Object.assign({ auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: true }, base.settings); }
+    if (save) { for (const k of PERSIST) if (save[k] !== undefined) base[k] = JSON.parse(JSON.stringify(save[k])); if (base.inv && base.inv.scRe) { base.meso += 2000 * base.inv.scRe; delete base.inv.scRe; } for (const id of Object.keys(base.inv || {})) if (!D.ITEMS[id]) delete base.inv[id]; for (const id of Object.keys(base.enh || {})) if (!D.ITEMS[id]) delete base.enh[id]; if (!base.bag) base.bag = {}; for (const id of Object.keys(base.bag)) if (!D.ITEMS[id]) delete base.bag[id]; for (const id of Object.keys(base.enh || {})) { const wornHere = Object.keys(base.equip || {}).some((sl) => base.equip[sl] === id); if (!wornHere) { (base.bag[id] = base.bag[id] || []).unshift(base.enh[id]); delete base.enh[id]; } } for (const sl in base.equip || {}) if (base.equip[sl] && !D.ITEMS[base.equip[sl]]) base.equip[sl] = sl === 'weapon' ? 'sw0' : null; base.settings = Object.assign({ auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: false }, base.settings); if (!base.settings.shakeV2) { base.settings.shake = false; base.settings.shakeV2 = true; } }
     Object.assign(base, { x: 100, y: 400, vx: 0, vy: 0, face: 1, onGround: true, plat: null, climb: null, ladderCd: 0, coyote: 0, jumpBuf: 0, dropT: 0, dropPlat: null, inv_t: 0, atkCd: 0, atk: null, knock: 0, dead: false, buffs: {}, skCd: {}, combo: 0, comboT: 0, regenT: 0, walkT: 0, hitFlash: 0 });
     G.p = base;
     E.loadMap(G, (save && save.mapId) || 'perion', save ? { x: 520 } : { x: 330 });
@@ -106,13 +106,26 @@
     let pick = list.find((it) => it[key] >= miss * 0.8) || list[list.length - 1];
     return E.useItem(G, pick.id);
   };
-  E.equip = function (G, id) {
+  /* ───── 장비 사본별 강화 기록: 착용 중인 장비는 p.enh[id], 가방 속 같은 장비는 p.bag[id][] (사본마다 따로) ───── */
+  const freshRec = () => ({ n: 0, atk: 0, def: 0, ok: 0 });
+  const recVal = (r) => r.ok * 1000 + (r.atk || 0) + (r.def || 0);
+  E.bagRecs = function (G, id) {
+    const p = G.p; if (!p.bag) p.bag = {}; const n = inv(p, id); const a = p.bag[id] || (p.bag[id] = []);
+    while (a.length < n) a.push(freshRec()); if (a.length > n) a.length = n; return a;
+  };
+  function pushBag(G, id, rec) { const p = G.p; if (!p.bag) p.bag = {}; const n = inv(p, id); const a = p.bag[id] || (p.bag[id] = []); while (a.length < n - 1) a.push(freshRec()); if (a.length > n - 1) a.length = n - 1; a.push(rec); }
+  E.bestIdx = (list) => { let b = 0; for (let k = 1; k < list.length; k++) if (recVal(list[k]) > recVal(list[b])) b = k; return b; };
+  E.worstIdx = (list) => { let b = 0; for (let k = 1; k < list.length; k++) if (recVal(list[k]) < recVal(list[b])) b = k; return b; };
+  E.equip = function (G, id, idx) {
     const p = G.p, it = D.ITEMS[id]; if (!it || it.t !== 'equip' || inv(p, id) < 1) return { ok: false, msg: '장비가 없어요' };
     if (p.lv < it.lv) return { ok: false, msg: `Lv ${it.lv} 이상부터 착용할 수 있어요` };
-    const old = p.equip[it.slot]; E.addItem(G, id, -1); if (old) E.addItem(G, old, 1); p.equip[it.slot] = id; ev(G, { t: 'sfx', n: 'equip' });
+    const list = E.bagRecs(G, id); if (idx == null || idx < 0 || idx >= list.length) idx = E.bestIdx(list); const rec = list.splice(idx, 1)[0];
+    const old = p.equip[it.slot]; if (!p.enh) p.enh = {}; const oldRec = old ? (p.enh[old] || freshRec()) : null; if (old) delete p.enh[old];
+    E.addItem(G, id, -1); if (old) { E.addItem(G, old, 1); pushBag(G, old, oldRec); }
+    p.enh[id] = rec; p.equip[it.slot] = id; ev(G, { t: 'sfx', n: 'equip' });
     const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); return { ok: true };
   };
-  E.unequip = function (G, slot) { const p = G.p; const id = p.equip[slot]; if (!id) return; if (slot === 'weapon') return; p.equip[slot] = null; E.addItem(G, id, 1); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); };
+  E.unequip = function (G, slot) { const p = G.p; const id = p.equip[slot]; if (!id) return; if (slot === 'weapon') return; const rec = (p.enh && p.enh[id]) || freshRec(); if (p.enh) delete p.enh[id]; p.equip[slot] = null; E.addItem(G, id, 1); pushBag(G, id, rec); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); };
   E.buy = function (G, id, n) {
     const p = G.p, it = D.ITEMS[id]; n = n || 1; const cost = it.price * n;
     if (p.meso < cost) return { ok: false, msg: '메소가 부족해요' };
@@ -121,19 +134,28 @@
   /* ───── 장비 강화(주문서) ───── */
   E.ENH_SLOTS = { weapon: 7, armor: 10, helmet: 5, gloves: 5, shoes: 5 }; // 메이플처럼 부위별 고정 (무기 7, 한벌옷 10, 모자·장갑·신발 5)
   E.enhSlots = (it) => it.slots || E.ENH_SLOTS[it.slot] || 5;
-  E.enhInfo = function (G, id) { const it = D.ITEMS[id]; const r = (G.p.enh && G.p.enh[id]) || { n: 0, atk: 0, def: 0, ok: 0 }; const slots = E.enhSlots(it); return { slots, used: r.n, left: slots - r.n, atk: r.atk, def: r.def, ok: r.ok }; };
+  const infoOf = (it, r) => { const slots = E.enhSlots(it); return { slots, used: r.n, left: slots - r.n, atk: r.atk, def: r.def, ok: r.ok }; };
+  // idx 가 없으면 착용 중인 사본, 숫자면 가방 속 idx 번째 사본
+  E.recOf = function (G, id, idx) { const p = G.p; if (idx == null) return (p.enh && p.enh[id]) || freshRec(); return E.bagRecs(G, id)[idx] || freshRec(); };
+  E.enhInfo = function (G, id, idx) { return infoOf(D.ITEMS[id], E.recOf(G, id, idx)); };
+  // 대상 키: 착용 칸 이름('helmet' 등) 또는 가방 사본 'id~번호'
+  E.resolveTarget = function (G, key) {
+    const p = G.p; key = String(key);
+    if (key.indexOf('~') >= 0) { const [id, k] = key.split('~'); const idx = +k; const list = D.ITEMS[id] && E.bagRecs(G, id); if (!list || !(idx >= 0 && idx < list.length)) return null; return { id, idx, rec: list[idx], bag: true }; }
+    const id = p.equip[key]; if (!id) return null; if (!p.enh) p.enh = {}; return { id, idx: null, rec: p.enh[id] || (p.enh[id] = freshRec()), bag: false, slot: key };
+  };
   E.scrollTargets = function (G, sid) {
-    const sc = D.ITEMS[sid], out = [];
-    for (const slot of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = G.p.equip[slot]; if (!id) continue; if (sc.kind === 'weapon' && slot !== 'weapon') continue; if (sc.kind === 'armor' && slot === 'weapon') continue; const inf = E.enhInfo(G, id); out.push({ slot, id, left: inf.left, slots: inf.slots, ok: inf.ok, used: inf.used }); }
+    const sc = D.ITEMS[sid], out = [], p = G.p; const fits = (it) => !(sc.kind === 'weapon' && it.slot !== 'weapon') && !(sc.kind === 'armor' && it.slot === 'weapon');
+    for (const slot of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[slot]; if (!id) continue; if (!fits(D.ITEMS[id])) continue; const inf = E.enhInfo(G, id); out.push({ key: slot, slot, id, idx: null, left: inf.left, slots: inf.slots, ok: inf.ok, used: inf.used }); }
+    for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (!it || it.t !== 'equip' || !fits(it)) continue; E.bagRecs(G, id).forEach((r, k) => { const inf = infoOf(it, r); out.push({ key: id + '~' + k, slot: it.slot, id, idx: k, bag: true, left: inf.left, slots: inf.slots, ok: inf.ok, used: inf.used }); }); }
     return out;
   };
-  E.enhance = function (G, sid, slot) {
+  E.enhance = function (G, sid, key) {
     const p = G.p, sc = D.ITEMS[sid]; if (!sc || sc.t !== 'scroll' || inv(p, sid) < 1) return { ok: false, success: false, msg: '주문서가 없어요' };
-    const id = p.equip[slot]; if (!id) return { ok: false, success: false, msg: '착용 중인 장비가 아니에요' };
-    const it = D.ITEMS[id]; if (!p.enh) p.enh = {};
-    const r = p.enh[id] || (p.enh[id] = { n: 0, atk: 0, def: 0, ok: 0 }); const inf = E.enhInfo(G, id);
-    if (sc.kind === 'weapon' && slot !== 'weapon') return { ok: false, success: false, msg: '무기에만 쓸 수 있어요' };
-    if (sc.kind === 'armor' && slot === 'weapon') return { ok: false, success: false, msg: '방어구에만 쓸 수 있어요' };
+    const tg = E.resolveTarget(G, key); if (!tg) return { ok: false, success: false, msg: '착용 중인 장비가 아니에요' };
+    const id = tg.id, it = D.ITEMS[id], r = tg.rec, inf = infoOf(it, r);
+    if (sc.kind === 'weapon' && it.slot !== 'weapon') return { ok: false, success: false, msg: '무기에만 쓸 수 있어요' };
+    if (sc.kind === 'armor' && it.slot === 'weapon') return { ok: false, success: false, msg: '방어구에만 쓸 수 있어요' };
     if (sc.kind === 'restore') {
       if (r.n <= 0) return { ok: false, success: false, msg: '복구할 강화 횟수가 없어요' };
       E.addItem(G, sid, -1); const win = rand(G) < sc.rate; if (win) r.n -= 1;
@@ -152,7 +174,7 @@
   };
   E.sell = function (G, id, n) {
     const p = G.p, it = D.ITEMS[id]; n = Math.min(n || 1, inv(p, id)); if (n < 1 || it.q) return { ok: false, msg: it && it.q ? '퀘스트에 필요한 물건이에요' : '팔 수 없어요' };
-    p.meso += E.sellPrice(it) * n; E.addItem(G, id, -n); if (inv(p, id) < 1 && p.equip[it.slot] !== id && p.enh) delete p.enh[id]; ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
+    p.meso += E.sellPrice(it) * n; if (it.t === 'equip') { const l = E.bagRecs(G, id); for (let k = 0; k < n; k++) l.splice(E.worstIdx(l), 1); } E.addItem(G, id, -n); if (inv(p, id) < 1 && p.bag) delete p.bag[id]; ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
   };
   E.sellAllEtc = function (G) { let gain = 0; const p = G.p; for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (it.t === 'etc' && !it.q && !questNeeds(G, id)) { gain += it.price * p.inv[id]; delete p.inv[id]; } } p.meso += gain; if (gain) ev(G, { t: 'sfx', n: 'buy' }); return gain; };
   function questNeeds(G, id) { for (const qid in G.p.quests) { if (G.p.quests[qid].st !== 'active') continue; for (const g of D.QUESTS[qid].goals) if (g.item === id) return true; } return false; }

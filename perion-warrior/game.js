@@ -271,14 +271,14 @@
 
   /* ───────── 아이템 설명 ───────── */
   const ico = (id, cls) => { const u = Art.itemIconUrl(id); const it = D.ITEMS[id]; return u ? `<img class="ii ${cls || ''}" src="${u}" alt="">` : it.icon; };
-  const enhOf = (id) => (G.p.enh && G.p.enh[id]) || { n: 0, atk: 0, def: 0, ok: 0 };
-  const enhBadge = (id) => { const o = enhOf(id).ok; return o ? `<span class="en">+${o}</span>` : ''; };
-  const gname = (id) => D.ITEMS[id].n + (enhOf(id).ok ? ` +${enhOf(id).ok}` : '');
+  const enhOf = (id, idx) => E.recOf(G, id, idx);
+  const enhBadge = (id, idx) => { const o = enhOf(id, idx).ok; return o ? `<span class="en">+${o}</span>` : ''; };
+  const gname = (id, idx) => D.ITEMS[id].n + (enhOf(id, idx).ok ? ` +${enhOf(id, idx).ok}` : '');
   const SLOTN = { weapon: '무기', helmet: '투구', armor: '갑옷', gloves: '장갑', shoes: '신발' };
-  function itemInfo(id) {
-    const it = D.ITEMS[id]; let s = `<div class="nm">${ico(id, 'mini')} ${esc(gname(id))}</div>`;
+  function itemInfo(id, idx) {
+    const it = D.ITEMS[id]; let s = `<div class="nm">${ico(id, 'mini')} ${esc(gname(id, idx))}</div>`;
     if (it.t === 'equip') {
-      const cur = G.p.equip[it.slot] && D.ITEMS[G.p.equip[it.slot]]; const en = enhOf(id), inf = E.enhInfo(G, id); const row = (k, lab) => { const v = it[k] || 0, c = cur ? (cur[k] || 0) : 0; if (!v && !c && !(en[k])) return ''; const d = v - c; return `${lab} <b>${v}</b>${en[k] ? ` <span style="color:#7aff9a">(+${en[k]} 강화)</span>` : ''}${cur && cur.id !== id && d ? ` <span style="color:${d > 0 ? '#7aff9a' : '#ff8a8a'}">(${d > 0 ? '▲' : '▼'}${Math.abs(d)})</span>` : ''}<br>`; };
+      const cur = G.p.equip[it.slot] && D.ITEMS[G.p.equip[it.slot]]; const en = enhOf(id, idx), inf = E.enhInfo(G, id, idx); const row = (k, lab) => { const v = it[k] || 0, c = cur ? (cur[k] || 0) : 0; if (!v && !c && !(en[k])) return ''; const d = v - c; return `${lab} <b>${v}</b>${en[k] ? ` <span style="color:#7aff9a">(+${en[k]} 강화)</span>` : ''}${cur && cur.id !== id && d ? ` <span style="color:${d > 0 ? '#7aff9a' : '#ff8a8a'}">(${d > 0 ? '▲' : '▼'}${Math.abs(d)})</span>` : ''}<br>`; };
       s += `<div style="color:#bda8e0">${SLOTN[it.slot]}${it.wt ? ' · ' + ({ sword: '한손검', axe: '도끼', great: '대검' })[it.wt] : ''}</div>`;
       s += `<span style="color:${G.p.lv >= it.lv ? '#cfe' : '#ff8a8a'}">요구 레벨 ${it.lv}</span><br>` + row('atk', '공격력') + row('def', '방어력') + row('str', 'STR') + row('dex', 'DEX') + row('hp', '최대 HP');
       s += `<div style="color:#ffe08a">🔨 강화 +${inf.ok} · 남은 횟수 <b>${inf.left}/${inf.slots}</b></div>`; if (it.wt) s += `공격 속도 <b>${it.spd <= 0.45 ? '빠름' : it.spd <= 0.55 ? '보통' : '느림'}</b> · 사거리 <b>${it.rng}</b><br>`;
@@ -287,7 +287,7 @@
   }
 
   /* ───────── 메뉴 ───────── */
-  let menuTab = 'inv', menuSel = null;
+  let menuTab = 'inv', menuSel = null, menuIdx = null;
   function openMenu(tab) {
     if (!started) return; menuTab = tab || menuTab;
     const draw = () => {
@@ -302,10 +302,10 @@
     const handler = (a, el) => {
       const p = G.p; const [k, v, w] = a.split(':');
       if (k === 'close') { closeModal(); return; }
-      if (k === 'tab') { menuTab = v; menuSel = null; document.getElementById('tcont') && (document.getElementById('tcont').scrollTop = 0); draw(); const n = document.getElementById('tcont'); if (n) n.scrollTop = 0; return; }
-      if (k === 'sel') { menuSel = v === menuSel ? null : v; }
-      else if (k === 'eq') { const r = E.equip(G, v); if (!r.ok) logLine(r.msg, 'q'); else { menuSel = null; Snd.sfx('equip'); } }
-      else if (k === 'un') { E.unequip(G, v); menuSel = null; }
+      if (k === 'tab') { menuTab = v; menuSel = null; menuIdx = null; document.getElementById('tcont') && (document.getElementById('tcont').scrollTop = 0); draw(); const n = document.getElementById('tcont'); if (n) n.scrollTop = 0; return; }
+      if (k === 'sel') { const ix = w === undefined || w === 'e' ? null : +w; if (v === menuSel && ix === menuIdx) { menuSel = null; menuIdx = null; } else { menuSel = v; menuIdx = ix; } }
+      else if (k === 'eq') { const r = E.equip(G, v, w === undefined || w === '' ? null : +w); if (!r.ok) logLine(r.msg, 'q'); else { menuSel = null; menuIdx = null; Snd.sfx('equip'); } }
+      else if (k === 'un') { E.unequip(G, v); menuSel = null; menuIdx = null; }
       else if (k === 'use') { E.useItem(G, v); if (!p.inv[v]) menuSel = null; if (G.mapId === 'perion' && D.ITEMS[v].town) { closeModal(); return; } }
       else if (k === 'enh') { enhAnim(v, w); return; }
       else if (k === 'learn') { E.learn(G, v); buildSkillBtns(); }
@@ -322,17 +322,17 @@
   }
   function tabInv() {
     const p = G.p; let s = '<div class="eqrow">';
-    for (const sl of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[sl]; const it = id && D.ITEMS[id]; s += `<div class="c"><button class="slot eq ${it ? '' : 'empty'}" ${it ? `data-a="sel:${id}"` : ''} style="width:100%">${it ? ico(id) : SLOTN[sl]}${it ? `<span class="lv">Lv${it.lv}</span>${enhBadge(id)}` : ''}</button>${SLOTN[sl]}</div>`; }
+    for (const sl of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[sl]; const it = id && D.ITEMS[id]; s += `<div class="c"><button class="slot eq ${it ? '' : 'empty'}" ${it ? `data-a="sel:${id}:e"` : ''} style="width:100%">${it ? ico(id) : SLOTN[sl]}${it ? `<span class="lv">Lv${it.lv}</span>${enhBadge(id)}` : ''}</button>${SLOTN[sl]}</div>`; }
     s += '</div>';
-    if (menuSel && D.ITEMS[menuSel]) { const id = menuSel, it = D.ITEMS[id]; const worn = p.equip[it.slot] === id; s += `<div class="card">${itemInfo(id)}<div class="row2" style="margin-top:7px;flex-wrap:wrap">`;
-      if (it.t === 'equip') { if (worn) s += it.slot === 'weapon' ? '<span style="color:#cdbbe8">착용 중 (무기는 다른 무기로 교체해요)</span>' : `<button class="btn sm gray" data-a="un:${it.slot}">벗기</button>`; else s += `<button class="btn sm green" data-a="eq:${id}" ${p.lv < it.lv || !(p.inv[id] > 0) ? 'disabled' : ''}>착용</button>`; }
+    if (menuSel && D.ITEMS[menuSel]) { const id = menuSel, it = D.ITEMS[id]; const worn = menuIdx === null && p.equip[it.slot] === id; s += `<div class="card">${itemInfo(id, menuIdx)}<div class="row2" style="margin-top:7px;flex-wrap:wrap">`;
+      if (it.t === 'equip') { if (worn) s += it.slot === 'weapon' ? '<span style="color:#cdbbe8">착용 중 (무기는 다른 무기로 교체해요)</span>' : `<button class="btn sm gray" data-a="un:${it.slot}">벗기</button>`; else s += `<button class="btn sm green" data-a="eq:${id}:${menuIdx === null ? '' : menuIdx}" ${p.lv < it.lv || !(p.inv[id] > 0) ? 'disabled' : ''}>착용</button>`; }
       if (it.t === 'use') s += `<button class="btn sm green" data-a="use:${id}">사용</button>`;
-      if (it.t === 'scroll') { const tg = E.scrollTargets(G, id); s += tg.length ? tg.map((t) => `<button class="btn sm green" data-a="enh:${id}:${t.slot}" ${t.left <= 0 && it.kind !== 'restore' ? 'disabled' : ''}>${SLOTN[t.slot]}: ${esc(gname(t.id))} (${t.left}/${t.slots}) 에 사용</button>`).join('') : '<span style="color:#ffb86a">사용할 수 있는 장비를 착용하세요</span>'; }
-      s += '<button class="btn sm gray" data-a="sel:' + id + '">닫기</button></div></div>'; }
+      if (it.t === 'scroll') { const tg = E.scrollTargets(G, id); s += tg.length ? tg.map((t) => `<button class="btn sm green" data-a="enh:${id}:${t.key}" ${t.left <= 0 && it.kind !== 'restore' ? 'disabled' : ''}>${t.bag ? '🎒 가방' : '착용'} ${SLOTN[t.slot]}: ${esc(D.ITEMS[t.id].n)}${t.ok ? ' +' + t.ok : ''} (${t.left}/${t.slots}) 에 사용</button>`).join('') : '<span style="color:#ffb86a">사용할 수 있는 장비를 착용하세요</span>'; }
+      s += '<button class="btn sm gray" data-a="sel:' + id + (menuIdx === null ? '' : ':' + menuIdx) + '">닫기</button></div></div>'; }
     const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]); const order = { equip: 0, scroll: 1, use: 2, etc: 3 };
     ids.sort((a, b) => order[D.ITEMS[a].t] - order[D.ITEMS[b].t] || (D.ITEMS[a].lv || 0) - (D.ITEMS[b].lv || 0));
     if (!ids.length) s += '<div class="card" style="text-align:center;color:#cdbbe8">가방이 비었어요. 몬스터를 처치해 아이템을 모아 보세요!</div>';
-    s += '<div class="grid">' + ids.map((id) => { const it = D.ITEMS[id]; return `<button class="slot ${menuSel === id ? 'sel' : ''}" data-a="sel:${id}">${ico(id)}${it.t === 'equip' ? enhBadge(id) + '' : ''}${it.t === 'equip' ? `<span class="lv ${p.lv < it.lv ? 'bad' : ''}">Lv${it.lv}</span>` : ''}<small>${p.inv[id] > 1 ? p.inv[id] : ''}</small></button>`; }).join('') + '</div>';
+    s += '<div class="grid">' + ids.map((id) => { const it = D.ITEMS[id]; if (it.t === 'equip') return E.bagRecs(G, id).map((r, k) => `<button class="slot ${menuSel === id && menuIdx === k ? 'sel' : ''}" data-a="sel:${id}:${k}">${ico(id)}${enhBadge(id, k)}<span class="lv ${p.lv < it.lv ? 'bad' : ''}">Lv${it.lv}</span></button>`).join(''); return `<button class="slot ${menuSel === id ? 'sel' : ''}" data-a="sel:${id}">${ico(id)}<small>${p.inv[id] > 1 ? p.inv[id] : ''}</small></button>`; }).join('') + '</div>';
     return s;
   }
   function tabSkill() {
@@ -363,7 +363,7 @@
     if (!p.pet) pet = `<div class="card">🐾 <b>펫이 없어요</b><br>퀘스트 <b>'길 잃은 새끼 멧돼지'</b>(촌장 도란, Lv 5~)를 완료하면 펫이 생겨요.<br><small style="color:#cdbbe8">펫이 있으면 HP·MP가 낮아졌을 때 자동으로 물약을 먹여 줘요.</small></div>`;
     else pet = `<div class="card">🐾 <b>${esc(p.pet.n)}</b> 와 함께하는 중!</div>` + tg('auto', '펫 자동 물약', 'HP·MP가 낮아지면 펫이 자동으로 물약을 먹여 줘요') + (st.auto ? pct('autoT', '❤️ 이 이하일 때 HP 물약') + tg('autoMp', 'MP 물약도 자동', '') + (st.autoMp ? pct('autoMpT', '💧 이 이하일 때 MP 물약') : '') : '');
     const how = `<div class="card">🧪 <b>물약 쓰는 법</b><br>화면 <b>오른쪽 위 ❤️(HP)·💧(MP) 버튼</b>을 누르면 가진 물약을 먹어요. 버튼의 숫자는 남은 개수예요.<br>⌨️ 키보드: H(HP) · M(MP)<br><small style="color:#cdbbe8">자동으로 먹는 건 펫이 있어야 해요 (아래 참고)</small></div>`;
-    return how + pet + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 페리온 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요') +
+    return how + pet + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 페리온 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
       `<div class="card">🕹️ <b>조작</b>: ◀▶ 이동 · ▲ 밧줄 오르기/문 들어가기 · ▼ 밧줄 내려가기/발판 아래로(▼+점프) · ⚔️ 공격(꾹) · 보라 버튼 스킬 · ❤️💧 물약<br>⌨️ 키보드: 방향키/Space점프/Z공격/1~5스킬/H·M물약/E대화</div>` +
       `<div class="row2"><button class="btn sm" data-a="save">💾 지금 저장</button><button class="btn sm red" data-a="wipe">🗑 처음부터 다시</button></div>`;
   }
@@ -371,13 +371,13 @@
   /* ───────── 주문서 바르기 연출 ───────── */
   const SLOTN2 = { weapon: '무기', helmet: '투구', armor: '갑옷', gloves: '장갑', shoes: '신발' };
   function enhAnim(sid, slot) {
-    const p = G.p, gid = p.equip[slot], sc = D.ITEMS[sid]; const before = JSON.stringify(p.enh[gid] || {});
+    const p = G.p, tg0 = E.resolveTarget(G, slot), gid = tg0 && tg0.id, gidx = tg0 ? tg0.idx : null, sc = D.ITEMS[sid];
     const r = E.enhance(G, sid, slot);
     if (!r.ok) { logLine(r.msg, 'q'); toastBanner(r.msg); openMenu('inv'); return; }
     // 연출이 끝날 때까지 월드 효과·소리는 미룬다
     const held = G.events.filter((e) => e.t === 'scroll'); G.events = G.events.filter((e) => !(e.t === 'scroll' || (e.t === 'sfx' && (e.n === 'questdone' || e.n === 'deny'))));
-    const inf = E.enhInfo(G, gid), gurl = Art.itemIconUrl(gid), surl = Art.itemIconUrl(sid);
-    const html = `<div class="panel" id="enhp"><h3><span>🔨 장비 강화 · ${esc(sc.n)}</span></h3><div class="stage busy"><div class="glow"></div><img class="gear" src="${gurl}" alt=""><img class="scr" src="${surl}" alt=""><div class="flash"></div></div><div class="res"><div style="color:#ffe08a;font-weight:800">${SLOTN2[slot]} · ${esc(D.ITEMS[gid].n)}</div><div class="dots" style="margin-top:4px">주문서를 바르는 중</div></div><div class="btns"></div></div>`;
+    const slotLabel = tg0.bag ? '🎒 가방 ' + SLOTN[D.ITEMS[gid].slot] : SLOTN2[tg0.slot]; const inf = E.enhInfo(G, gid, gidx), gurl = Art.itemIconUrl(gid), surl = Art.itemIconUrl(sid);
+    const html = `<div class="panel" id="enhp"><h3><span>🔨 장비 강화 · ${esc(sc.n)}</span></h3><div class="stage busy"><div class="glow"></div><img class="gear" src="${gurl}" alt=""><img class="scr" src="${surl}" alt=""><div class="flash"></div></div><div class="res"><div style="color:#ffe08a;font-weight:800">${slotLabel} · ${esc(D.ITEMS[gid].n)}</div><div class="dots" style="margin-top:4px">주문서를 바르는 중</div></div><div class="btns"></div></div>`;
     showModal(html, (a) => { if (a === 'again') { enhAnim(sid, slot); } else if (a === 'back') { openMenu('inv'); } }, true);
     const root = modal.querySelector('#enhp'), stage = root.querySelector('.stage');
     Snd.sfx('scrollApply');
@@ -385,13 +385,13 @@
     let tk = 0; const ti = setInterval(() => { if (!modal.contains(root)) { clearInterval(ti); return; } spark('#ffe9a0', 2, false); Snd.sfx('tick'); if (++tk > 10) clearInterval(ti); }, 200);
     setTimeout(() => {
       if (!modal.contains(root)) return; clearInterval(ti);
-      const after = E.enhInfo(G, gid);
+      const after = E.enhInfo(G, gid, gidx);
       stage.classList.remove('busy'); stage.classList.add(r.success ? 'ok' : 'fail');
       const fl = stage.querySelector('.flash'); if (r.success) { fl.classList.add('on'); spark('#fff27a', 34, true); spark('#ffffff', 14, true); Snd.sfx('enhOk'); } else { spark('#6a6a78', 18, false); Snd.sfx('enhFail'); }
       for (const e of held) G.events.push(e); handleEvents();
       const total = r.success && sc.kind !== 'restore' ? (sc.kind === 'weapon' ? `공격력 <b style="color:#7aff9a">+${r.bonus}</b> (강화 누계 +${after.atk})` : `방어력 <b style="color:#7aff9a">+${r.bonus}</b> (강화 누계 +${after.def})`) : '';
       const again = p.inv[sid] > 0 && (sc.kind === 'restore' ? after.used > 0 : after.left > 0);
-      root.querySelector('.res').innerHTML = (r.success ? `<div class="big ok">✨ ${sc.kind === 'restore' ? '복구 성공' : '강화 성공'}! ✨</div>` : `<div class="big bad">${sc.kind === 'restore' ? '복구 실패…' : '강화 실패…'}</div>`) + `<div style="color:#ffe08a;font-weight:800">${SLOTN2[slot]} · ${esc(gname(gid))}</div>` + (total ? `<div>${total}</div>` : '') + `<div style="color:#cdbbe8">남은 강화 횟수 <b>${after.left}/${after.slots}</b>${r.success || sc.kind === 'restore' ? '' : ' (실패해도 횟수는 줄어요)'}</div>`;
+      root.querySelector('.res').innerHTML = (r.success ? `<div class="big ok">✨ ${sc.kind === 'restore' ? '복구 성공' : '강화 성공'}! ✨</div>` : `<div class="big bad">${sc.kind === 'restore' ? '복구 실패…' : '강화 실패…'}</div>`) + `<div style="color:#ffe08a;font-weight:800">${slotLabel} · ${esc(gname(gid, gidx))}</div>` + (total ? `<div>${total}</div>` : '') + `<div style="color:#cdbbe8">남은 강화 횟수 <b>${after.left}/${after.slots}</b>${r.success || sc.kind === 'restore' ? '' : ' (실패해도 횟수는 줄어요)'}</div>`;
       root.querySelector('.btns').innerHTML = (again ? `<button class="btn green" data-a="again">🔨 한 번 더 바르기 (${p.inv[sid]}장)</button>` : '') + '<button class="btn gray" data-a="back">🎒 가방으로</button>';
       modal.dataset.lock = '';
     }, 2500);
@@ -465,7 +465,7 @@
           return `<div class="it"><div class="slot ${low ? 'empty' : ''}">${ico(id)}</div><div class="t"><b>${esc(it.n)}</b>${it.t === 'equip' ? ` <small style="color:${low ? '#ff8a8a' : '#9fe'}">Lv ${it.lv}${low ? ' 필요' : ''}</small>` : ''}${own ? ` <small style="color:#cdbbe8">(보유 ${own})</small>` : ''}<br>${it.t === 'equip' ? [it.atk ? `공격 ${it.atk}` : '', it.def ? `방어 ${it.def}` : '', it.str ? `STR+${it.str}` : '', it.hp ? `HP+${it.hp}` : ''].filter(Boolean).join(' · ') : esc(it.desc)}</div><div style="text-align:right"><div class="price">💰 ${fmt(it.price)}</div><button class="btn sm green" data-a="buy:${id}:1" ${can ? '' : 'disabled'}>구매</button>${it.t === 'use' && it.price * 10 <= p.meso ? `<button class="btn sm" data-a="buy:${id}:10">x10</button>` : ''}</div></div>`; }).join('');
       } else {
         const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]).sort((a, b) => ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[a].t] - ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[b].t]);
-        list = `<div class="row2" style="margin-bottom:7px"><button class="btn sm green" data-a="sellall">🧺 기타 아이템 전부 팔기</button></div>` + (ids.length ? '' : '<div class="card" style="text-align:center">팔 물건이 없어요</div>') + ids.map((id) => { const it = D.ITEMS[id], n = p.inv[id]; return `<div class="it"><div class="slot">${ico(id)}${enhBadge(id)}</div><div class="t"><b>${esc(gname(id))}</b> <small style="color:#cdbbe8">x${n}</small>${it.q ? ' <small style="color:#ffb86a">퀘스트</small>' : ''}<br><span class="price">개당 💰 ${fmt(E.sellPrice(it))}</span></div><div>${it.q ? '' : `<button class="btn sm" data-a="sell:${id}:1">1개</button>${n > 1 ? `<button class="btn sm" data-a="sell:${id}:${n}">전부</button>` : ''}`}</div></div>`; }).join('');
+        list = `<div class="row2" style="margin-bottom:7px"><button class="btn sm green" data-a="sellall">🧺 기타 아이템 전부 팔기</button></div>` + (ids.length ? '' : '<div class="card" style="text-align:center">팔 물건이 없어요</div>') + ids.map((id) => { const it = D.ITEMS[id], n = p.inv[id], wi = it.t === 'equip' ? E.worstIdx(E.bagRecs(G, id)) : null; return `<div class="it"><div class="slot">${ico(id)}${enhBadge(id, wi)}</div><div class="t"><b>${esc(gname(id, wi))}</b> <small style="color:#cdbbe8">x${n}</small>${it.q ? ' <small style="color:#ffb86a">퀘스트</small>' : ''}<br><span class="price">개당 💰 ${fmt(E.sellPrice(it))}</span></div><div>${it.q ? '' : `<button class="btn sm" data-a="sell:${id}:1">1개</button>${n > 1 ? `<button class="btn sm" data-a="sell:${id}:${n}">전부</button>` : ''}`}</div></div>`; }).join('');
       }
       const ex = modal.querySelector('#shop');
       if (ex) { ex.querySelector('.mesoH').textContent = `💰 ${fmt(p.meso)} 메소`; ex.querySelectorAll('.tabs2 button').forEach((b) => { b.className = 'btn sm ' + (b.dataset.a === 't:' + tab ? '' : 'gray'); }); const l2 = ex.querySelector('.list'); l2.innerHTML = list; if (shopTab !== tab) l2.scrollTop = 0; }
@@ -498,7 +498,7 @@
     // 카메라
     const EM = 120; const tx = Math.max(-EM, Math.min(Math.max(-EM, m.w - VW + EM), p.x + p.face * 30 - VW / 2)), ty = Math.max(0, Math.min(Math.max(0, m.h - VH), p.y - VH * 0.6));
     if (!started) { cam.x = (Math.sin(time * 0.06) * 0.5 + 0.5) * Math.max(0, m.w - VW); cam.y = Math.max(0, m.h - VH); }
-    else { const k = Math.min(1, dt * 7); cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; }
+    else { const k = Math.min(1, dt * 6), ky = Math.min(1, dt * 2.5); cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * ky; }
     const sh = G.shake > 0 && p.settings.shake !== false ? G.shake : 0; const ox = sh ? (Math.random() - 0.5) * sh : 0, oy = sh ? (Math.random() - 0.5) * sh * 0.7 : 0;
     const cx = Math.round(cam.x), cy = Math.round(cam.y);
     Art.drawBg(c, bg, cx, cy, VW, VH, time);
