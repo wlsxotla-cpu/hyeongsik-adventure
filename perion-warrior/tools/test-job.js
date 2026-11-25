@@ -16,4 +16,11 @@ q.sp = 5; ok(E.learn(g, 'rblow') && !E.learn(g, 'charge'), '내 직업 스킬만
 const base = E.stats(g).maxDmg; q.skills.fmastery = 5; ok(E.stats(g).maxDmg > base, '파이터 숙련 반영');
 const h = E.newGame('b', 5); h.p.lv = 30; h.p.quests.q9 = { st: 'done', prog: [] }; E.advance(h, 'page'); const hb = E.stats(h);
 ok(hb.def > 4 && hb.maxHp > h.p.baseHp, '페이지 방어/HP 보너스');
+
+// 직업 버프가 실제로 수치에 반영되는지
+function jobGame(job) { const G = E.newGame('b' + job, 7); G.p.lv = 40; G.p.str = 100; G.p.dex = 40; G.p.quests.q9 = { st: 'done', prog: [] }; E.advance(G, job); G.p.sp = 99; for (const k of D.SKILL_ORDER) for (let i = 0; i < 12; i++) E.learn(G, k); G.p.mp = 999; return G; }
+function cast(G, sid) { G.input.skills.push(sid); for (let i = 0; i < 70; i++) { G.p.mp = 999; E.step(G, 1 / 60); } }
+{ const g = jobGame('fighter'); const b = E.stats(g).maxDmg; cast(g, 'berserk'); ok(E.stats(g).maxDmg > b * 1.3, '파이터 버서크: 공격력 상승 ' + (E.stats(g).maxDmg / b).toFixed(2) + 'x'); }
+{ const g = jobGame('page'); const b = E.stats(g).def; cast(g, 'guard'); ok(E.stats(g).def >= b + 70, '페이지 파워 가드: 방어 상승 +' + (E.stats(g).def - b)); }
+{ const g = jobGame('spearman'); const b = E.stats(g).maxHp; cast(g, 'hyper'); ok(E.stats(g).maxHp > b * 1.25, '스피어맨 하이퍼 바디: 최대 HP 상승 ' + (E.stats(g).maxHp / b).toFixed(2) + 'x'); }
 console.log(fails ? 'FAILED ' + fails : 'ALL OK'); process.exit(fails ? 1 : 0);

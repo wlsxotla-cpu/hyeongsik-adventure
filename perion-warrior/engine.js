@@ -45,7 +45,7 @@
     const maxDmg = Math.max(1, (str * 4 + dex) * wAtk / 100 * rageMul);
     const minRatio = clamp(0.2 + mast * 0.05 + fm * 0.01 + sm * 0.02, 0.2, 0.85);
     const def = b.def + (p.buffs.def ? p.buffs.def.val : 0) + (p.buffs.def2 ? p.buffs.def2.val : 0) + Math.floor(dex / 6) + (job === 'page' ? 8 + pm * 3 : 0);
-    const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough + (job === 'page' ? 0.08 + pm * 0.02 : 0) + (job === 'spearman' ? 0.1 : 0) + (p.buffs.hp2 ? p.buffs.hp2.val : 0)));
+    const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough + (job === 'page' ? 0.08 + pm * 0.02 : 0) + (job === 'spearman' ? 0.1 : 0)) * (1 + (p.buffs.hp2 ? p.buffs.hp2.val : 0)));
     const maxMp = Math.round(p.baseMp + p.int * 2);
     return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004 + (job === 'spearman' ? 0.03 + sm * 0.015 : 0), speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b };
   };
