@@ -221,6 +221,11 @@
   // 옛 저장 보정: 받은 포인트 총량이 새 기준보다 많으면 스킬을 초기화하고 기준량만 돌려준다
   E.fixSp = function (G) { const p = G.p, earned = E.spEarned(p.lv) + (p.job ? 3 : 0), spent = E.spSpent(p); if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
   E.resetSkills = function (G) { const p = G.p; let back = 0; for (const sid in p.skills) { const l = p.skills[sid] || 0; const keep = sid === 'power' ? 1 : 0; back += Math.max(0, l - keep); if (keep) p.skills[sid] = keep; else delete p.skills[sid]; } p.sp += back; p.buffs = {}; return back; };
+  // 직업 변경: 다른 직업을 체험해 볼 수 있게 언제든 가능. 스킬은 전부 초기화(포인트는 그대로 돌려받음), 못 쓰는 무기는 직업 기본 무기로 교체
+  E.changeJob = function (G, jid) {
+    const p = G.p; if (!p.job) return { ok: false, msg: '아직 2차 전직 전이에요' }; if (!D.JOBS[jid] || jid === p.job) return { ok: false, msg: '지금과 다른 직업을 골라 주세요' };
+    E.resetSkills(G); p.job = jid; p.skCd = {}; E.checkGear(G); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `${D.JOBS[jid].n}(으)로 직업을 바꿨어요. 스킬 포인트를 다시 찍어 주세요!` }); return { ok: true };
+  };
   E.learn = function (G, sid) {
     const p = G.p, s = D.SKILLS[sid]; const l = p.skills[sid] || 0;
     if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job) || l >= E.skillCap(G, s)) return false;
@@ -310,14 +315,14 @@
       }
       p.mp -= cost; p.skCd[sid] = s.cd;
       const dur = sid === 'quake' ? 0.8 : sid === 'slash' ? Math.max(0.5, st.spd * 1.1) : Math.max(0.5, st.spd * 1.15);
-      a = { kind: sid, t: 0, dur, hit: dur * (sid === 'quake' ? 0.55 : 0.42), done: false, face: p.face, mult: s.mult(l), targets: s.targets, rng: s.rng + (st.rng - 58) * 0.6, combo: 0 };
+      const hits = s.hits || 1; a = { kind: sid, t: 0, dur: dur + 0.13 * (hits - 1), hit: dur * (sid === 'quake' ? 0.55 : 0.42), done: false, face: p.face, mult: s.mult(l), targets: s.targets, rng: s.rng + (st.rng - 58) * 0.6, combo: 0, hits, n: 0 };
     }
     p.atk = a; p.atkCd = a.dur * 0.92; p.vx *= 0.3; if (p.onGround && !sid) p.vx += p.face * 50;
     ev(G, { t: 'swing', kind: a.kind, face: p.face, combo: a.combo }); ev(G, { t: 'sfx', n: sid ? 'skill' : 'swing' });
     return true;
   }
   function resolveAttack(G) {
-    const p = G.p, a = p.atk; a.done = true;
+    const p = G.p, a = p.atk; a.done = true; a.n = (a.n || 0) + 1; if (a.n < (a.hits || 1)) { a.done = false; a.hit += 0.13; } // 다단히트: 0.13초 간격으로 다시 판정
     const mid = a.kind === 'quake';
     const x0 = mid ? p.x - a.rng : (a.face > 0 ? p.x - 10 : p.x - a.rng), x1 = mid ? p.x + a.rng : (a.face > 0 ? p.x + a.rng : p.x + 10);
     const y0 = p.y - 58, y1 = p.y + 12;
@@ -337,6 +342,8 @@
   /* ───────── 보스·몬스터 투사체 ───────── */
   function addProj(G, o) { G.proj.push(Object.assign({ life: 4, w: 14, h: 14, vx: 0, vy: 0, grav: 0, dmg: 10, lv: 10, hit: false, t: 0 }, o)); }
   function addZone(G, o) { G.zones.push(Object.assign({ t: 0, dur: 0.9, r: 40, dmg: 10, lv: 10, fired: false }, o)); }
+  // 플레이어 위치로 조준해서 쏘는 투사체 (발판 높이와 상관없이 닿는다)
+  function aimShot(G, m, kind, off, speed, dmg, w) { const p = G.p, x0 = m.x + m.face * 20, y0 = m.y - m.def.h * 0.6; const base = Math.atan2(p.y - 24 - y0, p.x - x0) + off; addProj(G, { kind, x: x0, y: y0, vx: Math.cos(base) * speed, vy: Math.sin(base) * speed, w, h: w, dmg, lv: m.def.lv, life: 3.6 }); }
   function bossAI(G, m, dt) {
     const p = G.p, def = m.def, tree = def.ai === 'bosstree', zak = def.ai === 'bosszakum';
     const phase2 = m.hp < m.maxhp * (tree ? 0.5 : 0.45);
@@ -350,10 +357,14 @@
       if (m.cd <= 0 && !p.dead) {
         m.st = 'wind'; m.vx = 0;
         const r = rand(G);
-        if (tree) m.atkn = r < 0.42 ? 'slam' : r < 0.8 ? 'roots' : (G.mons.filter((x) => x.minion && !x.dead).length < 2 ? 'summon' : 'slam');
-        else if (zak) m.atkn = (phase2 && r < 0.22 && G.mons.filter((x) => x.minion && !x.dead).length < 2) ? 'summon' : r < 0.3 ? 'slam' : r < 0.55 ? 'rocks' : r < 0.8 ? 'flame' : 'stomp';
-        else m.atkn = r < 0.34 ? 'slam' : r < 0.7 ? 'rocks' : 'stomp';
-        m.t = m.atkn === 'summon' ? 1.0 : m.atkn === 'stomp' ? 0.7 : 0.95; m.wind = m.t; ev(G, { t: 'bossWind', id: m.id, atk: m.atkn, x: m.x });
+        // 보스마다 패턴이 다르다. 바닥 공격(slam)만 있으면 발판에 올라가서 때리면 끝이라, 높이와 상관없이 닿는 공격과 바닥/발판을 번갈아 노리는 공격을 섞는다.
+        const minions = G.mons.filter((x) => x.minion && !x.dead).length;
+        if (tree) m.atkn = r < 0.22 ? 'slam' : r < 0.5 ? 'roots' : r < 0.78 ? 'seed' : (minions < 2 ? 'summon' : 'roots');
+        else if (zak) m.atkn = (phase2 && r < 0.2 && minions < 2) ? 'summon' : r < 0.12 ? 'slam' : r < 0.28 ? 'rocks' : r < 0.44 ? 'flame' : r < 0.6 ? 'fireball' : r < 0.82 ? (rand(G) < 0.5 ? 'burng' : 'burnp') : 'stomp';
+        else m.atkn = r < 0.16 ? 'slam' : r < 0.36 ? 'rocks' : r < 0.52 ? 'stomp' : r < 0.76 ? 'quake' : 'throw';
+        const FLOOR = { quake: 'g', burng: 'g', burnp: 'p' }; // 바닥 전체 / 발판 전체 공격: 예고 후 한꺼번에 터진다
+        if (FLOOR[m.atkn]) addZone(G, { kind: 'floor', full: FLOOR[m.atkn], x: p.x, y: G.map.plats[0].y, r: 0, dur: 1.3, dmg: def.atk * 1.5, lv: def.lv });
+        m.t = m.atkn === 'summon' ? 1.0 : m.atkn === 'stomp' ? 0.7 : FLOOR[m.atkn] ? 1.35 : 0.95; m.wind = m.t; ev(G, { t: 'bossWind', id: m.id, atk: m.atkn, x: m.x });
       }
     } else if (m.st === 'wind') {
       m.vx = 0;
@@ -366,15 +377,28 @@
           m.st = 'rest'; m.t = 0.9;
         } else if (a === 'roots') {
           const n = phase2 ? 5 : 3;
-          for (let k = 0; k < n; k++) addZone(G, { kind: 'root', x: clamp(p.x + (k - (n - 1) / 2) * 90 + rr(G, -20, 20), 60, G.map.w - 60), y: m.py, r: 36, dur: 0.9 + k * 0.15, dmg: def.atk * 1.4, lv: def.lv });
+          const ty = p.plat ? p.plat.y : m.py;
+          for (let k = 0; k < n; k++) addZone(G, { kind: 'root', x: clamp(p.x + (k - (n - 1) / 2) * 90 + rr(G, -20, 20), 60, G.map.w - 60), y: (k % 2 === 0 || n === 3 && k === 1) ? ty : m.py, r: 36, dur: 0.9 + k * 0.15, dmg: def.atk * 1.4, lv: def.lv });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.0;
         } else if (a === 'summon') {
           for (const d of [-1, 1]) { const x = clamp(m.x + d * 120, 80, G.map.w - 80); const sl = { m: zak ? 'lavamask' : 'stump', p: 0, x, mon: null, respT: 0, minion: true }; spawnMon(G, sl); const mm = sl.mon; mm.minion = true; mm.hp = mm.maxhp = zak ? 700 : 120; mm.x0 = 60; mm.x1 = G.map.w - 60; mm.prov = 99; mm.stunT = 0; ev(G, { t: 'hit', x, y: mm.y - 20, fx: 'spawn' }); }
           m.st = 'rest'; m.t = 0.8;
         } else if (a === 'rocks') {
           const n = phase2 ? 7 : 5;
-          for (let k = 0; k < n; k++) addZone(G, { kind: 'rock', x: clamp(k === 0 ? p.x : p.x + rr(G, -280, 280), 60, G.map.w - 60), y: m.py, r: 38, dur: 0.85 + k * 0.17, dmg: def.atk * 1.3, lv: def.lv });
+          const ty = p.plat ? p.plat.y : m.py;
+          for (let k = 0; k < n; k++) addZone(G, { kind: 'rock', x: clamp(k === 0 ? p.x : p.x + rr(G, -280, 280), 60, G.map.w - 60), y: k % 2 === 0 ? ty : m.py, r: 38, dur: 0.85 + k * 0.17, dmg: def.atk * 1.3, lv: def.lv });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.0;
+        } else if (a === 'seed') {
+          const n = phase2 ? 5 : 3; for (let k = 0; k < n; k++) aimShot(G, m, 'seed', (k - (n - 1) / 2) * 0.28, 250, def.atk * 1.0, 18);
+          ev(G, { t: 'sfx', n: 'swing' }); m.st = 'rest'; m.t = 1.0;
+        } else if (a === 'fireball') {
+          const n = phase2 ? 5 : 3; for (let k = 0; k < n; k++) aimShot(G, m, 'fire', (k - (n - 1) / 2) * 0.24, 290, def.atk * 1.0, 20);
+          ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.0;
+        } else if (a === 'throw') {
+          const n = phase2 ? 2 : 1; for (let k = 0; k < n; k++) { const x0 = m.x, y0 = m.y - def.h * 0.7, T = 0.95 + k * 0.25, tx = k === 0 ? p.x : p.x + rr(G, -160, 160), ty = p.y - 24; addProj(G, { kind: 'boulder', x: x0, y: y0, vx: (tx - x0) / T, vy: (ty - y0) / T - 0.5 * 900 * T, grav: 900, w: 28, h: 28, dmg: def.atk * 1.3, lv: def.lv, life: 4 }); }
+          ev(G, { t: 'sfx', n: 'swing' }); m.st = 'rest'; m.t = 1.0;
+        } else if (a === 'quake' || a === 'burng' || a === 'burnp') {
+          G.shake = Math.max(G.shake, 6); m.st = 'rest'; m.t = 0.9;
         } else if (a === 'flame') {
           const n = phase2 ? 9 : 6; for (let k = 0; k < n; k++) addProj(G, { kind: 'fire', x: clamp(k === 0 ? p.x : p.x + rr(G, -340, 340), 60, G.map.w - 60), y: m.py - 420, vx: 0, vy: 60, grav: 900, w: 22, h: 22, dmg: def.atk * 1.1, lv: def.lv, life: 4, delay: k * 0.2, warn: true, gy: m.py });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.1;
@@ -538,13 +562,18 @@
       const q = G.proj[i];
       if (q.delay > 0) { q.delay -= dt; continue; }
       q.t += dt; q.life -= dt; q.vy += q.grav * dt; q.x += q.vx * dt; q.y += q.vy * dt;
-      if (q.kind === 'fire' && q.y > G.map.plats[0].y + 20) q.life = 0;
+      if ((q.kind === 'fire' || q.kind === 'seed' || q.kind === 'boulder') && q.y > G.map.plats[0].y + 20) q.life = 0;
       if (!q.hit && !p.dead && p.inv_t <= 0 && Math.abs(p.x - q.x) < q.w * 0.5 + HW && p.y > q.y - q.h * 0.5 && p.y - PH < q.y + q.h * 0.5 + (q.ground ? q.h * 0.5 : 0)) { if (playerHurt(G, q.dmg, q.x, q.lv, 1)) q.hit = true; }
       if (q.life <= 0 || q.hit || q.x < -40 || q.x > G.map.w + 40) G.proj.splice(i, 1);
     }
     for (let i = G.zones.length - 1; i >= 0; i--) {
       const z = G.zones[i]; z.t += dt;
-      if (!z.fired && z.t >= z.dur) { z.fired = true; ev(G, { t: 'zone', kind: z.kind, x: z.x, y: z.y }); G.shake = Math.max(G.shake, 6); ev(G, { t: 'sfx', n: 'slam' }); if (!p.dead && Math.abs(p.x - z.x) < z.r + HW && p.y > z.y - 46) playerHurt(G, z.dmg, z.x, z.lv, 1); }
+      if (!z.fired && z.t >= z.dur) {
+        z.fired = true; let hit = false; const gy = G.map.plats[0].y;
+        if (z.full) { hit = !p.dead && (z.full === 'g' ? p.y > gy - 30 : p.y < gy - 30); G.shake = Math.max(G.shake, 8); ev(G, { t: 'sfx', n: 'slam' }); }
+        else { ev(G, { t: 'zone', kind: z.kind, x: z.x, y: z.y }); G.shake = Math.max(G.shake, 6); ev(G, { t: 'sfx', n: 'slam' }); hit = !p.dead && Math.abs(p.x - z.x) < z.r + HW && p.y > z.y - 46 && p.y < z.y + 14; }
+        if (hit) playerHurt(G, z.dmg, z.x, z.lv, 1);
+      }
       if (z.t >= z.dur + 0.35) G.zones.splice(i, 1);
     }
     // 드랍

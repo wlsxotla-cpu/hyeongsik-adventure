@@ -23,4 +23,10 @@ function cast(G, sid) { G.input.skills.push(sid); for (let i = 0; i < 70; i++) {
 { const g = jobGame('fighter'); const b = E.stats(g).maxDmg; cast(g, 'berserk'); ok(E.stats(g).maxDmg > b * 1.3, '파이터 버서크: 공격력 상승 ' + (E.stats(g).maxDmg / b).toFixed(2) + 'x'); }
 { const g = jobGame('page'); const b = E.stats(g).def; cast(g, 'guard'); ok(E.stats(g).def >= b + 70, '페이지 파워 가드: 방어 상승 +' + (E.stats(g).def - b)); }
 { const g = jobGame('spearman'); const b = E.stats(g).maxHp; cast(g, 'hyper'); ok(E.stats(g).maxHp > b * 1.25, '스피어맨 하이퍼 바디: 최대 HP 상승 ' + (E.stats(g).maxHp / b).toFixed(2) + 'x'); }
+
+// 드래곤 크러셔: 한 번 쓰면 같은 적에게 3번 맞는다
+{ const g = jobGame('spearman'); E.loadMap(g, 'rock1', null); g.mons = []; g.slots = []; const pl = g.p; const m = { id: 'stump', def: D.MON.stump, x: pl.x + 50, y: pl.y, py: pl.y, vx: 0, vy: 0, face: -1, hp: 99999, maxhp: 99999, st: 'walk', t: 9, stunT: 0, flash: 0, prov: 0, dead: false, deadT: 0, slot: {}, cd: 9, atkT: 0, born: 0, hopT: 0, hit: 0, spawnT: 0, seed: 1, x0: 0, x1: 9999 }; g.mons.push(m); pl.face = 1; g.input.skills.push('crusher'); let n = 0; for (let i = 0; i < 90; i++) { E.step(g, 1 / 60); for (const e of g.events) if (e.t === 'dmg' && e.who === 'mon') n++; g.events.length = 0; } ok(n === 3, '드래곤 크러셔 3연타 (타수 ' + n + ')'); }
+
+// 직업 변경: 스킬 포인트가 돌아오고, 새 직업 스킬만 배우며, 안 맞는 무기는 교체된다
+{ const g = jobGame('spearman'); g.p.inv.sp5 = 1; g.p.inv.mc2 = 1; const total = g.p.sp + E.spSpent(g.p); const r = E.changeJob(g, 'page'); ok(r.ok && g.p.job === 'page', '창→페이지 직업 변경'); ok(g.p.sp === total && E.spSpent(g.p) === 0, '스킬 포인트 전부 환급 (' + g.p.sp + ')'); ok(E.learn(g, 'charge') && !E.learn(g, 'crusher'), '새 직업 스킬만 배움'); ok(g.p.equip.weapon === 'mc0' && g.p.inv.sp4 > 0 || g.p.equip.weapon === 'mc0', '창은 가방으로, 페이지 기본 무기 장착 (' + g.p.equip.weapon + ')'); ok(!E.changeJob(g, 'page').ok, '같은 직업으로는 변경 불가'); }
 console.log(fails ? 'FAILED ' + fails : 'ALL OK'); process.exit(fails ? 1 : 0);

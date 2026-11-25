@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzp';
+  const BUILD = '20261125zzq';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -110,7 +110,7 @@
           else if (e.kind === 'quake') { fx({ type: 'ring', x: p.x, y: p.y - 2, r: 40, flat: 0.25, col: '#ffcc66', size: 5, life: 0.5 }); }
           else fx({ type: 'arc', kind: e.kind, face: e.face, combo: e.combo, r: Math.max(34, a.rng * 0.78), col: e.kind === 'basic' ? (D.ITEMS[p.equip.weapon].wt === 'axe' ? '#ffd9a0' : D.ITEMS[p.equip.weapon].wt === 'great' ? '#ffe0ff' : D.ITEMS[p.equip.weapon].wt === 'spear' ? '#c8ffd8' : D.ITEMS[p.equip.weapon].wt === 'mace' ? '#ffe3b8' : FXCOL.basic) : FXCOL[e.kind], life: e.kind === 'slash' ? 0.42 : 0.26, delay: 0 }), fxs[fxs.length - 1].delay = 0;
           if (e.kind === 'rblow') { fx({ type: 'ring', x: cx + e.face * a.rng * 0.7, y: p.y - 24, r: 38, col: '#ff5a3a', size: 7, life: 0.38 }); G.shake = Math.max(G.shake, 1); }
-          else if (e.kind === 'crusher') { for (const dy of [-9, 9]) fx({ type: 'beam', x: cx, y: cy + 2 + dy, face: e.face, r: a.rng * 1.05, col: '#b6ffd0', life: 0.24, delay: 0.03 }); }
+          else if (e.kind === 'crusher') { for (let k = 1; k <= 2; k++) fx({ type: 'beam', x: cx, y: cy + 2 + (k % 2 ? -5 : 5), face: e.face, r: a.rng * 1.1, col: '#b6ffd0', life: 0.2, delay: k * 0.13 }); }
           else if (e.kind === 'charge') { fx({ type: 'ring', x: p.x, y: p.y - 24, r: 64, flat: 0.55, col: '#fff0a0', size: 6, life: 0.42 }); }
           break; }
         case 'dmg': {
@@ -130,7 +130,7 @@
         case 'fade': doFade(); break;
         case 'dust': puffs(e.x, e.y - 1, e.land ? 5 : 3, 'rgba(230,210,180,1)', e.land ? 40 : 24, 4, 0.35); break;
         case 'msg': logLine(e.text, 'q'); toastBanner(e.text); break;
-        case 'bossWind': { const m = G.boss || { x: e.x, y: 0 }; fx({ type: 'text', x: e.x, y: (m.y || 0) - (D.MON[e.id] ? D.MON[e.id].h : 40) - 10, s: e.atk === 'charge' ? '‼' : '!', life: 0.7, size: 32, col: '#ff4a3a', stroke: '#fff' }); break; }
+        case 'bossWind': { const m = G.boss || { x: e.x, y: 0 }; fx({ type: 'text', x: e.x, y: (m.y || 0) - (D.MON[e.id] ? D.MON[e.id].h : 40) - 10, s: ({ quake: '바닥!', burng: '바닥!', burnp: '발판!', throw: '‼', fireball: '‼', seed: '‼', charge: '‼' })[e.atk] || '!', life: (e.atk === 'quake' || e.atk === 'burng' || e.atk === 'burnp') ? 1.2 : 0.7, size: (e.atk === 'quake' || e.atk === 'burng' || e.atk === 'burnp') ? 24 : 32, col: '#ff4a3a', stroke: '#fff' }); break; }
         case 'slam': { for (const d of [-1, 1]) puffs(e.x + d * e.w * 0.5, e.y - 2, 6, 'rgba(210,190,160,1)', 80, 9, 0.6); fx({ type: 'ring', x: e.x, y: e.y - 2, r: 120, flat: 0.18, col: '#ffe9b0', size: 6, life: 0.5 }); for (let i = 0; i < 8; i++) fx({ type: 'rock', x: e.x + (Math.random() - 0.5) * e.w, y: e.y - 6, vx: (Math.random() - 0.5) * 240, vy: -160 - Math.random() * 200, g: 700, size: 2 + Math.random() * 3, col: '#8d8678', rot: 0, vr: 9, life: 0.8 }); break; }
         case 'zone': { puffs(e.x, e.y - 4, 8, e.kind === 'root' ? '#7be05a' : 'rgba(210,190,160,1)', 90, 9, 0.5); for (let i = 0; i < 7; i++) fx({ type: 'rock', x: e.x, y: e.y - 8, vx: (Math.random() - 0.5) * 200, vy: -180 - Math.random() * 160, g: 700, size: 2 + Math.random() * 3, col: e.kind === 'root' ? '#6a4528' : '#8d8678', rot: 0, vr: 8, life: 0.8 }); break; }
         case 'quake': { fx({ type: 'ring', x: e.x, y: e.y - 2, r: e.r, flat: 0.16, col: '#ffcc66', size: 9, life: 0.6 }); fx({ type: 'ring', x: e.x, y: e.y - 2, r: e.r * 0.65, flat: 0.16, col: '#fff', size: 5, life: 0.45 }); puffs(e.x, e.y - 2, 14, 'rgba(220,200,170,1)', 150, 11, 0.7); for (let i = 0; i < 16; i++) fx({ type: 'rock', x: e.x + (Math.random() - 0.5) * e.r * 1.4, y: e.y - 6, vx: (Math.random() - 0.5) * 240, vy: -220 - Math.random() * 240, g: 800, size: 2.5 + Math.random() * 3.5, col: ['#9a8a6a', '#6a5a48', '#c4a870'][i % 3], rot: 0, vr: 10, life: 0.9 }); break; }
@@ -453,7 +453,14 @@
         opts.push({ label: '🛒 물건 보기 (사기·팔기)', cls: 'green', fn: () => shop(npc) });
       } else if (npc.role === 'master') {
         const cadv = E.canAdvance(G);
-        if (G.p.job) text = `${D.JOBS[G.p.job].icon} 이제 어엿한 **${D.JOBS[G.p.job].n}**이로군. 계속 강해져라, 페리온의 영웅!`;
+        if (G.p.job) {
+          text = `${D.JOBS[G.p.job].icon} 이제 어엿한 **${D.JOBS[G.p.job].n}**이로군. 계속 강해져라, 페리온의 영웅!
+
+다른 직업도 체험해 보고 싶다면 **직업을 바꿔** 줄 수 있다. (스킬은 초기화되고 포인트는 그대로 돌려받는다. 안 맞는 무기는 가방으로 들어간다)`;
+          for (const j of Object.keys(D.JOBS)) if (j !== G.p.job) opts.push({ label: `🔄 ${D.JOBS[j].icon} ${D.JOBS[j].n}(으)로 바꾸기 <small>(${D.JOBS[j].wtn})</small>`, cls: '', fn: () => dlg(npc, `**${D.JOBS[j].n}**(으)로 직업을 바꾸겠나?
+스킬이 전부 초기화된다. (포인트는 돌려받는다)`, [{ label: '✅ 바꾼다', cls: 'green', fn: () => { const r = E.changeJob(G, j); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`직업 변경! ${D.JOBS[j].n}`); dlg(npc, `좋다! 이제 너는 **${D.JOBS[j].n}**이다.
+스킬 탭에서 포인트를 다시 찍어라.`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }, { label: '← 다시 생각', cls: 'gray', fn: home }]) });
+        }
         else if (cadv.ok) { text = '때가 됐군. 레벨 30, 그리고 시련까지 통과했다.\n\n**2차 전직**을 할 수 있다. 하나를 고르면 **되돌릴 수 없으니** 신중히 골라라!\n\n' + Object.keys(D.JOBS).map((j) => `${D.JOBS[j].icon} **${D.JOBS[j].n}** — ${D.JOBS[j].desc}\n  ▸ 쓰는 무기: ${D.JOBS[j].wtn} · 기본 보너스: ${D.JOBS[j].bonus}`).join('\n\n');
           for (const j of Object.keys(D.JOBS)) opts.push({ label: `${D.JOBS[j].icon} ${D.JOBS[j].n} 되기`, cls: 'green', fn: () => dlg(npc, `정말 **${D.JOBS[j].n}**(으)로 전직하겠나?\n선택하면 바꿀 수 없다.`, [{ label: '✅ 전직한다', cls: 'green', fn: () => { const r = E.advance(G, j); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`2차 전직! ${D.JOBS[j].n}`); dlg(npc, `좋다! 오늘부터 너는 **${D.JOBS[j].n}**이다.\n스킬 탭에서 새 스킬을 배워라. (SP +3, 능력치 +5)`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }, { label: '← 다시 생각', cls: 'gray', fn: home }]) });
         } else text = `나는 전사 교관 발도다.\n\n⚔️ **2차 전직**(파이터·페이지·스피어맨)은 Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후에 가능하다. (${cadv.msg})\n\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.`;
@@ -539,7 +546,7 @@
     for (const pt of m.portals) if (vis(pt.x, 80)) Art.drawPortal(c, { x: pt.x, y: gy, label: pt.label, lv: pt.lv, col: pt.col }, time, nb && nb.portal === pt);
     for (const n of m.npcs) if (vis(n.x, 80)) { c.save(); c.translate(n.x, n.y || gy); Art.drawNpc(c, n, time, nb && nb.npc === n); c.restore(); }
     for (const d of G.drops) if (vis(d.x, 30)) Art.drawDrop(c, d, time);
-    for (const z of G.zones) Art.drawZone(c, z, time);
+    for (const z of G.zones) { if (z.full) drawFloorZone(c, z); else Art.drawZone(c, z, time); }
     for (const mm of G.mons) { if (!vis(mm.x, 160)) continue; c.save(); c.translate(mm.x, mm.y); Art.drawMon(c, mm, time); c.restore(); }
     if (p.buffs.def || p.buffs.atk) drawAura(c, p);
     if (p.pet && !p.dead) { const pp = petState; c.save(); c.translate(pp.x, pp.y); Art.drawPet(c, time, pp.face, pp.moving, pp.cheer > 0); c.restore(); if (pp.cheer > 0) { c.font = '14px sans-serif'; c.textAlign = 'center'; c.fillText('💖', pp.x, pp.y - 34 - (0.8 - pp.cheer) * 14); } }
@@ -567,6 +574,16 @@
   /* ───────── 메인 루프 ───────── */
   let lw = 0, lh = 0;
   if (/[?&]debug/.test(location.search)) window.__pw = { G: () => G, E: E, openMenu: (t) => openMenu(t), onMap: () => onMap(), interact: () => doContext() }; // 점검용 (?debug 주소에서만)
+  // 바닥 전체(g) / 발판 전체(p) 공격 표시: 예고(붉은 점멸)는 위험한 면 전체에, 터질 땐 불기둥
+  function drawFloorZone(c, z) {
+    const m = G.map, u = Math.min(1, z.t / z.dur), surfaces = z.full === 'g' ? [m.plats[0]] : m.plats.slice(1);
+    for (const pl of surfaces) {
+      c.save();
+      if (!z.fired) { c.globalAlpha = (0.25 + 0.3 * Math.sin(time * 18)) * (0.5 + u * 0.5) + 0.1; c.fillStyle = '#ff4a2a'; c.fillRect(pl.x, pl.y - 7, pl.w, 9); c.globalAlpha = 0.7; c.strokeStyle = '#fff'; c.lineWidth = 2; c.setLineDash([8, 6]); c.strokeRect(pl.x, pl.y - 7, pl.w, 9); }
+      else { const k = Math.min(1, (z.t - z.dur) / 0.35); c.globalAlpha = 1 - k; c.fillStyle = '#ffb040'; for (let x = pl.x + 6; x < pl.x + pl.w - 6; x += 20) { const h = (46 + 20 * Math.sin(x * 0.7)) * (1 - k * 0.4); c.beginPath(); c.moveTo(x - 9, pl.y); c.lineTo(x, pl.y - h); c.lineTo(x + 9, pl.y); c.closePath(); c.fill(); } c.fillStyle = '#fff2a0'; c.globalAlpha = (1 - k) * 0.8; c.fillRect(pl.x, pl.y - 10, pl.w, 10); }
+      c.restore();
+    }
+  }
   function frame(now) {
     if (window.innerWidth !== lw || window.innerHeight !== lh || !view.s) { lw = window.innerWidth; lh = window.innerHeight; if (lw > 0 && lh > 0) layout(); else return; }
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now; time += dt;
@@ -603,8 +620,8 @@
     else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
   }
   // 업데이트 소식: 새 소식 번호가 바뀌면 한 번만 보여 준다 (소식을 고칠 땐 NEWS_ID 도 올릴 것)
-  const NEWS_ID = 'n2';
-  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.'];
+  const NEWS_ID = 'n3';
+  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.', '🔄 교관 발도에게서 <b>직업을 바꿀</b> 수 있어요 (스킬 초기화, 포인트 환급). 다른 직업도 체험해 보세요!', '🔱 스피어맨 <b>드래곤 크러셔</b>가 3연속 찌르기로 바뀌었어요.', '👹 <b>보스 패턴 개편</b> — 발판 위에서도 맞아요! 붉은 <b>바닥!/발판!</b> 표시가 뜨면 안전한 곳으로 이동하세요.'];
   function showNews() {
     let seen = null; try { seen = localStorage.getItem('pw.news'); } catch (e) {} if (seen === NEWS_ID) return;
     try { localStorage.setItem('pw.news', NEWS_ID); } catch (e) {}
