@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzi';
+  const BUILD = '20261125zzj';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -280,6 +280,9 @@
   const ico = (id, cls) => { const u = Art.itemIconUrl(id); const it = D.ITEMS[id]; return u ? `<img class="ii ${cls || ''}" src="${u}" alt="">` : it.icon; };
   const enhOf = (id, idx) => E.recOf(G, id, idx);
   const enhBadge = (id, idx) => { const o = enhOf(id, idx).ok; return o ? `<span class="en" style="color:${Art.enhColor(o)}">+${o}</span>` : ''; };
+  const gscore = (id, rec) => { const it = D.ITEMS[id]; return (it.atk || 0) * 3 + (it.def || 0) * 2 + (it.hp || 0) / 10 + (it.str || 0) * 4 + (it.dex || 0) * 2 + ((rec && rec.atk) || 0) * 3 + ((rec && rec.def) || 0) * 2; };
+  // 가방 장비 중 지금 낀 것보다 좋고 입을 수 있는 건 초록 ▲ 표시
+  const upMark = (id, k) => { const it = D.ITEMS[id]; if (it.t !== 'equip' || !E.canWear(G, it).ok) return ''; const cur = G.p.equip[it.slot]; const cs = cur ? gscore(cur, G.p.enh && G.p.enh[cur]) : 0; return gscore(id, E.bagRecs(G, id)[k]) > cs + 0.5 ? '<span class="up">▲</span>' : ''; };
   const gname = (id, idx) => D.ITEMS[id].n + (enhOf(id, idx).ok ? ` +${enhOf(id, idx).ok}` : '');
   const gnameC = (id, idx) => { const o = enhOf(id, idx).ok; return esc(D.ITEMS[id].n) + (o ? ` <span style="color:${Art.enhColor(o)};text-shadow:0 0 6px ${Art.enhColor(o)}">+${o}</span>` : ''); };
   const SLOTN = { weapon: '무기', helmet: '투구', armor: '갑옷', gloves: '장갑', shoes: '신발' };
@@ -341,7 +344,7 @@
     const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]); const order = { equip: 0, scroll: 1, use: 2, etc: 3 };
     ids.sort((a, b) => order[D.ITEMS[a].t] - order[D.ITEMS[b].t] || (D.ITEMS[a].lv || 0) - (D.ITEMS[b].lv || 0));
     if (!ids.length) s += '<div class="card" style="text-align:center;color:#cdbbe8">가방이 비었어요. 몬스터를 처치해 아이템을 모아 보세요!</div>';
-    s += '<div class="grid">' + ids.map((id) => { const it = D.ITEMS[id]; if (it.t === 'equip') return E.bagRecs(G, id).map((r, k) => `<button class="slot ${menuSel === id && menuIdx === k ? 'sel' : ''}" data-a="sel:${id}:${k}">${ico(id)}${enhBadge(id, k)}<span class="lv ${E.canWear(G, it).ok ? '' : 'bad'}">Lv${it.lv}</span></button>`).join(''); return `<button class="slot ${menuSel === id ? 'sel' : ''}" data-a="sel:${id}">${ico(id)}<small>${p.inv[id] > 1 ? p.inv[id] : ''}</small></button>`; }).join('') + '</div>';
+    s += '<div class="grid">' + ids.map((id) => { const it = D.ITEMS[id]; if (it.t === 'equip') return E.bagRecs(G, id).map((r, k) => `<button class="slot ${menuSel === id && menuIdx === k ? 'sel' : ''}" data-a="sel:${id}:${k}">${ico(id)}${enhBadge(id, k)}${upMark(id, k)}<span class="lv ${E.canWear(G, it).ok ? '' : 'bad'}">Lv${it.lv}</span></button>`).join(''); return `<button class="slot ${menuSel === id ? 'sel' : ''}" data-a="sel:${id}">${ico(id)}<small>${p.inv[id] > 1 ? p.inv[id] : ''}</small></button>`; }).join('') + '</div>';
     return s;
   }
   function tabSkill() {
