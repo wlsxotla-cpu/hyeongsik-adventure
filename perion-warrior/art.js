@@ -135,12 +135,12 @@
   A.itemIconUrl = function (id) { const cv = A.itemCanvas(id); if (!cv) return null; if (!cv._url) cv._url = cv.toDataURL('image/png'); return cv._url; };
   function drawHuman(c, o) {
     const t = o.t || 0, moving = !!o.moving, air = !!o.air, cl = !!o.climb;
-    const bob = (air || cl) ? 0 : (moving ? Math.abs(Math.sin(o.walk * 5)) * -1.6 : Math.sin(t * 2.6) * 0.7);
-    const sw = moving && !air ? Math.sin(o.walk * 5) * 6 : 0;
+    const bob = (air || cl) ? 0 : (moving ? Math.abs(Math.sin(o.walk * 2.5)) * -0.8 : Math.sin(t * 2.6) * 0.7);
+    const sw = moving && !air ? Math.sin(o.walk * 2.5) * 3.6 : 0; // 걸음 빠르기·폭을 절반 가까이 줄임(발이 왔다갔다 하는 게 멀미 유발)
     const armor = o.armor || '#c9b48a', pants = o.pants || '#5b4a3a', shoes = o.shoes || '#6b4426', skin = o.skin || '#f6d4b2', hair = o.hair || '#4a2f20';
     c.save(); c.scale(o.face < 0 ? -1 : 1, 1);
     if (o.alpha != null) c.globalAlpha = o.alpha;
-    const cs = cl ? Math.sin((o.climbT || 0) * 14) * 4 : 0;
+    const cs = cl ? Math.sin((o.climbT || 0) * 8) * 3 : 0;
     // 다리
     const legY = -11 + bob * 0.3;
     const L = (x, k) => { c.beginPath(); rrect(c, x - 3.2, legY, 6.4, 11 + (air ? -2 : 0), 2.4); fillStroke(c, pants, 1.8); bootShape(c, o.shoeId, shoes, x, air); };
