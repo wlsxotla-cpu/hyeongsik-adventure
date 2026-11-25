@@ -122,6 +122,7 @@
   E.canWear = function (G, it) {
     const p = G.p, r = E.req(it);
     if (p.lv < r.lv) return { ok: false, msg: `Lv ${r.lv} 이상부터 착용할 수 있어요` };
+    if (it.slot === 'weapon' && p.job && !D.JOBS[p.job].wts.includes(it.wt)) return { ok: false, msg: `${D.JOBS[p.job].n}은(는) ${D.JOBS[p.job].wtn}만 쓸 수 있어요` };
     if (p.str < r.str) return { ok: false, msg: `STR ${r.str} 이상 필요해요 (지금 ${p.str})` };
     if (p.dex < r.dex) return { ok: false, msg: `DEX ${r.dex} 이상 필요해요 (지금 ${p.dex})` };
     return { ok: true };
@@ -198,8 +199,8 @@
     const p = G.p, out = [];
     for (const slot of ['helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[slot], it = id && D.ITEMS[id]; if (it && !E.canWear(G, it).ok) { E.unequip(G, slot); out.push(it.n); } }
     const wid = p.equip.weapon, w = wid && D.ITEMS[wid];
-    if (w && wid !== 'sw0' && !E.canWear(G, w).ok) {
-      if (!(p.inv.sw0 > 0)) E.addItem(G, 'sw0', 1); const r = E.bagRecs(G, 'sw0'); E.equip(G, 'sw0', r.length - 1); out.push(w.n); // 교체되며 원래 무기는 강화 기록과 함께 가방으로
+    if (w && wid !== ((p.job && D.JOBS[p.job].start) || 'sw0') && !E.canWear(G, w).ok) {
+      const fb = (p.job && D.JOBS[p.job].start) || 'sw0'; if (!(p.inv[fb] > 0)) E.addItem(G, fb, 1); const r = E.bagRecs(G, fb); E.equip(G, fb, r.length - 1); out.push(w.n); // 교체되며 원래 무기는 강화 기록과 함께 가방으로
     }
     if (out.length) ev(G, { t: 'msg', text: `능력치가 모자라 장비를 벗었어요: ${out.join(', ')}` });
     const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); return out;
@@ -207,7 +208,7 @@
   E.canAdvance = (G) => { const p = G.p; if (p.job) return { ok: false, msg: '이미 전직했어요' }; if (p.lv < D.JOB_LV) return { ok: false, msg: `Lv ${D.JOB_LV} 이상부터 전직할 수 있어요` }; if (E.qState(G, 'q9') !== 'done') return { ok: false, msg: '「고대 골렘의 시련」을 먼저 완료해야 해요' }; return { ok: true }; };
   E.advance = function (G, jid) {
     const p = G.p, j = D.JOBS[jid]; const c = E.canAdvance(G); if (!j || !c.ok) return c.ok ? { ok: false, msg: '없는 직업이에요' } : c;
-    p.job = jid; p.sp += 6; p.ap += 5; const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
+    p.job = jid; p.sp += 6; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
   };
   // 스킬 레벨 상한: 캐릭터 레벨이 오를수록 천천히 열린다 (스킬 요구 레벨 +12~13 에서 만렙)
   E.skillCap = (G, s) => Math.min(s.maxLv, 3 + Math.floor(Math.max(0, G.p.lv - s.reqLv) * 0.8));
@@ -289,7 +290,7 @@
     let a;
     if (!sid) {
       p.comboT > 0 ? p.combo = (p.combo + 1) % 3 : p.combo = 0; p.comboT = 0.9;
-      a = { kind: 'basic', t: 0, dur: st.spd, hit: st.spd * 0.42, done: false, face: p.face, combo: p.combo, mult: 1, targets: st.wt === 'great' ? 2 : 1, rng: st.rng };
+      a = { kind: 'basic', t: 0, dur: st.spd, hit: st.spd * 0.42, done: false, face: p.face, combo: p.combo, mult: 1, targets: (st.wt === 'great' || st.wt === 'spear') ? 2 : 1, rng: st.rng };
       if (st.wt === 'great') a.rng = st.rng;
     } else {
       const s = D.SKILLS[sid], l = p.skills[sid] || 0; if (!l || p.lv < s.reqLv) return false;
@@ -318,7 +319,7 @@
     const n = Math.min(a.targets, hits.length);
     for (let i = 0; i < n; i++) {
       const m = hits[i]; const dir = m.x >= p.x ? 1 : -1; hitMonster(G, m, a.mult, dir, a.kind);
-      if (a.kind === 'basic' && (E.stats(G).wt !== 'great')) break;
+      if (a.kind === 'basic' && (E.stats(G).wt !== 'great' && E.stats(G).wt !== 'spear')) break;
     }
     if (a.kind === 'quake') { G.shake = Math.max(G.shake, 9); ev(G, { t: 'quake', x: p.x, y: p.y, r: a.rng }); }
     if (a.kind === 'power' || a.kind === 'slash') G.shake = Math.max(G.shake, a.kind === 'power' ? 3 : 2);

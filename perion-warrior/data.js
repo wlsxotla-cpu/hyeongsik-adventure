@@ -67,6 +67,18 @@
   eq('gs1', '대검', 'weapon', 10, { wt: 'great', atk: 34, spd: 0.62, rng: 74, price: 2400, col: '#c4ccd8', desc: '양손으로 휘두르는 큰 검' });
   eq('gs2', '철 대검', 'weapon', 18, { wt: 'great', atk: 58, spd: 0.62, rng: 78, price: 8800, col: '#d6dde8', desc: '두꺼운 철 대검' });
   eq('gs3', '용살검', 'weapon', 26, { wt: 'great', atk: 84, spd: 0.62, rng: 84, price: 30000, col: '#ff9c7a', str: 6, desc: '용도 벤다는 전설의 대검' });
+  // 둔기 (한손, 페이지용)
+  eq('mc0', '나무 망치', 'weapon', 1, { wt: 'mace', atk: 14, spd: 0.5, rng: 56, price: 100, col: '#a2754a', desc: '둔기의 기본, 나무 망치' });
+  eq('mc1', '철 메이스', 'weapon', 8, { wt: 'mace', atk: 25, spd: 0.5, rng: 56, price: 1000, col: '#aab2bd', desc: '묵직한 철 곤봉' });
+  eq('mc2', '전투 망치', 'weapon', 14, { wt: 'mace', atk: 38, spd: 0.5, rng: 58, price: 3300, col: '#b6bece', desc: '전장에서 쓰는 큰 망치' });
+  eq('mc3', '가시 철퇴', 'weapon', 20, { wt: 'mace', atk: 56, spd: 0.5, rng: 60, price: 10000, col: '#cdd5e2', str: 2, desc: '가시가 박힌 무시무시한 철퇴' });
+  eq('mc4', '배틀 해머', 'weapon', 27, { wt: 'mace', atk: 76, spd: 0.5, rng: 62, price: 27000, col: '#e8cf7a', str: 4, desc: '금빛 장식의 전쟁 망치' });
+  // 창 (양손, 스피어맨용: 사거리 길고 2마리까지 관통)
+  eq('sp0', '나무 창', 'weapon', 1, { wt: 'spear', atk: 15, spd: 0.55, rng: 72, price: 120, col: '#a2754a', desc: '창의 기본, 나무 창' });
+  eq('sp1', '단창', 'weapon', 6, { wt: 'spear', atk: 26, spd: 0.55, rng: 76, price: 900, col: '#cfd6df', desc: '가볍고 빠른 철 단창' });
+  eq('sp2', '철 창', 'weapon', 12, { wt: 'spear', atk: 40, spd: 0.55, rng: 80, price: 3400, col: '#b0b8c6', desc: '길고 단단한 철 창' });
+  eq('sp3', '기사 창', 'weapon', 20, { wt: 'spear', atk: 60, spd: 0.55, rng: 84, price: 10000, col: '#e9d28a', str: 3, desc: '기사단의 금빛 창' });
+  eq('sp4', '드래곤 랜스', 'weapon', 27, { wt: 'spear', atk: 86, spd: 0.55, rng: 90, price: 30000, col: '#ff9c7a', str: 5, dex: 3, desc: '용의 비늘로 벼린 전설의 창' });
   // 투구
   eq('hm1', '가죽 모자', 'helmet', 1, { def: 3, price: 150, col: '#a2754a', desc: '질긴 가죽 모자' });
   eq('hm2', '철 투구', 'helmet', 8, { def: 7, price: 1100, col: '#aab2bd', desc: '튼튼한 철 투구' });
@@ -109,9 +121,9 @@
   };
   // ── 2차 전직 (Lv 30 + 고대 골렘의 시련 완료) ──
   D.JOBS = {
-    fighter: { n: '파이터', icon: '⚔️', col: '#ff9a6a', desc: '공격력이 가장 강한 공격형. 전 스킬 데미지가 올라가고, 강한 한 방(레이징 블로우)과 버서크로 보스를 녹인다.', bonus: '공격력 +8%' },
-    page: { n: '페이지', icon: '🛡️', col: '#8fb6ff', desc: '방어와 체력이 높은 탱커형. 파워 가드·방어 마스터리로 맞아도 버티며, 홀리 차지로 여러 마리를 쓸어낸다.', bonus: '방어력 +8, 최대 HP +8%' },
-    spearman: { n: '스피어맨', icon: '🔱', col: '#7ae0a0', desc: '체력과 치명타가 좋은 사냥형. 드래곤 크러셔로 넓게 쓸고, 하이퍼 바디로 HP를 크게 늘린다.', bonus: '최대 HP +10%, 치명타 +3%' },
+    fighter: { n: '파이터', icon: '⚔️', col: '#ff9a6a', wts: ['sword', 'great'], wtn: '검·양손검', desc: '[검/양손검] 공격력이 가장 강한 공격형. 전 스킬 데미지가 올라가고, 강한 한 방(레이징 블로우)과 버서크로 보스를 녹인다.', bonus: '공격력 +8%' },
+    page: { n: '페이지', icon: '🛡️', col: '#8fb6ff', wts: ['axe', 'mace'], wtn: '도끼·둔기', start: 'mc0', desc: '[도끼/둔기] 방어와 체력이 높은 탱커형. 파워 가드·방어 마스터리로 맞아도 버티며, 홀리 차지로 여러 마리를 쓸어낸다.', bonus: '방어력 +8, 최대 HP +8%' },
+    spearman: { n: '스피어맨', icon: '🔱', col: '#7ae0a0', wts: ['spear'], wtn: '창', start: 'sp0', desc: '[창] 체력과 치명타가 좋은 사냥형. 드래곤 크러셔로 넓게 쓸고, 하이퍼 바디로 HP를 크게 늘린다.', bonus: '최대 HP +10%, 치명타 +3%' },
   };
   Object.assign(D.SKILLS, {
     rblow: { job: 'fighter', n: '레이징 블로우', icon: '🗡️', kind: 'atk', reqLv: 30, maxLv: 10, mp: (l) => 14 + l, mult: (l) => 2.6 + 0.25 * l, targets: 1, rng: 84, cd: 1.6, fx: 'power',
@@ -268,7 +280,7 @@
   /* ───────── 상점 ───────── */
   D.SHOPS = {
     potion: { n: '소비 상점', items: ['hp1', 'hp2', 'hp3', 'hp4', 'mp1', 'mp2', 'mp3', 'scroll'] },
-    smith: { n: '장비 상점', items: ['sw1', 'ax1', 'gs1', 'sw2', 'ax2', 'gs2', 'hm1', 'hm2', 'hm3', 'ar1', 'ar2', 'ar3', 'gl1', 'gl2', 'gl3', 'sh1', 'sh2', 'sh3'] },
+    smith: { n: '장비 상점', items: ['sw1', 'ax1', 'gs1', 'mc1', 'sp1', 'sw2', 'ax2', 'gs2', 'mc2', 'sp2', 'mc3', 'sp3', 'hm1', 'hm2', 'hm3', 'ar1', 'ar2', 'ar3', 'gl1', 'gl2', 'gl3', 'sh1', 'sh2', 'sh3'] },
     scroll: { n: '주문서 상점 (100% 주문서만 판매)', items: ['scW100', 'scA100'] },
   };
 

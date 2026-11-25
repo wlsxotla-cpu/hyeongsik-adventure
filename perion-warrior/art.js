@@ -23,6 +23,8 @@
     ax4: { head: '#d9a15b', handle: '#4a3224', style: 'stone', gem: '#ff7a2a', glow: '#ff9a4a' },
     gs1: { w: 5, blade: '#c4ccd8', guard: '#6a7482', grip: '#4a3a2a', style: 'plain' },
     gs2: { w: 5.4, blade: '#dde3ee', guard: '#4a5262', grip: '#3a2a22', style: 'serrated' },
+    mc0: { head: '#a2754a', handle: '#7a4a2a', style: 'mace' }, mc1: { head: '#aab2bd', handle: '#6a4020', style: 'mace' }, mc2: { head: '#b6bece', handle: '#5a3a22', style: 'mace', big: 1 }, mc3: { head: '#cdd5e2', handle: '#4a3224', style: 'mace', spike: 1 }, mc4: { head: '#e8cf7a', handle: '#3a2a22', style: 'mace', spike: 1, big: 1, glow: '#ffd24a', gem: '#d6343c' },
+    sp0: { head: '#bfc7d1', handle: '#a2754a', style: 'spear' }, sp1: { head: '#dde3ee', handle: '#7a4a2a', style: 'spear' }, sp2: { head: '#b0b8c6', handle: '#5a3a22', style: 'spear' }, sp3: { head: '#f4e8b8', handle: '#7a2a2a', style: 'spear', tassel: '#d6343c' }, sp4: { head: '#ff9c7a', handle: '#2a1a1a', style: 'spear', tassel: '#ffd24a', glow: '#ff7a3a' },
     gs3: { w: 5.6, blade: '#ff9c7a', guard: '#7a2a2a', grip: '#2a1a1a', style: 'dragon', glow: '#ff7a3a', gem: '#ffd24a', lenK: 1.05 },
   };
   // 강화 등급 색 (메이플처럼 올릴수록 색이 달라짐): +1~2 하늘 / +3~4 보라 / +5~6 금 / +7 이상 빨강
@@ -34,9 +36,22 @@
     c.shadowColor = col; c.shadowBlur = 6 + e * 2; c.globalAlpha = 0.9; c.lineWidth = 1.6; c.stroke(); c.restore();
   }
   function weapon(c, wp, len) {
-    const id = wp.id && WPS[wp.id] ? wp.id : (wp.wt === 'axe' ? 'ax1' : wp.wt === 'great' ? 'gs1' : 'sw0');
+    const id = wp.id && WPS[wp.id] ? wp.id : (wp.wt === 'axe' ? 'ax1' : wp.wt === 'great' ? 'gs1' : wp.wt === 'mace' ? 'mc1' : wp.wt === 'spear' ? 'sp1' : 'sw0');
     const S = Object.assign({}, WPS[id]); if (!wp.id && wp.col) { S.blade = wp.col; S.head = wp.col; }
     c.save();
+    if (S.style === 'mace') {
+      c.beginPath(); c.rect(-1.7, -len * 0.86, 3.4, len * 0.98); fillStroke(c, S.handle, 1.6); if (S.glow) { c.shadowColor = S.glow; c.shadowBlur = 7; }
+      const hr = S.big ? 6.4 : 5, hy = -len * 0.94;
+      if (S.spike) for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; c.beginPath(); c.moveTo(Math.cos(a - 0.3) * hr, hy + Math.sin(a - 0.3) * hr); c.lineTo(Math.cos(a) * (hr + 4), hy + Math.sin(a) * (hr + 4)); c.lineTo(Math.cos(a + 0.3) * hr, hy + Math.sin(a + 0.3) * hr); c.closePath(); fillStroke(c, shade(S.head, -0.2), 1.2); }
+      c.beginPath(); c.arc(0, hy, hr, 0, TAU); fillStroke(c, S.head, 1.8); c.shadowBlur = 0; if (S.gem) { c.beginPath(); c.arc(0, hy, 2, 0, TAU); fillStroke(c, S.gem, 1); }
+      c.restore(); return;
+    }
+    if (S.style === 'spear') {
+      c.beginPath(); c.rect(-1.5, -len * 1.05, 3, len * 1.4); fillStroke(c, S.handle, 1.5); if (S.glow) { c.shadowColor = S.glow; c.shadowBlur = 7; }
+      c.beginPath(); c.moveTo(-4.2, -len * 1.05); c.lineTo(0, -len * 1.42); c.lineTo(4.2, -len * 1.05); c.lineTo(0, -len * 1.12); c.closePath(); fillStroke(c, S.head, 1.7); c.shadowBlur = 0;
+      if (S.tassel) { c.beginPath(); c.moveTo(0, -len * 1.04); c.quadraticCurveTo(-7, -len * 0.98, -6, -len * 0.84); c.quadraticCurveTo(-3, -len * 0.95, 0, -len * 0.98); c.closePath(); fillStroke(c, S.tassel, 1.1); }
+      c.restore(); return;
+    }
     if (S.style === 'hand' || S.style === 'battle' || S.style === 'double' || S.style === 'stone') {
       c.beginPath(); c.rect(-1.7, -len * 0.92, 3.4, len * 1.0); fillStroke(c, S.handle, 1.6);
       c.beginPath(); c.arc(0, len * 0.08, 2.2, 0, TAU); fillStroke(c, shade(S.handle, -0.2), 1.2);
@@ -125,7 +140,7 @@
       c.beginPath(); rrect(c, -4, -13, 8, 26, 2); fillStroke(c, it.col, 1.8);
       c.rotate(0.5); c.fillStyle = it.col; c.font = '900 17px sans-serif'; c.textAlign = 'center'; c.strokeStyle = OUT; c.lineWidth = 3; c.strokeText(it.mark || '+', 0, 8); c.fillText(it.mark || '+', 0, 8);
       if (it.rate) { c.font = '900 11px sans-serif'; c.lineWidth = 3; c.strokeStyle = '#fff'; c.strokeText(Math.round(it.rate * 100) + '%', 0, 26); c.fillStyle = '#7a2a08'; c.fillText(Math.round(it.rate * 100) + '%', 0, 26); }
-    } else if (it.slot === 'weapon') { const len = it.wt === 'great' ? 28 : 24; const s = it.wt === 'great' ? 1.9 : 2.1; c.translate(36, 36); c.rotate(0.72); c.scale(s, s); c.translate(0, len * (WPS[id].lenK || 1) * 0.5 * (it.wt === 'great' ? 1.15 : 1)); weapon(c, { id, wt: it.wt, col: it.col }, len); }
+    } else if (it.slot === 'weapon') { const len = it.wt === 'great' ? 28 : it.wt === 'spear' ? 22 : 24; const s = it.wt === 'great' ? 1.9 : it.wt === 'spear' ? 1.6 : 2.1; c.translate(36, 36); c.rotate(0.72); c.scale(s, s); c.translate(0, len * (WPS[id].lenK || 1) * 0.5 * (it.wt === 'great' ? 1.15 : 1)); weapon(c, { id, wt: it.wt, col: it.col }, len); }
     else if (it.slot === 'helmet') { c.translate(36, 44); c.scale(2.7, 2.7); helmet(c, id, it.col, 0); }
     else if (it.slot === 'armor') { c.translate(36, 78); c.scale(2.7, 2.7); armorShape(c, id, it.col, 0, '#6b3e22', 0); }
     else if (it.slot === 'gloves') { c.translate(36, 40); c.scale(3.2, 3.2); c.save(); c.translate(-6, 3); gloveShape(c, id, it.col, '#f6d4b2'); c.restore(); c.save(); c.translate(6, 1); gloveShape(c, id, it.col, '#f6d4b2'); c.restore(); }
@@ -195,7 +210,7 @@
   const TIER = { ar0: 0, ar1: 1, ar2: 2, ar3: 3, ar4: 4 };
   A.playerLook = function (G, extra) {
     const p = G.p, D = root.DATA; const eq = p.equip; const ar = D.ITEMS[eq.armor], w = D.ITEMS[eq.weapon], h = eq.helmet && D.ITEMS[eq.helmet], gl = eq.gloves && D.ITEMS[eq.gloves], sh = eq.shoes && D.ITEMS[eq.shoes];
-    return Object.assign({ armor: ar ? ar.col : '#c9b48a', armorId: ar ? ar.id : 'ar0', tier: ar ? (TIER[ar.id] || 0) : 0, pants: '#5a4636', shoes: sh ? sh.col : '#6b4426', shoeId: sh ? sh.id : null, gloves: gl ? gl.col : null, gloveId: gl ? gl.id : null, helmet: h ? h.id : null, helmetCol: h ? h.col : null, band: h ? null : '#d6343c', weapon: w ? { id: w.id, wt: w.wt, col: w.col, len: w.wt === 'great' ? 26 : 24, enh: (p.enh && p.enh[w.id] && p.enh[w.id].ok) || 0 } : null }, extra || {});
+    return Object.assign({ armor: ar ? ar.col : '#c9b48a', armorId: ar ? ar.id : 'ar0', tier: ar ? (TIER[ar.id] || 0) : 0, pants: '#5a4636', shoes: sh ? sh.col : '#6b4426', shoeId: sh ? sh.id : null, gloves: gl ? gl.col : null, gloveId: gl ? gl.id : null, helmet: h ? h.id : null, helmetCol: h ? h.col : null, band: h ? null : '#d6343c', weapon: w ? { id: w.id, wt: w.wt, col: w.col, len: (w.wt === 'great' || w.wt === 'spear') ? 26 : 24, enh: (p.enh && p.enh[w.id] && p.enh[w.id].ok) || 0 } : null }, extra || {});
   };
   A.drawPlayer = function (c, G, t) {
     const p = G.p; const look = A.playerLook(G, { t, face: p.face, walk: p.walkT, moving: Math.abs(p.vx) > 18 && p.onGround, air: !p.onGround && !p.climb, climb: !!p.climb, climbT: p.climbT, atk: p.atk, hurt: p.hitFlash > 0 || p.dead });

@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125u';
+  const BUILD = '20261125v';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -108,7 +108,7 @@
         case 'swing': { p.tut.atk = 1; const st = E.stats(G), a = p.atk; if (!a) break; const cx = p.x + e.face * 6, cy = p.y - 24;
           if (e.kind === 'power' || e.kind === 'rblow' || e.kind === 'crusher') fx({ type: 'beam', x: cx, y: cy + 2, face: e.face, r: a.rng * 1.15, col: FXCOL[e.kind] || '#ffb066', life: 0.3, delay: 0 });
           else if (e.kind === 'quake') { fx({ type: 'ring', x: p.x, y: p.y - 2, r: 40, flat: 0.25, col: '#ffcc66', size: 5, life: 0.5 }); }
-          else fx({ type: 'arc', kind: e.kind, face: e.face, combo: e.combo, r: Math.max(34, a.rng * 0.78), col: e.kind === 'basic' ? (D.ITEMS[p.equip.weapon].wt === 'axe' ? '#ffd9a0' : D.ITEMS[p.equip.weapon].wt === 'great' ? '#ffe0ff' : FXCOL.basic) : FXCOL[e.kind], life: e.kind === 'slash' ? 0.42 : 0.26, delay: 0 }), fxs[fxs.length - 1].delay = 0;
+          else fx({ type: 'arc', kind: e.kind, face: e.face, combo: e.combo, r: Math.max(34, a.rng * 0.78), col: e.kind === 'basic' ? (D.ITEMS[p.equip.weapon].wt === 'axe' ? '#ffd9a0' : D.ITEMS[p.equip.weapon].wt === 'great' ? '#ffe0ff' : D.ITEMS[p.equip.weapon].wt === 'spear' ? '#c8ffd8' : D.ITEMS[p.equip.weapon].wt === 'mace' ? '#ffe3b8' : FXCOL.basic) : FXCOL[e.kind], life: e.kind === 'slash' ? 0.42 : 0.26, delay: 0 }), fxs[fxs.length - 1].delay = 0;
           break; }
         case 'dmg': {
           if (e.who === 'player') dmgText(e.x, e.y, e.amt, { col: '#ff6a7a', grad: '#ff2a4a', stroke: '#3a0610', size: 20 });
@@ -284,7 +284,7 @@
     const it = D.ITEMS[id]; let s = `<div class="nm">${ico(id, 'mini')} ${gnameC(id, idx)}</div>`;
     if (it.t === 'equip') {
       const cur = G.p.equip[it.slot] && D.ITEMS[G.p.equip[it.slot]]; const en = enhOf(id, idx), inf = E.enhInfo(G, id, idx); const row = (k, lab) => { const v = it[k] || 0, c = cur ? (cur[k] || 0) : 0; if (!v && !c && !(en[k])) return ''; const d = v - c; return `${lab} <b>${v}</b>${en[k] ? ` <span style="color:#7aff9a">(+${en[k]} 강화)</span>` : ''}${cur && cur.id !== id && d ? ` <span style="color:${d > 0 ? '#7aff9a' : '#ff8a8a'}">(${d > 0 ? '▲' : '▼'}${Math.abs(d)})</span>` : ''}<br>`; };
-      s += `<div style="color:#bda8e0">${SLOTN[it.slot]}${it.wt ? ' · ' + ({ sword: '한손검', axe: '도끼', great: '대검' })[it.wt] : ''}</div>`;
+      s += `<div style="color:#bda8e0">${SLOTN[it.slot]}${it.wt ? ' · ' + ({ sword: '한손검', axe: '도끼', great: '대검(양손)', mace: '둔기', spear: '창(양손)' })[it.wt] : ''}</div>`;
       { const rq = E.req(it), pp = G.p; const c = (ok) => ok ? '#cfe' : '#ff8a8a'; s += `<span style="color:${c(pp.lv >= rq.lv)}">요구 Lv ${rq.lv}</span> · <span style="color:${c(pp.str >= rq.str)}">STR ${rq.str}</span>` + (rq.dex ? ` · <span style="color:${c(pp.dex >= rq.dex)}">DEX ${rq.dex}</span>` : '') + '<br>'; } s += '' + row('atk', '공격력') + row('def', '방어력') + row('str', 'STR') + row('dex', 'DEX') + row('hp', '최대 HP');
       s += `<div style="color:#ffe08a">🔨 강화 +${inf.ok} · 남은 횟수 <b>${inf.left}/${inf.slots}</b></div>`; if (it.wt) s += `공격 속도 <b>${it.spd <= 0.45 ? '빠름' : it.spd <= 0.55 ? '보통' : '느림'}</b> · 사거리 <b>${it.rng}</b><br>`;
     }
@@ -352,7 +352,7 @@
     const p = G.p, st = E.stats(G); let s = `<div class="card">남은 능력치 포인트 <b style="font-size:17px">${p.ap}</b> <small style="color:#cdbbe8">(레벨업마다 +5) · 전사는 <b>STR</b>이 제일 중요해요!</small></div>`;
     const row = (k, n, d) => `<div class="st"><span><b style="color:#fff">${n}</b> <small style="color:#cdbbe8">${d}</small></span><b>${p[k]}${st[k] !== undefined && st[k] !== p[k] ? `<small style="color:#7aff9a">(+${st[k] - p[k]})</small>` : ''}</b><button class="btn sm" data-a="stat:${k}:1" ${p.ap < 1 ? 'disabled' : ''}>＋</button><button class="btn sm" data-a="stat:${k}:5" ${p.ap < 5 ? 'disabled' : ''}>＋5</button></div>`;
     s += row('str', 'STR 힘', '공격력') + row('dex', 'DEX 민첩', '공격력(조금)·방어') + row('int', 'INT 지력', '최대 MP') + row('luk', 'LUK 행운', '치명타·드랍');
-    const w = D.ITEMS[p.equip.weapon] || D.ITEMS.sw0; const WT = { sword: '한손검', axe: '도끼', great: '대검' };
+    const w = D.ITEMS[p.equip.weapon] || D.ITEMS.sw0; const WT = { sword: '한손검', axe: '도끼', great: '대검', mace: '둔기', spear: '창' };
     s += `<div class="card" style="margin-top:8px;line-height:1.7"><b style="color:#ffd24a">📊 ${esc(p.name)} · Lv.${p.lv} ${p.job ? D.JOBS[p.job].n : '전사'}</b><br>⚔️ 공격력 <b>${fmt(Math.round(st.minDmg))} ~ ${fmt(Math.round(st.maxDmg))}</b> <small style="color:#cdbbe8">(무기 공격력 ${Math.round(st.wAtk)})</small><br>🛡️ 방어력 <b>${st.def}</b> · 치명타 <b>${(st.crit * 100).toFixed(1)}%</b><br>❤️ 최대 HP <b>${fmt(st.maxHp)}</b> · 💧 최대 MP <b>${fmt(st.maxMp)}</b><br>🗡️ 무기 <b>${esc(w.n)}</b> (${WT[w.wt] || '검'}) · 공격 속도 <b>${(1 / st.spd).toFixed(1)}</b>회/초 · 사거리 <b>${st.rng}</b><br>👟 이동 속도 <b>${st.speed}</b> · 장비 보너스 STR <b>+${st.bonus.str}</b> DEX <b>+${st.bonus.dex}</b> 공격 <b>+${st.bonus.atk}</b> 방어 <b>+${st.bonus.def}</b> HP <b>+${st.bonus.hp}</b></div>`;
     s += `<div class="card" style="font-size:11px;line-height:1.6"><b>🎽 장비 요구 능력치</b> <small style="color:#cdbbe8">(기본 STR/DEX 기준)</small><br>${['weapon', 'helmet', 'armor', 'gloves', 'shoes'].map((sl) => { const id = p.equip[sl], it = id && D.ITEMS[id]; if (!it) return `${SLOTN[sl]}: -`; const rq = E.req(it); return `${SLOTN[sl]}: ${esc(it.n)} (STR ${rq.str}${rq.dex ? ' / DEX ' + rq.dex : ''})`; }).join('<br>')}</div>`;
     s += `<div class="row2"><button class="btn sm green" data-a="auto" ${p.ap < 1 ? 'disabled' : ''}>남은 포인트 전부 STR에</button><button class="btn sm gray" data-a="reset">능력치 초기화(무료)</button></div>`;
@@ -441,7 +441,7 @@
       } else if (npc.role === 'master') {
         const cadv = E.canAdvance(G);
         if (G.p.job) text = `${D.JOBS[G.p.job].icon} 이제 어엿한 **${D.JOBS[G.p.job].n}**이로군. 계속 강해져라, 페리온의 영웅!`;
-        else if (cadv.ok) { text = '때가 됐군. 레벨 30, 그리고 시련까지 통과했다.\n\n**2차 전직**을 할 수 있다. 하나를 고르면 **되돌릴 수 없으니** 신중히 골라라!\n\n' + Object.keys(D.JOBS).map((j) => `${D.JOBS[j].icon} **${D.JOBS[j].n}** — ${D.JOBS[j].desc}\n  ▸ 기본 보너스: ${D.JOBS[j].bonus}`).join('\n\n');
+        else if (cadv.ok) { text = '때가 됐군. 레벨 30, 그리고 시련까지 통과했다.\n\n**2차 전직**을 할 수 있다. 하나를 고르면 **되돌릴 수 없으니** 신중히 골라라!\n\n' + Object.keys(D.JOBS).map((j) => `${D.JOBS[j].icon} **${D.JOBS[j].n}** — ${D.JOBS[j].desc}\n  ▸ 쓰는 무기: ${D.JOBS[j].wtn} · 기본 보너스: ${D.JOBS[j].bonus}`).join('\n\n');
           for (const j of Object.keys(D.JOBS)) opts.push({ label: `${D.JOBS[j].icon} ${D.JOBS[j].n} 되기`, cls: 'green', fn: () => dlg(npc, `정말 **${D.JOBS[j].n}**(으)로 전직하겠나?\n선택하면 바꿀 수 없다.`, [{ label: '✅ 전직한다', cls: 'green', fn: () => { const r = E.advance(G, j); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`2차 전직! ${D.JOBS[j].n}`); dlg(npc, `좋다! 오늘부터 너는 **${D.JOBS[j].n}**이다.\n스킬 탭에서 새 스킬을 배워라. (SP +6, 능력치 +5)`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }, { label: '← 다시 생각', cls: 'gray', fn: home }]) });
         } else text = `나는 전사 교관 발도다.\n\n⚔️ **2차 전직**(파이터·페이지·스피어맨)은 Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후에 가능하다. (${cadv.msg})\n\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.`;
         if (false) text = `나는 전사 교관 발도다.\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.\n· Lv 1 파워 스트라이크 · Lv 6 슬래시 블러스트\n· Lv 10 아이언 바디 · Lv 14 분노의 함성 · Lv 20 대지 가르기\n\n⚔️ 2차 전직(파이터·페이지·스피어맨)은 Lv 30 이후 준비 중이다. 기대해라!`;
