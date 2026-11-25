@@ -723,6 +723,7 @@
   };
   function npcName(id) { for (const mid in D.MAPS) { const t = D.MAPS[mid].npcs.find((n) => n.id === id); if (t) return t.n; } return id; }
   E.npcName = npcName;
+  E.npcMap = (id) => { for (const mid in D.MAPS) if (D.MAPS[mid].npcs.some((n) => n.id === id)) return D.MAPS[mid].n; return ''; };
   function npcMap(id) { for (const mid in D.MAPS) if (D.MAPS[mid].npcs.some((n) => n.id === id)) return D.MAPS[mid].n; return ''; }
 
   E.takeRelic = function (G) {

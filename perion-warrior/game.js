@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzzf';
+  const BUILD = '20261125zzzg';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -410,11 +410,12 @@
     return s;
   }
   function tabQuest() {
-    const p = G.p; let s = ''; const act = [], done = [];
-    for (const qid of D.QUEST_ORDER) { const st = E.qState(G, qid); if (st === 'active' || st === 'ready') act.push(qid); else if (st === 'done') done.push(qid); }
+    const p = G.p; let s = ''; const act = [], done = [], avail = [];
+    for (const qid of D.QUEST_ORDER) { const st = E.qState(G, qid); if (st === 'active' || st === 'ready') act.push(qid); else if (st === 'done') done.push(qid); else if (st === 'avail') avail.push(qid); }
     if (!act.length) { const o = E.objective(G); s += `<div class="card">진행 중인 퀘스트가 없어요.<br><b>${esc(o.txt)}</b></div>`; }
     for (const qid of act) { const q = D.QUESTS[qid], ready = E.qState(G, qid) === 'ready'; s += `<div class="card qrow ${ready ? 'ready' : ''}"><div class="nm">${esc(q.n)} <small style="color:#cdbbe8">Lv ${q.lv}</small></div><div style="color:#cdbbe8">${esc(E.npcName(q.npc))}</div>` + E.qProg(G, qid).map((g) => `<div>${esc(g.txt)} <b>${g.cur}/${g.n}</b><div class="pbar"><i style="width:${Math.min(100, g.cur / g.n * 100)}%"></i></div></div>`).join('') + `<div style="margin-top:4px">${ready ? '✅ <b>완료! NPC에게 돌아가세요</b>' : esc(q.doing)}</div></div>`; }
-    if (done.length) s += `<div class="card" style="color:#cdbbe8">완료한 퀘스트 ${done.length}/${D.QUEST_ORDER.length}: ${done.map((q) => '✔ ' + esc(D.QUESTS[q].n)).join(' · ')}</div>`;
+    if (avail.length) s += `<div class="card" style="font-size:12px">❗ <b>받을 수 있는 퀘스트</b> (${avail.length}개)<br>${avail.slice(0, 8).map((q) => `· ${esc(D.QUESTS[q].n)} <small style="color:#cdbbe8">Lv ${D.QUESTS[q].lv} · ${esc(E.npcName(D.QUESTS[q].npc))} (${esc(E.npcMap(D.QUESTS[q].npc))})</small>`).join('<br>')}${avail.length > 8 ? `<br><small style="color:#cdbbe8">…외 ${avail.length - 8}개</small>` : ''}</div>`;
+    if (done.length) s += `<div class="card" style="color:#cdbbe8">완료한 퀘스트 ${done.length}/${D.QUEST_ORDER.length}: ${done.slice(-8).map((q) => '✔ ' + esc(D.QUESTS[q].n)).join(' · ')}${done.length > 8 ? ` …외 ${done.length - 8}개` : ''}</div>`;
     return s;
   }
   // 조작 버튼 위치 보정 (기기마다 안전 영역이 달라 버튼이 가장자리에 붙을 때 직접 조절)
