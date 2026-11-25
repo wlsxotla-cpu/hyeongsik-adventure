@@ -271,12 +271,12 @@
     p.job = jid; p.sp += 3; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
   };
   // 스킬 레벨 상한: 캐릭터 레벨이 오를수록 천천히 열린다 (스킬 요구 레벨 +12~13 에서 만렙)
-  E.skillCap = (G, s) => Math.min(s.maxLv, 3 + Math.floor(Math.max(0, G.p.lv - s.reqLv) * 0.8));
+  E.skillCap = (G, s) => Math.min(s.maxLv, 3 + Math.floor(Math.max(0, G.p.lv - s.reqLv) * (s.tier || s.job ? 0.3 : 0.8)));
   // 스킬 포인트 총량을 스킬 필요량에 딱 맞춤: Lv2~30 합계 69(1차 스킬 7종 만렙, 파워 스트라이크 1레벨은 기본) + 전직 3 + Lv31~39 레벨당 3 = 직업 스킬 30
-  E.spEarned = (lv) => (lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69 + 3 * Math.min(lv - 30, 9)) + (lv > 70 ? 5 * Math.min(lv - 70, 9) : 0) + (lv > 120 ? 5 * Math.min(lv - 120, 9) : 0); // 2차 31~39 레벨당 3, 3차 71~79 레벨당 5, 4차 121~129 레벨당 5
+  E.spEarned = (lv) => (lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69 + (lv - 30)); // 31레벨부터 매 레벨 SP 1 (200까지 꾸준히). 2·3·4차 전직 보너스는 fixSp에서
   E.spSpent = (p) => { let n = 0; for (const sid in p.skills) n += Math.max(0, (p.skills[sid] || 0) - (sid === 'power' ? 1 : 0)); return n; };
   // 옛 저장 보정: 받은 포인트 총량이 새 기준보다 많으면 스킬을 초기화하고 기준량만 돌려준다
-  E.fixSp = function (G) { const p = G.p; if (p.tier3 && p.lv < D.JOB3_LV) p.tier3 = false; if (p.tier4 && (p.lv < D.JOB4_LV || !p.tier3)) p.tier4 = false; const earned = E.spEarned(p.lv) + (p.job ? 3 : 0) + (p.tier3 ? 5 : 0) + (p.tier4 ? 5 : 0), spent = E.spSpent(p); if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
+  E.fixSp = function (G) { const p = G.p; if (p.tier3 && p.lv < D.JOB3_LV) p.tier3 = false; if (p.tier4 && (p.lv < D.JOB4_LV || !p.tier3)) p.tier4 = false; const earned = E.spEarned(p.lv) + (p.job ? 3 : 0) + (p.tier3 ? 5 : 0) + (p.tier4 ? 5 : 0), spent = E.spSpent(p); if (spent + p.sp < earned) { const add = earned - spent - p.sp; p.sp += add; ev(G, { t: 'msg', text: '스킬 포인트 ' + add + '점을 추가로 받았어요! (31레벨부터 매 레벨 1점)' }); return true; } if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
   E.resetSkills = function (G) { const p = G.p; let back = 0; for (const sid in p.skills) { const l = p.skills[sid] || 0; const keep = sid === 'power' ? 1 : 0; back += Math.max(0, l - keep); if (keep) p.skills[sid] = keep; else delete p.skills[sid]; } p.sp += back; p.buffs = {}; return back; };
   // 직업 변경: 다른 직업을 체험해 볼 수 있게 언제든 가능. 스킬은 전부 초기화(포인트는 그대로 돌려받음), 못 쓰는 무기는 직업 기본 무기로 교체
   E.changeJob = function (G, jid) {
