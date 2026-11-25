@@ -376,7 +376,7 @@
           for (let k = 0; k < n; k++) addZone(G, { kind: 'rock', x: clamp(k === 0 ? p.x : p.x + rr(G, -280, 280), 60, G.map.w - 60), y: m.py, r: 38, dur: 0.85 + k * 0.17, dmg: def.atk * 1.3, lv: def.lv });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.0;
         } else if (a === 'flame') {
-          const n = phase2 ? 9 : 6; for (let k = 0; k < n; k++) addProj(G, { kind: 'fire', x: clamp(k === 0 ? p.x : p.x + rr(G, -340, 340), 60, G.map.w - 60), y: m.py - 420, vx: 0, vy: 60, grav: 900, w: 22, h: 22, dmg: def.atk * 1.1, lv: def.lv, life: 4, delay: k * 0.2 });
+          const n = phase2 ? 9 : 6; for (let k = 0; k < n; k++) addProj(G, { kind: 'fire', x: clamp(k === 0 ? p.x : p.x + rr(G, -340, 340), 60, G.map.w - 60), y: m.py - 420, vx: 0, vy: 60, grav: 900, w: 22, h: 22, dmg: def.atk * 1.1, lv: def.lv, life: 4, delay: k * 0.2, warn: true, gy: m.py });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.1;
         } else if (a === 'stomp') {
           m.vy = -620; m.vx = clamp((p.x - m.x) / 0.9, -330, 330); m.st = 'air'; m.stomp = true; ev(G, { t: 'sfx', n: 'swing' });

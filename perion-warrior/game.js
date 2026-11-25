@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzj';
+  const BUILD = '20261125zzk';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -539,6 +539,8 @@
     if (p.buffs.def || p.buffs.atk) drawAura(c, p);
     if (p.pet && !p.dead) { const pp = petState; c.save(); c.translate(pp.x, pp.y); Art.drawPet(c, time, pp.face, pp.moving, pp.cheer > 0); c.restore(); if (pp.cheer > 0) { c.font = '14px sans-serif'; c.textAlign = 'center'; c.fillText('💖', pp.x, pp.y - 34 - (0.8 - pp.cheer) * 14); } }
     if (p.dead) Art.drawGrave(c, p.x, p.y, time); else { c.save(); c.translate(p.x, p.y); ellShadow(c, p); Art.drawPlayer(c, G, time); c.restore(); }
+    // 떨어지는 불덩이(자쿰)는 떨어질 자리에 붉은 경고 표시
+    for (const q of G.proj) if (q.kind === 'fire' && q.warn) { const gy = q.gy; if (q.y < gy) { const k = 0.35 + 0.25 * Math.sin(time * 20); c.save(); c.globalAlpha = k; c.fillStyle = '#ff3a2a'; c.beginPath(); c.ellipse(q.x, gy, 18, 5, 0, 0, TAU); c.fill(); c.globalAlpha = k * 0.8; c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke(); c.restore(); } }
     for (const q of G.proj) if (q.delay === undefined || q.delay <= 0) Art.drawProj(c, q, time);
     // 몬스터 HP바
     for (const mm of G.mons) { if (mm.dead || mm.def.boss || !(mm.hit > 0) || mm.hp >= mm.maxhp || mm.prov <= 0) continue; const w = 38, x = mm.x - w / 2, y = mm.y - mm.def.h - 12; c.fillStyle = 'rgba(0,0,0,.7)'; c.fillRect(x - 1.5, y - 1.5, w + 3, 7); c.fillStyle = '#ff4a5a'; c.fillRect(x, y, w * mm.hp / mm.maxhp, 4); c.font = 'bold 9px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = 2.4; const nm = `Lv.${mm.def.lv} ${mm.def.n}`; c.strokeText(nm, mm.x, y - 3); c.fillText(nm, mm.x, y - 3); }
