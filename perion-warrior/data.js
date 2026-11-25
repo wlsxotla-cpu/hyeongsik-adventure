@@ -268,10 +268,23 @@
   };
   // 점프맵: 시련의 탑 (몬스터 없음, 발판을 점프로 올라가 꼭대기 고대 상자까지)
   (function () {
-    const pl = [P(0, 960, 1400, 1)]; let xc = 300, dir = 1, y = 960; const W = 96;
-    for (let i = 0; i < 14; i++) { const nx = xc + dir * 150; if (nx > 1150 || nx < 250) dir = -dir; else xc = nx; y -= 60; pl.push(P(xc - W / 2, y, W)); }
-    pl[pl.length - 1] = P(xc - 110, y, 220);
-    maps.trial = { id: 'trial', n: '시련의 탑', sub: '점프맵', lvTxt: 'Lv 26+ 점프맵', w: 1400, h: 1000, theme: 'temple', bgm: 'boss', plats: pl, ladders: [], spawns: [],
+    // 코스: 3구간(발판 점점 좁고 높아짐) + 중간 쉼터 2곳. 발판은 좌우로 불규칙하게 이어져, 떨어지면 아래 발판에 걸리거나 바닥까지 떨어진다
+    const H = 2400, GY = H - 40, pl = [P(0, GY, 1400, 1)]; let y = GY, dir = 1, seed = 7, left = 300, right = 420;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const stages = [{ n: 9, w: 52, rise: 66, gap: 58 }, { rest: 1 }, { n: 10, w: 40, rise: 72, gap: 54 }, { rest: 1 }, { n: 11, w: 32, rise: 76, gap: 52 }];
+    for (const st of stages) {
+      const cnt = st.rest ? 1 : st.n;
+      for (let i = 0; i < cnt; i++) {
+        const w = st.rest ? 200 : st.w, rise = st.rest ? 66 : st.rise + Math.round((rnd() - 0.5) * 4), gap = st.rest ? 40 : st.gap + Math.round((rnd() - 0.5) * 3);
+        if (rnd() < 0.4) dir = -dir;
+        let nx = dir > 0 ? right + gap : left - gap - w;
+        if (nx < 40 || nx + w > 1360) { dir = -dir; nx = dir > 0 ? right + gap : left - gap - w; }
+        y -= rise; pl.push(P(nx, y, w)); left = nx; right = nx + w;
+      }
+    }
+    { const t0 = pl[pl.length - 1]; pl[pl.length - 1] = P(t0.x + t0.w / 2 - 110, t0.y, 220); }
+    const top = pl[pl.length - 1]; const xc = top.x + top.w / 2;
+    maps.trial = { id: 'trial', n: '시련의 탑', sub: '점프맵', lvTxt: 'Lv 26+ 점프맵', w: 1400, h: H, theme: 'temple', bgm: 'boss', plats: pl, ladders: [], spawns: [],
       portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toTrial', label: '페리온 마을' }],
       npcs: [{ id: 'chest', n: '고대 상자', x: xc, y, role: 'chest', look: 'chest' }] };
   })();
