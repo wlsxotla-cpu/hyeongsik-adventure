@@ -4,7 +4,7 @@
   const D = {};
 
   /* ───────── 경험치 / 공식 ───────── */
-  D.MAX_LV = 30;
+  D.MAX_LV = 40; D.JOB_LV = 30;
   D.expToNext = (lv) => Math.round((9 * lv * lv + 12 * lv + 2) * (1 + lv / 20));
   D.monExp = (lv) => Math.round(1.5 * Math.pow(lv, 1.5) + 4);
   D.monHp = (lv) => Math.round(11 + 2.7 * Math.pow(lv, 1.95));
@@ -107,7 +107,33 @@
     toughness: { n: '체력 단련', icon: '❤️', kind: 'passive', reqLv: 8, maxLv: 10,
       desc: (l) => `최대 HP +${l * 4}%, HP 자연회복 증가.` },
   };
-  D.SKILL_ORDER = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness'];
+  // ── 2차 전직 (Lv 30 + 고대 골렘의 시련 완료) ──
+  D.JOBS = {
+    fighter: { n: '파이터', icon: '⚔️', col: '#ff9a6a', desc: '공격력이 가장 강한 공격형. 전 스킬 데미지가 올라가고, 강한 한 방(레이징 블로우)과 버서크로 보스를 녹인다.', bonus: '공격력 +8%' },
+    page: { n: '페이지', icon: '🛡️', col: '#8fb6ff', desc: '방어와 체력이 높은 탱커형. 파워 가드·방어 마스터리로 맞아도 버티며, 홀리 차지로 여러 마리를 쓸어낸다.', bonus: '방어력 +8, 최대 HP +8%' },
+    spearman: { n: '스피어맨', icon: '🔱', col: '#7ae0a0', desc: '체력과 치명타가 좋은 사냥형. 드래곤 크러셔로 넓게 쓸고, 하이퍼 바디로 HP를 크게 늘린다.', bonus: '최대 HP +10%, 치명타 +3%' },
+  };
+  Object.assign(D.SKILLS, {
+    rblow: { job: 'fighter', n: '레이징 블로우', icon: '🗡️', kind: 'atk', reqLv: 30, maxLv: 10, mp: (l) => 14 + l, mult: (l) => 2.6 + 0.25 * l, targets: 1, rng: 84, cd: 1.6, fx: 'power',
+      desc: (l) => `혼신의 일격! 앞의 적 1명을 ${Math.round((2.6 + 0.25 * l) * 100)}% 위력으로 강타. (MP ${14 + l})` },
+    berserk: { job: 'fighter', n: '버서크', icon: '😡', kind: 'buff', reqLv: 30, maxLv: 10, mp: (l) => 20 + l, cd: 1, dur: (l) => 40 + l * 5, buff: 'atk2', val: (l) => 0.15 + l * 0.03,
+      desc: (l) => `${40 + l * 5}초 동안 공격력 +${Math.round((0.15 + l * 0.03) * 100)}% (분노의 함성과 중첩). (MP ${20 + l})` },
+    fmastery: { job: 'fighter', n: '파이터 숙련', icon: '📕', kind: 'passive', reqLv: 30, maxLv: 10,
+      desc: (l) => `공격력 +${l * 2}%, 최소 데미지 비율 +${l}%p.` },
+    charge: { job: 'page', n: '홀리 차지', icon: '✨', kind: 'atk', reqLv: 30, maxLv: 10, mp: (l) => 16 + l, mult: (l) => 2.0 + 0.2 * l, targets: 4, rng: 110, cd: 2.0, fx: 'slash',
+      desc: (l) => `성스러운 검기로 최대 4명을 ${Math.round((2.0 + 0.2 * l) * 100)}% 위력으로 공격. (MP ${16 + l})` },
+    guard: { job: 'page', n: '파워 가드', icon: '🔰', kind: 'buff', reqLv: 30, maxLv: 10, mp: (l) => 20 + l, cd: 1, dur: (l) => 40 + l * 5, buff: 'def2', val: (l) => 20 + l * 6,
+      desc: (l) => `${40 + l * 5}초 동안 방어력 +${20 + l * 6} (아이언 바디와 중첩). (MP ${20 + l})` },
+    pmastery: { job: 'page', n: '방어 마스터리', icon: '📗', kind: 'passive', reqLv: 30, maxLv: 10,
+      desc: (l) => `방어력 +${l * 3}, 최대 HP +${l * 2}%.` },
+    crusher: { job: 'spearman', n: '드래곤 크러셔', icon: '🐉', kind: 'atk', reqLv: 30, maxLv: 10, mp: (l) => 20 + l, mult: (l) => 1.7 + 0.18 * l, targets: 7, rng: 150, cd: 2.5, fx: 'power',
+      desc: (l) => `창을 휘둘러 앞의 넓은 범위 최대 7명을 ${Math.round((1.7 + 0.18 * l) * 100)}% 위력으로 공격. (MP ${20 + l})` },
+    hyper: { job: 'spearman', n: '하이퍼 바디', icon: '💪', kind: 'buff', reqLv: 30, maxLv: 10, mp: (l) => 22 + l, cd: 1, dur: (l) => 40 + l * 5, buff: 'hp2', val: (l) => 0.1 + l * 0.02,
+      desc: (l) => `${40 + l * 5}초 동안 최대 HP +${Math.round((0.1 + l * 0.02) * 100)}%. (MP ${22 + l})` },
+    smastery: { job: 'spearman', n: '창 마스터리', icon: '📙', kind: 'passive', reqLv: 30, maxLv: 10,
+      desc: (l) => `치명타 확률 +${(l * 1.5).toFixed(1)}%p, 최소 데미지 비율 +${l * 2}%p.` },
+  });
+  D.SKILL_ORDER = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness', 'rblow', 'berserk', 'fmastery', 'charge', 'guard', 'pmastery', 'crusher', 'hyper', 'smastery'];
 
   /* ───────── 몬스터 ───────── */
   const M = {};

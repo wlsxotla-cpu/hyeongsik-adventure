@@ -173,8 +173,8 @@
       const u = Math.min(1, a.t / a.dur), k = a.kind, PI = Math.PI;
       const ease = (x) => x * x * (3 - 2 * x), lerp = (p, q, f) => p + (q - p) * f, cl01 = (x) => Math.max(0, Math.min(1, x));
       if (k === 'quake') { ang = u < 0.5 ? lerp(0.2, -2.9, ease(u / 0.5)) : lerp(-2.9, -0.5, ease(cl01((u - 0.5) / 0.18))); }
-      else if (k === 'power') { if (u < 0.35) ang = lerp(0.1, 0.8, ease(u / 0.35)); else { const f = ease(cl01((u - 0.35) / 0.2)); ang = lerp(0.8, -1.55, f); ex = lerp(0, 4, f); } }
-      else if (k === 'slash') { ang = -1.2 + Math.sin(u * 6.5) * 0.55; }
+      else if (k === 'power' || k === 'rblow' || k === 'crusher') { if (u < 0.35) ang = lerp(0.1, 0.8, ease(u / 0.35)); else { const f = ease(cl01((u - 0.35) / 0.2)); ang = lerp(0.8, -1.55, f); ex = lerp(0, 4, f); } }
+      else if (k === 'slash' || k === 'charge') { ang = -1.2 + Math.sin(u * 6.5) * 0.55; }
       else if (a.combo === 1) { ang = u < 0.35 ? lerp(0.1, 0.8, ease(u / 0.35)) : lerp(0.8, -1.7, ease(cl01((u - 0.35) / 0.22))); }
       else if (a.combo === 2) { ang = u < 0.35 ? lerp(0.1, 0.5, ease(u / 0.35)) : lerp(0.5, -2.6, ease(cl01((u - 0.35) / 0.22))); }
       else { ang = u < 0.35 ? lerp(0.1, -2.6, ease(u / 0.35)) : lerp(-2.6, -0.5, ease(cl01((u - 0.35) / 0.22))); }

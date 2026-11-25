@@ -12,7 +12,7 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job'];
   E.newPlayer = function (name) {
     return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
@@ -39,14 +39,15 @@
     const w = D.ITEMS[p.equip.weapon] || D.ITEMS.sw0;
     const str = p.str + b.str, dex = p.dex + b.dex;
     const tough = p.skills.toughness || 0, mast = p.skills.mastery || 0;
-    const rageMul = p.buffs.atk ? 1 + p.buffs.atk.val : 1;
+    const job = p.job, fm = job === 'fighter' ? (p.skills.fmastery || 0) : 0, pm = job === 'page' ? (p.skills.pmastery || 0) : 0, sm = job === 'spearman' ? (p.skills.smastery || 0) : 0;
+    const rageMul = (p.buffs.atk ? 1 + p.buffs.atk.val : 1) * (p.buffs.atk2 ? 1 + p.buffs.atk2.val : 1) * (job === 'fighter' ? 1.08 + fm * 0.02 : 1);
     const wAtk = (w.atk || 10) + (w.slot === 'weapon' ? b.atk - (w.atk || 0) : 0);
     const maxDmg = Math.max(1, (str * 4 + dex) * wAtk / 100 * rageMul);
-    const minRatio = clamp(0.2 + mast * 0.05, 0.2, 0.75);
-    const def = b.def + (p.buffs.def ? p.buffs.def.val : 0) + Math.floor(dex / 6);
-    const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough));
+    const minRatio = clamp(0.2 + mast * 0.05 + fm * 0.01 + sm * 0.02, 0.2, 0.85);
+    const def = b.def + (p.buffs.def ? p.buffs.def.val : 0) + (p.buffs.def2 ? p.buffs.def2.val : 0) + Math.floor(dex / 6) + (job === 'page' ? 8 + pm * 3 : 0);
+    const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough + (job === 'page' ? 0.08 + pm * 0.02 : 0) + (job === 'spearman' ? 0.1 : 0) + (p.buffs.hp2 ? p.buffs.hp2.val : 0)));
     const maxMp = Math.round(p.baseMp + p.int * 2);
-    return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004, speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b };
+    return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004 + (job === 'spearman' ? 0.03 + sm * 0.015 : 0), speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b };
   };
   E.calcMon = (id) => D.MON[id];
 
@@ -191,10 +192,26 @@
   /* ───────── 스탯·스킬 ───────── */
   E.addStat = function (G, k, n) { const p = G.p; n = Math.min(n || 1, p.ap); if (n < 1 || !(k in { str: 1, dex: 1, int: 1, luk: 1 })) return false; p[k] += n; p.ap -= n; return true; };
   E.autoStat = function (G) { const p = G.p; p.str += p.ap; p.ap = 0; };
-  E.resetStats = function (G) { const p = G.p; const used = (p.str - 12) + (p.dex - 5) + (p.int - 4) + (p.luk - 4); p.str = 12; p.dex = 5; p.int = 4; p.luk = 4; p.ap += used; };
+  E.resetStats = function (G) { const p = G.p; const used = (p.str - 12) + (p.dex - 5) + (p.int - 4) + (p.luk - 4); p.str = 12; p.dex = 5; p.int = 4; p.luk = 4; p.ap += used; E.checkGear(G); };
+  // 능력치가 모자라 못 입는 장비는 자동으로 벗는다 (스탯 초기화·옛 저장 대비). 무기는 낡은 검으로 교체
+  E.checkGear = function (G) {
+    const p = G.p, out = [];
+    for (const slot of ['helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[slot], it = id && D.ITEMS[id]; if (it && !E.canWear(G, it).ok) { E.unequip(G, slot); out.push(it.n); } }
+    const wid = p.equip.weapon, w = wid && D.ITEMS[wid];
+    if (w && wid !== 'sw0' && !E.canWear(G, w).ok) {
+      if (!(p.inv.sw0 > 0)) E.addItem(G, 'sw0', 1); const r = E.bagRecs(G, 'sw0'); E.equip(G, 'sw0', r.length - 1); out.push(w.n); // 교체되며 원래 무기는 강화 기록과 함께 가방으로
+    }
+    if (out.length) ev(G, { t: 'msg', text: `능력치가 모자라 장비를 벗었어요: ${out.join(', ')}` });
+    const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); return out;
+  };
+  E.canAdvance = (G) => { const p = G.p; if (p.job) return { ok: false, msg: '이미 전직했어요' }; if (p.lv < D.JOB_LV) return { ok: false, msg: `Lv ${D.JOB_LV} 이상부터 전직할 수 있어요` }; if (E.qState(G, 'q9') !== 'done') return { ok: false, msg: '「고대 골렘의 시련」을 먼저 완료해야 해요' }; return { ok: true }; };
+  E.advance = function (G, jid) {
+    const p = G.p, j = D.JOBS[jid]; const c = E.canAdvance(G); if (!j || !c.ok) return c.ok ? { ok: false, msg: '없는 직업이에요' } : c;
+    p.job = jid; p.sp += 6; p.ap += 5; const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
+  };
   E.learn = function (G, sid) {
     const p = G.p, s = D.SKILLS[sid]; const l = p.skills[sid] || 0;
-    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv) return false;
+    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job)) return false;
     p.skills[sid] = l + 1; p.sp -= 1; ev(G, { t: 'sfx', n: 'equip' }); return true;
   };
 
@@ -410,7 +427,7 @@
     // 타이머
     p.inv_t -= dt; p.atkCd -= dt; p.dropT -= dt; p.ladderCd -= dt; p.knock -= dt; p.comboT -= dt; p.hitFlash -= dt;
     for (const k in p.skCd) if (p.skCd[k] > 0) p.skCd[k] -= dt;
-    for (const k in p.buffs) { p.buffs[k].t -= dt; if (p.buffs[k].t <= 0) { delete p.buffs[k]; ev(G, { t: 'buffEnd', k }); } }
+    for (const k in p.buffs) { p.buffs[k].t -= dt; if (p.buffs[k].t <= 0) { delete p.buffs[k]; ev(G, { t: 'buffEnd', k }); if (k === 'hp2') p.hp = Math.min(p.hp, E.stats(G).maxHp); } }
     // 포션
     if (inp.pot) { E.autoPotion(G, inp.pot); inp.pot = null; }
     if (p.pet && p.settings.auto && !p.dead && G.potCd <= 0) {
