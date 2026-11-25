@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzx';
+  const BUILD = '20261125zzy';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -326,7 +326,7 @@
       else if (k === 'ctl') { const st = G.p.settings; if (v === 'reset') { st.padX = st.padY = st.btnX = st.btnY = 0; } else { st[v] = Math.max(-30, Math.min(160, (st[v] || 0) + (+w || 0))); } applyCtl(); }
       else if (k === 'auto') { E.autoStat(G); }
       else if (k === 'reset') { E.resetStats(G); handleEvents(); }
-      else if (k === 'tog') { p.settings[v] = !p.settings[v]; if (v === 'sound') Snd.setSound(p.settings.sound); if (v === 'music') Snd.setMusic(p.settings.music); if (v === 'ytbgm') Snd.setYt(p.settings.ytbgm); }
+      else if (k === 'tog') { p.settings[v] = !p.settings[v]; if (v === 'sound') Snd.setSound(p.settings.sound); if (v === 'music') Snd.setMusic(p.settings.music); if (v === 'ytbgm') Snd.setYt(p.settings.ytbgm); if (v === 'hq') applyHq(); }
       else if (k === 'thr') { p.settings[v] = +w; }
       else if (k === 'save') { save(); logLine('💾 저장했어요', 'i'); }
       else if (k === 'wipe') { if (el.dataset.c !== '1') { el.dataset.c = '1'; el.textContent = '정말 지울까요? 한 번 더 누르면 삭제'; return; } store.del(SAVE_KEY); started = false; location.reload(); return; }
@@ -376,6 +376,9 @@
     return s;
   }
   // 조작 버튼 위치 보정 (기기마다 안전 영역이 달라 버튼이 가장자리에 붙을 때 직접 조절)
+  // 고화질 효과(명암·분위기)를 켜고 끈다. 프레임이 많이 떨어지면 자동으로 끈다
+  function applyHq() { const on = !(G && G.p.settings.hq === false); Art.shading = on; Art.hq = on; }
+  let slowT = 0;
   function applyCtl() { const a = $('app'); if (!a || !G) return; const st = G.p.settings; a.style.setProperty('--px', (st.padX || 0) + 'px'); a.style.setProperty('--py', (st.padY || 0) + 'px'); a.style.setProperty('--bx', (st.btnX || 0) + 'px'); a.style.setProperty('--by', (st.btnY || 0) + 'px'); }
   function tabSet() {
     const p = G.p, st = p.settings; const tg = (k, n, d) => `<div class="tog" data-a="tog:${k}"><span><b>${n}</b><br><small style="color:#cdbbe8">${d}</small></span><div class="sw ${st[k] ? 'on' : ''}"></div></div>`;
@@ -386,7 +389,7 @@
     const how = `<div class="card">🧪 <b>물약 쓰는 법</b><br>화면 <b>오른쪽 위 ❤️(HP)·💧(MP) 버튼</b>을 누르면 가진 물약을 먹어요. 버튼의 숫자는 남은 개수예요.<br>⌨️ 키보드: H(HP) · M(MP)<br><small style="color:#cdbbe8">자동으로 먹는 건 펫이 있어야 해요 (아래 참고)</small></div>`;
     const ctlRow = (k, lab) => `<div class="tog"><span><b>${lab}</b> <small style="color:#cdbbe8">${st[k] || 0}</small></span><span><button class="btn sm gray" data-a="ctl:${k}:-10">－</button> <button class="btn sm" data-a="ctl:${k}:10">＋</button></span></div>`;
     const ctl = `<div class="card"><b>🕹️ 버튼 위치 조절</b><br><small style="color:#cdbbe8">방향키·버튼이 화면 끝에 붙어 누르기 힘들면 안쪽으로 옮겨요.</small></div>` + ctlRow('padX', '방향키 ▶ 안쪽으로') + ctlRow('padY', '방향키 ▲ 위로') + ctlRow('btnX', '공격·스킬 ◀ 안쪽으로') + ctlRow('btnY', '공격·스킬 ▲ 위로') + `<div class="row2"><button class="btn sm gray" data-a="ctl:reset">위치 초기화</button></div>`;
-    return how + pet + `<div class="card" style="font-size:11px;color:#cdbbe8">빌드 ${BUILD}</div>` + ctl + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 메이플 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
+    return how + pet + `<div class="card" style="font-size:11px;color:#cdbbe8">빌드 ${BUILD}</div>` + ctl + tg('hq', '🎨 고화질 효과', '입체 명암·날씨·빛 효과. 끄면 더 부드럽게 돌아가요') + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 메이플 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
       `<div class="card">🕹️ <b>조작</b>: ◀▶ 이동 · ▲ 밧줄 오르기/문 들어가기 · ▼ 밧줄 내려가기/발판 아래로(▼+점프) · ⚔️ 공격(꾹) · 보라 버튼 스킬 · ❤️💧 물약<br>⌨️ 키보드: 방향키/Space점프/Z공격/1~5스킬/H·M물약/E대화</div>` +
       `<div class="row2"><button class="btn sm" data-a="save">💾 지금 저장</button><button class="btn sm red" data-a="wipe">🗑 처음부터 다시</button></div>`;
   }
@@ -603,6 +606,7 @@
   function frame(now) {
     if (window.innerWidth !== lw || window.innerHeight !== lh || !view.s) { lw = window.innerWidth; lh = window.innerHeight; if (lw > 0 && lh > 0) layout(); else return; }
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now; time += dt;
+    if (started && G && G.p.settings.hq !== false) { if (dt > 0.034) slowT += dt; else slowT = Math.max(0, slowT - dt * 0.5); if (slowT > 6) { slowT = 0; G.p.settings.hq = false; applyHq(); logLine('화면이 느려서 고화질 효과를 껐어요 (설정에서 다시 켤 수 있어요)', 'i'); } }
     if (G) {
       if (started && !paused) {
         E.step(G, dt); handleEvents();
@@ -631,7 +635,7 @@
     G = E.newGame(sv ? sv.name : name, undefined, sv); if (sv) E.fixSp(G); started = true; paused = false; Snd.init(); Snd.setSound(G.p.settings.sound); Snd.setMusic(G.p.settings.music); if (G.p.settings.ytbgm === undefined) G.p.settings.ytbgm = true; Snd.setYt(G.p.settings.ytbgm);
     $('title').classList.add('hidden'); $('hud').classList.remove('hidden'); $('ctl').classList.remove('hidden');
     if (!sv) { G.p.name = name; }
-    applyCtl(); onMap(); buildSkillBtns(); updateHud(true); hc.sk = null;
+    if (G.p.settings.hq === undefined) G.p.settings.hq = true; applyHq(); applyCtl(); onMap(); buildSkillBtns(); updateHud(true); hc.sk = null;
     if (isNew) { showModal(`<div class="panel" id="dlg"><h3><span>📖 프롤로그</span></h3><div class="body"><div class="txt"><div>바위와 용기의 마을 <b>페리온</b>.\n이곳은 수많은 전사가 첫걸음을 내딛은 곳이에요.\n\n오늘, 새로운 전사 <b>${esc(name)}</b>의 모험이 시작됩니다!\n\n⚔️ 사냥하고, 레벨을 올리고, 장비를 갖춰\n페리온의 위협 <b>고목 대장</b>과 <b>바위왕 골렘</b>을 쓰러뜨리세요.</div><div class="opts"><button class="btn green" data-a="go" style="min-height:52px;font-size:16px">모험 시작!</button></div></div></div></div>`, (a) => { if (a === 'go') closeModal(); }, true); }
     else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
   }

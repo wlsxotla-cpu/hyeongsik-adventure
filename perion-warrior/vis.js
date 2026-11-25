@@ -119,6 +119,7 @@
 
   /* ───────── 분위기 효과 (눈·불씨·빛줄기·비네트) ───────── */
   A.drawAtmos = function (c, G, cx, cy, VW, VH, t) {
+    if (A.hq === false) return;
     const m = G.map, th = m.theme; c.save();
     if (th === 'ice') { // 눈 내리기 (3겹 시차)
       c.fillStyle = '#fff'; for (let i = 0; i < 70; i++) { const d = 1 + (i % 3), sp = 14 + d * 12, x = ((hash(i) * (VW + 80) + t * (10 + d * 4) - cx * 0.05 * d) % (VW + 80) + (VW + 80)) % (VW + 80) - 40, y = ((hash(i + 50) * (VH + 40) + t * sp) % (VH + 40)) - 20; c.globalAlpha = 0.35 + 0.2 * d; c.beginPath(); c.arc(x + Math.sin(t * 1.2 + i) * 4, y, 0.8 + d * 0.5, 0, TAU); c.fill(); }

@@ -1,11 +1,13 @@
 /* 페리온 전사 — 그림(전부 코드로 그림). 캐릭터·몬스터·NPC·배경·지형 */
 (function (root) {
   'use strict';
-  const A = {}; const TAU = Math.PI * 2; const OUT = '#2b1c14';
+  const A = { shading: true }; const TAU = Math.PI * 2; const OUT = '#2b1c14';
   function rrect(c, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
   function ell(c, x, y, rx, ry) { c.beginPath(); c.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), 0, 0, TAU); }
   function shade(hex, amt) { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; const f = (v) => Math.max(0, Math.min(255, Math.round(amt >= 0 ? v + (255 - v) * amt : v * (1 + amt)))); return '#' + ((1 << 24) | (f(r) << 16) | (f(g) << 8) | f(b)).toString(16).slice(1); }
-  function fillStroke(c, fill, lw) { c.fillStyle = fill; c.fill(); c.lineWidth = lw || 2; c.strokeStyle = OUT; c.lineJoin = 'round'; c.stroke(); }
+  // 모양을 칠한 뒤, 위쪽은 살짝 밝게·아래쪽은 살짝 어둡게 덧칠해 입체감을 준다 (A.shading 으로 끌 수 있음)
+  function shadeGrad(c) { return c.__sg || (c.__sg = (() => { const g = c.createLinearGradient(0, -86, 0, 6); g.addColorStop(0, 'rgba(255,255,255,.26)'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(10,0,30,.3)'); return g; })()); }
+  function fillStroke(c, fill, lw) { c.fillStyle = fill; c.fill(); if (A.shading) { c.save(); c.clip(); c.fillStyle = shadeGrad(c); c.fillRect(-400, -400, 800, 500); c.restore(); } c.lineWidth = lw || 2; c.strokeStyle = OUT; c.lineJoin = 'round'; c.stroke(); }
   function seeded(seed) { let a = seed | 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   A.shade = shade; A.rrect = rrect; A.seeded = seeded;
 
