@@ -44,6 +44,16 @@
     sp7: { head: '#7ad8ff', handle: '#1a2a40', style: 'spear', tassel: '#ffffff', glow: '#6ad8ff' },
     gs3: { w: 5.6, blade: '#ff9c7a', guard: '#7a2a2a', grip: '#2a1a1a', style: 'dragon', glow: '#ff7a3a', gem: '#ffd24a', lenK: 1.05 },
   };
+  // 생성된 장비(gen)의 무기 그림: 아이템 색에서 스타일을 만든다
+  (function () {
+    const IT = (root.DATA && root.DATA.ITEMS) || {};
+    for (const id in IT) { const it = IT[id]; if (!it.gen || it.slot !== 'weapon' || WPS[id]) continue; const c0 = it.col || '#cccccc';
+      WPS[id] = it.wt === 'sword' ? { w: 4.2, blade: shade(c0, 0.5), guard: shade(c0, -0.2), grip: '#2a1a1a', style: 'rune', gem: shade(c0, 0.7), glow: c0, lenK: 1.08 }
+        : it.wt === 'axe' ? { head: c0, handle: '#3a2a2a', style: 'stone', gem: shade(c0, 0.6), glow: c0 }
+        : it.wt === 'great' ? { w: 6, blade: shade(c0, 0.4), guard: shade(c0, -0.3), grip: '#1a1a1a', style: 'dragon', glow: c0, gem: shade(c0, 0.7), lenK: 1.08 }
+        : it.wt === 'mace' ? { head: c0, handle: '#2a2a2a', style: 'mace', spike: 1, big: 1, glow: c0, gem: shade(c0, 0.7) }
+        : { head: shade(c0, 0.3), handle: '#2a2a3a', style: 'spear', tassel: c0, glow: c0 }; }
+  })();
   // 강화 등급 색 (메이플처럼 올릴수록 색이 달라짐): +1~2 하늘 / +3~4 보라 / +5~6 금 / +7 이상 빨강
   A.enhColor = (ok) => (ok >= 7 ? '#ff5a4a' : ok >= 5 ? '#ffd24a' : ok >= 3 ? '#b98cff' : ok >= 1 ? '#8fd8ff' : null);
   function weaponAura(c, wp, len) {
@@ -205,7 +215,7 @@
     let ang = air ? -0.7 : 0.1 + sw * 0.03, wang = 0.9, ex = 0;
     const a = o.atk;
     if (a) {
-      const u = Math.min(1, a.t / a.dur), k = a.kind, PI = Math.PI;
+      const u = Math.min(1, a.t / a.dur), k = (['quake', 'power', 'rblow', 'crusher', 'slash', 'charge', 'basic'].includes(a.kind) || !a.fx) ? a.kind : a.fx, PI = Math.PI;
       const ease = (x) => x * x * (3 - 2 * x), lerp = (p, q, f) => p + (q - p) * f, cl01 = (x) => Math.max(0, Math.min(1, x));
       if (k === 'quake') { ang = u < 0.5 ? lerp(0.2, -2.9, ease(u / 0.5)) : lerp(-2.9, -0.5, ease(cl01((u - 0.5) / 0.18))); }
       else if (k === 'power' || k === 'rblow' || k === 'crusher') { if (u < 0.35) ang = lerp(0.1, 0.8, ease(u / 0.35)); else { const f = ease(cl01((u - 0.35) / 0.2)); ang = lerp(0.8, -1.55, f); ex = lerp(0, 4, f); } }
@@ -230,7 +240,7 @@
   const TIER = { ar0: 0, ar1: 1, ar2: 2, ar3: 3, ar4: 4, ar5: 4, ar6: 4, ar7: 4 };
   A.playerLook = function (G, extra) {
     const p = G.p, D = root.DATA; const eq = p.equip; const ar = D.ITEMS[eq.armor], w = D.ITEMS[eq.weapon], h = eq.helmet && D.ITEMS[eq.helmet], gl = eq.gloves && D.ITEMS[eq.gloves], sh = eq.shoes && D.ITEMS[eq.shoes];
-    return Object.assign({ armor: ar ? ar.col : '#c9b48a', armorId: ar ? ar.id : 'ar0', tier: ar ? (TIER[ar.id] || 0) : 0, pants: '#5a4636', shoes: sh ? sh.col : '#6b4426', shoeId: sh ? sh.id : null, gloves: gl ? gl.col : null, gloveId: gl ? gl.id : null, helmet: h ? h.id : null, helmetCol: h ? h.col : null, band: h ? null : '#d6343c', weapon: w ? { id: w.id, wt: w.wt, col: w.col, len: (w.wt === 'great' || w.wt === 'spear') ? 26 : 24, enh: (p.enh && p.enh[w.id] && p.enh[w.id].ok) || 0 } : null }, extra || {});
+    return Object.assign({ armor: ar ? ar.col : '#c9b48a', armorId: ar ? ar.id : 'ar0', tier: ar ? (TIER[ar.id] || (ar.gen ? 4 : 0)) : 0, pants: '#5a4636', shoes: sh ? sh.col : '#6b4426', shoeId: sh ? sh.id : null, gloves: gl ? gl.col : null, gloveId: gl ? gl.id : null, helmet: h ? h.id : null, helmetCol: h ? h.col : null, band: h ? null : '#d6343c', weapon: w ? { id: w.id, wt: w.wt, col: w.col, len: (w.wt === 'great' || w.wt === 'spear') ? 26 : 24, enh: (p.enh && p.enh[w.id] && p.enh[w.id].ok) || 0 } : null }, extra || {});
   };
   A.drawPlayer = function (c, G, t) {
     const p = G.p; const look = A.playerLook(G, { t, face: p.face, walk: p.walkT, moving: Math.abs(p.vx) > 18 && p.onGround, air: !p.onGround && !p.climb, climb: !!p.climb, climbT: p.climbT, atk: p.atk, hurt: p.hitFlash > 0 || p.dead });
@@ -291,7 +301,7 @@
       c.fillStyle = OUT; c.beginPath(); c.arc(13, -5, 1.2, 0, TAU); c.fill();
     },
     stump(c, m, t) {
-      const h = m.def.hue; const wood = ({ dark: '#54405e', axe: '#8f5e34', sky: '#6f98cc', ice: '#6a98c0' })[h] || '#9a6a3c', ring = ({ dark: '#8a6aa0', sky: '#e8f2ff', ice: '#dff4ff' })[h] || '#d9a86a';
+      const h = m.def.hue, hx = (typeof m.def.hue === 'string' && m.def.hue[0] === '#'); const wood = hx ? h : (({ dark: '#54405e', axe: '#8f5e34', sky: '#6f98cc', ice: '#6a98c0' })[h] || '#9a6a3c'), ring = hx ? shade(h, 0.45) : (({ dark: '#8a6aa0', sky: '#e8f2ff', ice: '#dff4ff' })[h] || '#d9a86a');
       const sq = Math.sin(t * 5 + m.seed) * 1.4; const wd = m.def.w * 0.5, ht = m.def.h;
       c.save(); c.translate(0, -sq * 0.3);
       c.beginPath(); c.moveTo(-wd, 0); c.quadraticCurveTo(-wd - 3, -ht * 0.5, -wd + 3, -ht + 6); c.lineTo(wd - 3, -ht + 6); c.quadraticCurveTo(wd + 3, -ht * 0.5, wd, 0); c.closePath(); fillStroke(c, wood, 2.2);
@@ -311,7 +321,7 @@
       c.restore();
     },
     woodmask(c, m, t) {
-      const base = ({ flame: '#c4503a', stone: '#8d939c', sky: '#86bdf2', ice: '#9ad8ff', shadow: '#5a4a6e' })[m.def.hue] || '#b4854a'; const st = ['stone', 'ice', 'shadow'].includes(m.def.hue); /* 갈라진 금·푸른 눈 표시용 */
+      const base = (typeof m.def.hue === 'string' && m.def.hue[0] === '#') ? m.def.hue : (({ flame: '#c4503a', stone: '#8d939c', sky: '#86bdf2', ice: '#9ad8ff', shadow: '#5a4a6e' })[m.def.hue] || '#b4854a'); const st = ['stone', 'ice', 'shadow'].includes(m.def.hue); /* 갈라진 금·푸른 눈 표시용 */
       const hop = m.y < m.py - 2 ? 0 : Math.abs(Math.sin(t * 6 + m.seed)) * 2;
       c.save(); c.translate(0, -hop);
       c.beginPath(); rrect(c, -9, -10, 6, 10, 2); fillStroke(c, shade(base, -0.25), 1.6); c.beginPath(); rrect(c, 3, -10, 6, 10, 2); fillStroke(c, shade(base, -0.25), 1.6);
@@ -324,7 +334,7 @@
       c.restore();
     },
     ant(c, m, t) {
-      const h = m.def.hue; const col = ({ soldier: '#c4452d', zombie: '#7aa05a', gold: '#d9a82a', ice: '#7ac8f0' })[h] || '#5a3a2a'; const w = Math.sin(t * 10 + m.seed);
+      const h = m.def.hue; const col = (typeof m.def.hue === 'string' && m.def.hue[0] === '#') ? h : (({ soldier: '#c4452d', zombie: '#7aa05a', gold: '#d9a82a', ice: '#7ac8f0' })[h] || '#5a3a2a'); const w = Math.sin(t * 10 + m.seed);
       c.strokeStyle = OUT; c.lineWidth = 2; for (let i = 0; i < 3; i++) { const x = -8 + i * 8; c.beginPath(); c.moveTo(x, -8); c.lineTo(x + 3 + w * (i % 2 ? 2 : -2), 0); c.moveTo(x, -8); c.lineTo(x - 4 + w * (i % 2 ? -2 : 2), 0); c.stroke(); }
       c.beginPath(); ell(c, -13, -12, 10, 8); fillStroke(c, col, 2);
       c.beginPath(); ell(c, 0, -11, 6.5, 6); fillStroke(c, shade(col, 0.05), 2);
@@ -336,12 +346,12 @@
       if (h === 'soldier') { c.fillStyle = '#e8c04a'; c.beginPath(); c.rect(-17, -13, 3, 6); c.fill(); }
     },
     boar(c, m, t) {
-      const BP = ({ lava: ['#35283a', '#4d3548', '#1f1620'], cloud: ['#9cc4ff', '#c6dcff', '#3f5f9a'], ice: ['#6ab0e8', '#8ac8f8', '#3a6090'] })[m.def.hue] || ['#c4452d', '#d65a3a', '#7a2a1c']; const B1 = BP[0], B2 = BP[1], B3 = BP[2]; const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 60) * 1.5 : 0; const run = m.st === 'dash';
+      const BP = (typeof m.def.hue === 'string' && m.def.hue[0] === '#') ? [m.def.hue, shade(m.def.hue, 0.2), shade(m.def.hue, -0.4)] : ({ lava: ['#35283a', '#4d3548', '#1f1620'], cloud: ['#9cc4ff', '#c6dcff', '#3f5f9a'], ice: ['#6ab0e8', '#8ac8f8', '#3a6090'] })[m.def.hue] || ['#c4452d', '#d65a3a', '#7a2a1c']; const B1 = BP[0], B2 = BP[1], B3 = BP[2]; const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 60) * 1.5 : 0; const run = m.st === 'dash';
       c.save(); c.translate(sh, 0);
       c.strokeStyle = OUT; c.lineWidth = 2; const lg = Math.sin(t * (run ? 24 : 10));
       c.beginPath(); rrect(c, -14, -9, 6, 9 + lg * 1.5, 2); fillStroke(c, B3, 1.6); c.beginPath(); rrect(c, 8, -9, 6, 9 - lg * 1.5, 2); fillStroke(c, B3, 1.6);
       c.beginPath(); c.moveTo(-22, -16); c.quadraticCurveTo(-18, -34, 0, -33); c.quadraticCurveTo(18, -33, 22, -18); c.quadraticCurveTo(22, -8, 10, -8); c.lineTo(-14, -8); c.quadraticCurveTo(-22, -9, -22, -16); c.closePath(); fillStroke(c, B1, 2.2);
-      for (let i = 0; i < 4; i++) { const fx = -14 + i * 9, fl = 8 + Math.sin(t * 9 + i * 1.7) * 3; c.beginPath(); c.moveTo(fx - 4, -30 + i); c.quadraticCurveTo(fx, -30 - fl - 4, fx + 2, -30 - fl - 10); c.quadraticCurveTo(fx + 6, -30 - fl, fx + 5, -29); c.closePath(); c.fillStyle = (({ cloud: ['#f4faff', '#bcd8ff'], ice: ['#d8f4ff', '#7ad8ff'], lava: ['#ff9a50', '#ff5a20'] })[m.def.hue] || ['#ffb23a', '#ff6a2a'])[i % 2]; c.fill(); }
+      for (let i = 0; i < 4; i++) { const fx = -14 + i * 9, fl = 8 + Math.sin(t * 9 + i * 1.7) * 3; c.beginPath(); c.moveTo(fx - 4, -30 + i); c.quadraticCurveTo(fx, -30 - fl - 4, fx + 2, -30 - fl - 10); c.quadraticCurveTo(fx + 6, -30 - fl, fx + 5, -29); c.closePath(); c.fillStyle = ((typeof m.def.hue === 'string' && m.def.hue[0] === '#') ? [shade(m.def.hue, 0.6), shade(m.def.hue, 0.85)] : (({ cloud: ['#f4faff', '#bcd8ff'], ice: ['#d8f4ff', '#7ad8ff'], lava: ['#ff9a50', '#ff5a20'] })[m.def.hue] || ['#ffb23a', '#ff6a2a']))[i % 2]; c.fill(); }
       c.beginPath(); ell(c, 24, -17, 9, 8); fillStroke(c, B2, 2.2); c.beginPath(); ell(c, 30, -14, 4, 3.6); fillStroke(c, '#f0a08a', 1.6); c.fillStyle = OUT; c.beginPath(); c.arc(29, -14, 0.9, 0, TAU); c.arc(32, -14, 0.9, 0, TAU); c.fill();
       c.beginPath(); c.moveTo(26, -10); c.quadraticCurveTo(34, -10, 33, -20); c.quadraticCurveTo(30, -12, 25, -10); c.closePath(); fillStroke(c, '#f6ecd0', 1.4);
       c.beginPath(); c.moveTo(20, -24); c.lineTo(17, -31); c.lineTo(24, -26); c.closePath(); fillStroke(c, B3, 1.4);
@@ -349,7 +359,7 @@
       c.restore();
     },
     golem(c, m, t) {
-      const gh = m.def.hue, GP = ({ lava: ['#3a2a34', '#ff4a1a'], fire: ['#6a4038', '#ff7a2a'], storm: ['#4a5a78', '#ffe44a'], ice: ['#9ab8d8', '#6ad8ff'] })[gh] || ['#8d939c', '#6fd0e8']; const rock = GP[0]; const glow = GP[1]; const fire = gh === 'fire' || gh === 'lava'; const b = Math.sin(t * 2 + m.seed) * 1;
+      const gh = m.def.hue, GP = (typeof m.def.hue === 'string' && m.def.hue[0] === '#') ? [gh, shade(gh, 0.6)] : ({ lava: ['#3a2a34', '#ff4a1a'], fire: ['#6a4038', '#ff7a2a'], storm: ['#4a5a78', '#ffe44a'], ice: ['#9ab8d8', '#6ad8ff'] })[gh] || ['#8d939c', '#6fd0e8']; const rock = GP[0]; const glow = GP[1]; const fire = gh === 'fire' || gh === 'lava'; const b = Math.sin(t * 2 + m.seed) * 1;
       const wd = m.def.w, ht = m.def.h; const g = (x, y, w, h, r, col) => { c.beginPath(); rrect(c, x, y, w, h, r); fillStroke(c, col || rock, 2.2); };
       g(-wd * 0.34, -ht * 0.22, wd * 0.26, ht * 0.22, 4, shade(rock, -0.12)); g(wd * 0.08, -ht * 0.22, wd * 0.26, ht * 0.22, 4, shade(rock, -0.12));
       const sw = Math.sin(t * 3) * 3;
@@ -377,7 +387,7 @@
       c.restore();
     },
     balrog(c, m, t) {
-      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 50) * 2 : 0; const b = Math.sin(t * 1.7) * 1.5, red = '#b02a2a', dark = '#5a1414', fl = Math.sin(t * 3) * 10;
+      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 50) * 2 : 0; const TN = Array.isArray(m.def.tint) ? m.def.tint : null; const b = Math.sin(t * 1.7) * 1.5, red = TN ? TN[0] : '#b02a2a', dark = TN ? shade(TN[0], -0.5) : '#5a1414', fl = Math.sin(t * 3) * 10;
       c.save(); c.translate(sh, 0); const g = (x, y, w, h, r, col) => { c.beginPath(); rrect(c, x, y, w, h, r); fillStroke(c, col || red, 3); };
       for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(sd * 24, -112 + b); c.quadraticCurveTo(sd * 112, -190 + b + fl, sd * 140, -112 + b); c.quadraticCurveTo(sd * 112, -96 + b, sd * 122, -66 + b); c.quadraticCurveTo(sd * 82, -84 + b, sd * 72, -58 + b); c.quadraticCurveTo(sd * 52, -86 + b, sd * 30, -66 + b); c.closePath(); fillStroke(c, dark, 3); }
       g(-36, -44, 28, 44, 8, shade(red, -0.2)); g(8, -44, 28, 44, 8, shade(red, -0.2)); g(-46, -118 + b, 92, 78, 16, red);
@@ -391,7 +401,7 @@
       c.restore();
     },
     frostlord(c, m, t) {
-      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 50) * 2 : 0; const b = Math.sin(t * 1.5) * 1.5, ice = '#a8dcff', deep = '#4a78b0';
+      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 50) * 2 : 0; const TN = Array.isArray(m.def.tint) ? m.def.tint : null; const b = Math.sin(t * 1.5) * 1.5, ice = TN ? TN[1] : '#a8dcff', deep = TN ? TN[0] : '#4a78b0';
       c.save(); c.translate(sh, 0); const g = (x, y, w, h, r, col) => { c.beginPath(); rrect(c, x, y, w, h, r); fillStroke(c, col || ice, 3); };
       g(-56, -38, 112, 38, 10, shade(deep, -0.1)); g(-50, -134 + b, 100, 98, 18, ice);
       c.shadowColor = '#6ad8ff'; c.shadowBlur = 10; for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(sd * 44, -126 + b); c.lineTo(sd * 78, -166 + b); c.lineTo(sd * 62, -112 + b); c.closePath(); fillStroke(c, '#e8f8ff', 2.4); c.beginPath(); c.moveTo(sd * 50, -100 + b); c.lineTo(sd * 92, -122 + b); c.lineTo(sd * 66, -88 + b); c.closePath(); fillStroke(c, '#e8f8ff', 2.4); } c.shadowBlur = 0;
@@ -403,7 +413,7 @@
       c.restore();
     },
     zakum(c, m, t) {
-      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 50) * 2 : 0; const b = Math.sin(t * 1.6) * 1.5; const stone = '#6a4538', fire = '#ff7a2a';
+      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 50) * 2 : 0; const TN = Array.isArray(m.def.tint) ? m.def.tint : null; const b = Math.sin(t * 1.6) * 1.5; const stone = TN ? TN[0] : '#6a4538', fire = TN ? TN[1] : '#ff7a2a';
       c.save(); c.translate(sh, 0);
       const g = (x, y, w, h, r, col) => { c.beginPath(); rrect(c, x, y, w, h, r); fillStroke(c, col || stone, 3); };
       g(-66, -34, 132, 34, 8, shade(stone, -0.22)); g(-30, -30, 60, 14, 5, shade(stone, -0.32));
@@ -423,7 +433,7 @@
       c.restore();
     },
     bossgolem(c, m, t) {
-      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 50) * 2 : 0; const b = Math.sin(t * 1.8) * 1.5; const gold = '#ffd24a'; const rock = '#5e5870';
+      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 50) * 2 : 0; const b = Math.sin(t * 1.8) * 1.5; const gold = '#ffd24a'; const rock = (typeof m.def.tint === 'string') ? m.def.tint : '#5e5870';
       c.save(); c.translate(sh, 0);
       const g = (x, y, w, h, r, col) => { c.beginPath(); rrect(c, x, y, w, h, r); fillStroke(c, col || rock, 3); };
       g(-38, -34, 28, 34, 6, shade(rock, -0.15)); g(10, -34, 28, 34, 6, shade(rock, -0.15));
@@ -465,6 +475,15 @@
     cave2: { sky: ['#0f0a18', '#1d1230', '#2e1c44'], far: '#1c1230', mid: '#2a1c42', near: '#38275a', grass: '#7a6aa0', soil: '#46345c', rock: '#32224a', kind: 'cave', crystal: true },
     lava: { sky: ['#2a0c10', '#5a1a14', '#d0602a'], far: '#4a1c1c', mid: '#6a2a22', near: '#8a3a2a', grass: '#8a5a2a', soil: '#4a2a22', rock: '#3a1c1a', kind: 'mesa', dust: true },
     quarry: { sky: ['#e8884a', '#f4b46a', '#ffe0a0'], far: '#b86a4a', mid: '#9a5440', near: '#7a4032', grass: '#c4a45a', soil: '#8a5a40', rock: '#6a4030', kind: 'mesa', dust: true },
+    toy: { sky: ['#7ac8ff', '#c0e4ff', '#fff0d8'], far: '#f0a0c0', mid: '#e08ab0', near: '#c070a0', grass: '#f08ab0', soil: '#d8a860', rock: '#b88a58', sun: true, kind: 'mesa', style: 'toy' },
+    ocean: { sky: ['#0e4a7a', '#1a78a8', '#58b8d0'], far: '#2a6a98', mid: '#1e5888', near: '#164a78', grass: '#58c8b0', soil: '#3a7a8a', rock: '#2a5a70', kind: 'mesa', style: 'ocean' },
+    dragon: { sky: ['#2a6a4a', '#58a070', '#d8e8a8'], far: '#4a8a5a', mid: '#3a7a4a', near: '#2a6a3a', grass: '#78c050', soil: '#8a7a4a', rock: '#6a5a38', sun: true, kind: 'mesa', style: 'dragon' },
+    bamboo: { sky: ['#a8c8a0', '#d0e4b8', '#f4f0d0'], far: '#7aa070', mid: '#5a8a58', near: '#487a48', grass: '#6ab050', soil: '#a08a58', rock: '#7a6a48', kind: 'mesa', style: 'bamboo' },
+    desert: { sky: ['#58a8e0', '#a8d4f0', '#fff0c0'], far: '#e0b878', mid: '#d0a060', near: '#c08a48', grass: '#e8cc80', soil: '#d0a868', rock: '#b08848', sun: true, kind: 'mesa', style: 'desert' },
+    alchemy: { sky: ['#2a1a50', '#4a2a78', '#9a6ac0'], far: '#5a3a88', mid: '#483070', near: '#38285a', grass: '#a070d0', soil: '#5a4880', rock: '#443068', kind: 'mesa', style: 'alchemy' },
+    clock: { sky: ['#3a3050', '#6a5a70', '#d8b878'], far: '#8a7088', mid: '#6a5870', near: '#504058', grass: '#c8a860', soil: '#7a6a58', rock: '#5a4c44', kind: 'mesa', style: 'clock' },
+    steam: { sky: ['#6a5a50', '#a89078', '#e0c898'], far: '#8a7a68', mid: '#6a5a4a', near: '#504438', grass: '#8a8a70', soil: '#6a5a48', rock: '#4a4038', kind: 'mesa', style: 'steam' },
+    space: { sky: ['#08061a', '#1a1048', '#4a2a8a'], far: '#3a2a78', mid: '#2a2060', near: '#201850', grass: '#7a6ac8', soil: '#3a3068', rock: '#2a2450', kind: 'mesa', style: 'space' },
     sea: { sky: ['#4aa8e8', '#8accf4', '#e8f6ff'], far: '#8ab8d8', mid: '#6aa0c8', near: '#4a80a8', grass: '#c8a064', soil: '#8a6644', rock: '#6a4a30', sun: true, kind: 'mesa' },
     sky: { sky: ['#3a86e4', '#7ab8f4', '#c8e4fa'], far: '#c4d8f0', mid: '#aac4e4', near: '#90b0d8', grass: '#7ed05e', soil: '#b49a78', rock: '#7e8eb6', sun: true, kind: 'mesa' },
     ice: { sky: ['#14284a', '#2c4a7c', '#8ab8e8'], far: '#4a6a98', mid: '#3a5a88', near: '#2c4a78', grass: '#e4f6ff', soil: '#8aa8c8', rock: '#6a88b0', kind: 'mesa', dust: true },
@@ -478,7 +497,7 @@
     c.lineTo(w, h); c.closePath(); c.fillStyle = col; c.fill();
   }
   A.buildBg = function (map, vw, vh) {
-    if (A.customBg && ['sky', 'sea', 'ice', 'lava'].includes(map.theme)) { const CL = A.customBg(map, vw, vh); if (CL) return CL; } // vis.js: 하늘·바다·얼음·용암 전용 배경
+    if (A.customBg) { const CL = A.customBg(map, vw, vh); if (CL) return CL; } // vis.js: 하늘·바다·얼음·용암 전용 배경
     const th = THEMES[map.theme] || THEMES.rock; const rnd = seeded(map.w * 7 + map.h); const H = Math.max(vh + 120, map.h);
     const L = { th, layers: [] };
     L.sky = layer(8, 360, (c) => { const g = c.createLinearGradient(0, 0, 0, 360); g.addColorStop(0, th.sky[0]); g.addColorStop(0.55, th.sky[1]); g.addColorStop(1, th.sky[2]); c.fillStyle = g; c.fillRect(0, 0, 8, 360); });

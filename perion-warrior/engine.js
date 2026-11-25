@@ -12,7 +12,7 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3', 'tier4', 'slots'];
   E.newPlayer = function (name) {
     return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
@@ -36,21 +36,22 @@
   E.stats = function (G) {
     const p = G.p; const b = { atk: 0, def: 0, str: 0, dex: 0, hp: 0 };
     const inactive = []; // 능력치(STR/DEX)·직업이 안 맞아 꺼진 장비: 낀 채로 두되 효과만 없다 (스탯을 올리면 다시 켜짐)
-    for (const slot in p.equip) { const it = D.ITEMS[p.equip[slot]]; if (!it) continue; if (!E.canWear(G, it).ok) { inactive.push(slot); continue; } b.atk += it.atk || 0; b.def += it.def || 0; b.str += it.str || 0; b.dex += it.dex || 0; b.hp += it.hp || 0; const en = p.enh && p.enh[it.id]; if (en) { b.atk += en.atk || 0; b.def += en.def || 0; } }
+    for (const slot in p.equip) { const it = D.ITEMS[p.equip[slot]]; if (!it) continue; if (!E.canWear(G, it).ok) { inactive.push(slot); continue; } b.atk += it.atk || 0; b.def += it.def || 0; b.str += it.str || 0; b.dex += it.dex || 0; b.hp += it.hp || 0; const en = p.enh && p.enh[it.id]; if (en) { b.atk += en.atk || 0; b.def += en.def || 0; b.str += en.str || 0; b.dex += en.dex || 0; b.hp += en.hp || 0; } }
     const w = (D.ITEMS[p.equip.weapon] && !inactive.includes('weapon')) ? D.ITEMS[p.equip.weapon] : (p.equip.weapon ? { atk: 6, spd: 0.5, rng: 50, wt: 'sword' } : D.ITEMS.sw0); // 무기가 꺼지면 맨손
     const str = p.str + b.str, dex = p.dex + b.dex;
     const tough = p.skills.toughness || 0, mast = p.skills.mastery || 0;
     const job = p.job, fm = job === 'fighter' ? (p.skills.fmastery || 0) : 0, pm = job === 'page' ? (p.skills.pmastery || 0) : 0, sm = job === 'spearman' ? (p.skills.smastery || 0) : 0;
+    const t4 = !!p.tier4, hw = !t4 ? 0 : (job === 'fighter' ? (p.skills.herowill || 0) : job === 'page' ? (p.skills.paladinwill || 0) : (p.skills.dkwill || 0)); const f4 = t4 && job === 'fighter' ? hw : 0, p4 = t4 && job === 'page' ? hw : 0, s4 = t4 && job === 'spearman' ? hw : 0;
     const t3 = !!p.tier3, fm3 = t3 && job === 'fighter' ? (p.skills.fmaster3 || 0) : 0, pm3 = t3 && job === 'page' ? (p.skills.pmaster3 || 0) : 0, sm3 = t3 && job === 'spearman' ? (p.skills.smaster3 || 0) : 0;
     let rageMul = 1, defBuff = 0; for (const k in p.buffs) { if (/^atk/.test(k)) rageMul *= 1 + p.buffs[k].val; else if (/^def/.test(k)) defBuff += p.buffs[k].val; }
-    rageMul *= (job === 'fighter' ? 1.08 + fm * 0.02 : 1) * (1 + fm3 * 0.015) * (t3 ? 1.06 : 1);
+    rageMul *= (job === 'page' ? 1.15 : 1) * (job === 'fighter' ? 1.08 + fm * 0.02 : 1) * (1 + fm3 * 0.015) * (t3 ? 1.06 : 1) * (1 + f4 * 0.02) * (t4 ? 1.08 : 1);
     const wAtk = (w.atk || 10) + (w.slot === 'weapon' ? b.atk - (w.atk || 0) : 0);
     const maxDmg = Math.max(1, (str * 4 + dex) * wAtk / 100 * rageMul);
-    const minRatio = clamp(0.2 + mast * 0.05 + fm * 0.01 + sm * 0.02 + sm3 * 0.02, 0.2, 0.88);
-    const def = b.def + defBuff + Math.floor(dex / 6) + (job === 'page' ? 8 + pm * 3 : 0) + pm3 * 4 + (t3 ? 10 : 0);
-    const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough + (job === 'page' ? 0.08 + pm * 0.02 : 0) + (job === 'spearman' ? 0.1 : 0) + pm3 * 0.02 + (t3 ? 0.08 : 0)) * (1 + (p.buffs.hp2 ? p.buffs.hp2.val : 0)));
+    const minRatio = clamp(0.2 + mast * 0.05 + fm * 0.01 + sm * 0.02 + sm3 * 0.02 + s4 * 0.02, 0.2, 0.9);
+    const def = b.def + defBuff + Math.floor(dex / 6) + (job === 'page' ? 8 + pm * 3 : 0) + pm3 * 4 + (t3 ? 10 : 0) + p4 * 6 + (t4 ? 20 : 0);
+    const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough + (job === 'page' ? 0.08 + pm * 0.02 : 0) + (job === 'spearman' ? 0.1 : 0) + pm3 * 0.02 + (t3 ? 0.08 : 0) + p4 * 0.03 + (t4 ? 0.08 : 0)) * (1 + (p.buffs.hp2 ? p.buffs.hp2.val : 0)));
     const maxMp = Math.round(p.baseMp + p.int * 2);
-    return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004 + (job === 'spearman' ? 0.03 + sm * 0.015 : 0) + fm3 * 0.01 + sm3 * 0.012, speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b, inactive };
+    return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004 + (job === 'spearman' ? 0.03 + sm * 0.015 : 0) + fm3 * 0.01 + sm3 * 0.012 + f4 * 0.01 + s4 * 0.015, speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b, inactive };
   };
   E.calcMon = (id) => D.MON[id];
 
@@ -84,6 +85,14 @@
   E.tapJump = (G) => { G.input.jump = 0.14; };
   E.tapUp = (G) => { G.input.up_e = 0.12; };
   E.skill = (G, sid) => { G.input.skills.push(sid); };
+  // 배운 버프를 한 번에 전부 켠다 (스킬이 많아져도 버튼 하나로)
+  E.buffAll = (G) => { G.input.buffAll = true; };
+  E.usableBuffs = (G) => { const p = G.p; return D.SKILL_ORDER.filter((sid) => { const s = D.SKILLS[sid]; return s.kind === 'buff' && (p.skills[sid] || 0) > 0 && p.lv >= s.reqLv && (!s.job || s.job === p.job) && !(s.tier === 3 && !p.tier3) && !(s.tier === 4 && !p.tier4); }); };
+  function castAllBuffs(G) {
+    const p = G.p; let n = 0, lack = false, last = null;
+    for (const sid of E.usableBuffs(G)) { const s = D.SKILLS[sid], l = p.skills[sid], cost = s.mp(l); if (p.mp < cost) { lack = true; continue; } p.mp -= cost; p.buffs[s.buff] = { t: s.dur(l), val: s.val(l), sid, max: s.dur(l) }; n++; last = sid; }
+    if (n) { ev(G, { t: 'buff', sid: last }); ev(G, { t: 'sfx', n: 'buff' }); p.atkCd = Math.max(p.atkCd, 0.3); } else if (lack) { ev(G, { t: 'msg', text: 'MP가 부족해요!' }); ev(G, { t: 'sfx', n: 'deny' }); }
+  }
   E.potion = (G, kind) => { G.input.pot = kind; };
 
   /* ───────── 아이템 ───────── */
@@ -112,8 +121,8 @@
     return E.useItem(G, pick.id);
   };
   /* ───── 장비 사본별 강화 기록: 착용 중인 장비는 p.enh[id], 가방 속 같은 장비는 p.bag[id][] (사본마다 따로) ───── */
-  const freshRec = () => ({ n: 0, atk: 0, def: 0, ok: 0 });
-  const recVal = (r) => r.ok * 1000 + (r.atk || 0) + (r.def || 0);
+  const freshRec = () => ({ n: 0, atk: 0, def: 0, ok: 0, str: 0, dex: 0, hp: 0, hm: 0 });
+  const recVal = (r) => r.ok * 1000 + (r.atk || 0) + (r.def || 0) + (r.str || 0) * 2 + (r.dex || 0) * 2 + (r.hp || 0) / 10;
   E.bagRecs = function (G, id) {
     const p = G.p; if (!p.bag) p.bag = {}; const n = inv(p, id); const a = p.bag[id] || (p.bag[id] = []);
     while (a.length < n) a.push(freshRec()); if (a.length > n) a.length = n; return a;
@@ -149,7 +158,7 @@
   /* ───── 장비 강화(주문서) ───── */
   E.ENH_SLOTS = { weapon: 7, armor: 10, helmet: 5, gloves: 5, shoes: 5 }; // 메이플처럼 부위별 고정 (무기 7, 한벌옷 10, 모자·장갑·신발 5)
   E.enhSlots = (it) => it.slots || E.ENH_SLOTS[it.slot] || 5;
-  const infoOf = (it, r) => { const slots = E.enhSlots(it); return { slots, used: r.n, left: slots - r.n, atk: r.atk, def: r.def, ok: r.ok }; };
+  const infoOf = (it, r) => { const slots = E.enhSlots(it) + (r.hm || 0); return { slots, used: r.n, left: slots - r.n, atk: r.atk, def: r.def, ok: r.ok, str: r.str || 0, dex: r.dex || 0, hp: r.hp || 0, hm: r.hm || 0 }; };
   // idx 가 없으면 착용 중인 사본, 숫자면 가방 속 idx 번째 사본
   E.recOf = function (G, id, idx) { const p = G.p; if (idx == null) return (p.enh && p.enh[id]) || freshRec(); return E.bagRecs(G, id)[idx] || freshRec(); };
   E.enhInfo = function (G, id, idx) { return infoOf(D.ITEMS[id], E.recOf(G, id, idx)); };
@@ -160,7 +169,7 @@
     const id = p.equip[key]; if (!id) return null; if (!p.enh) p.enh = {}; return { id, idx: null, rec: p.enh[id] || (p.enh[id] = freshRec()), bag: false, slot: key };
   };
   E.scrollTargets = function (G, sid) {
-    const sc = D.ITEMS[sid], out = [], p = G.p; const fits = (it) => !(sc.kind === 'weapon' && it.slot !== 'weapon') && !(sc.kind === 'armor' && it.slot === 'weapon');
+    const sc = D.ITEMS[sid], out = [], p = G.p; const fits = (it) => !(sc.kind === 'weapon' && it.slot !== 'weapon') && !(sc.kind === 'armor' && it.slot === 'weapon'); // 능력치·망치·혼돈 주문서는 모든 장비
     for (const slot of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[slot]; if (!id) continue; if (!fits(D.ITEMS[id])) continue; const inf = E.enhInfo(G, id); out.push({ key: slot, slot, id, idx: null, left: inf.left, slots: inf.slots, ok: inf.ok, used: inf.used }); }
     for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (!it || it.t !== 'equip' || !fits(it)) continue; E.bagRecs(G, id).forEach((r, k) => { const inf = infoOf(it, r); out.push({ key: id + '~' + k, slot: it.slot, id, idx: k, bag: true, left: inf.left, slots: inf.slots, ok: inf.ok, used: inf.used }); }); }
     return out;
@@ -177,15 +186,19 @@
       ev(G, { t: 'scroll', ok: win, x: p.x, y: p.y }); ev(G, { t: 'sfx', n: win ? 'questdone' : 'deny' });
       return { ok: true, success: win, msg: win ? `${it.n}의 강화 가능 횟수가 1 늘었어요!` : '복구에 실패했어요…' };
     }
+    if (sc.kind === 'hammer') { if ((r.hm || 0) >= 2) return { ok: false, success: false, msg: '황금 망치는 장비 하나에 2번까지만 쓸 수 있어요' }; E.addItem(G, sid, -1); r.hm = (r.hm || 0) + 1; ev(G, { t: 'scroll', ok: true, x: p.x, y: p.y }); ev(G, { t: 'sfx', n: 'questdone' }); return { ok: true, success: true, hammer: true, bonus: 1, msg: `${it.n}의 강화 가능 횟수가 1 늘었어요!` }; }
     if (inf.left <= 0) return { ok: false, success: false, msg: `${it.n}은(는) 더 이상 강화할 수 없어요 (횟수 소진)` };
-    E.addItem(G, sid, -1); r.n += 1; const win = rand(G) < sc.rate; let bonus = 0;
+    E.addItem(G, sid, -1); r.n += 1; const win = rand(G) < sc.rate; let bonus = 0, res0 = null;
     if (win) {
       r.ok += 1;
       if (sc.kind === 'weapon') { bonus = sc.rate >= 0.99 ? Math.max(1, Math.round(it.atk * 0.03)) : sc.rate >= 0.5 ? Math.max(2, Math.round(it.atk * 0.06)) : Math.max(5, Math.round(it.atk * 0.16)); r.atk += bonus; }
-      else { bonus = sc.rate >= 0.99 ? Math.max(1, Math.round((it.def || 0) * 0.05)) : sc.rate >= 0.5 ? Math.max(1, Math.round((it.def || 0) * 0.1 + 1)) : Math.max(3, Math.round((it.def || 0) * 0.25 + 2)); r.def += bonus; }
+      else if (sc.kind === 'armor') { bonus = sc.rate >= 0.99 ? Math.max(1, Math.round((it.def || 0) * 0.05)) : sc.rate >= 0.5 ? Math.max(1, Math.round((it.def || 0) * 0.1 + 1)) : Math.max(3, Math.round((it.def || 0) * 0.25 + 2)); r.def += bonus; }
+      else if (sc.kind === 'str' || sc.kind === 'dex') { const t0 = sc.rate >= 0.99 ? 1 : sc.rate >= 0.5 ? 2 : sc.rate >= 0.25 ? 3 : 5; bonus = t0 + Math.floor((it.lv || 0) / 50); r[sc.kind] = (r[sc.kind] || 0) + bonus; }
+      else if (sc.kind === 'hp') { const m0 = sc.rate >= 0.99 ? 1 : sc.rate >= 0.5 ? 2 : sc.rate >= 0.25 ? 3.5 : 6; bonus = Math.round(m0 * (10 + (it.lv || 0))); r.hp = (r.hp || 0) + bonus; }
+      else if (sc.kind === 'chaos') { const rn = (a, b) => Math.round(a + (b - a) * rand(G)); const baseA = it.slot === 'weapon' ? (it.atk || 0) : (it.def || 0); const dA = rn(-0.04 * baseA - 1, 0.1 * baseA + 2), top = 5 + Math.floor((it.lv || 0) / 50), dS = rn(-3, top), dD = rn(-3, top), dH = rn(-(10 + (it.lv || 0)), 4 * (10 + (it.lv || 0))); if (it.slot === 'weapon') r.atk += dA; else r.def += dA; r.str = (r.str || 0) + dS; r.dex = (r.dex || 0) + dD; r.hp = (r.hp || 0) + dH; bonus = dA; res0 = { a: dA, s: dS, d: dD, h: dH, w: it.slot === 'weapon' }; }
     }
     ev(G, { t: 'scroll', ok: win, x: p.x, y: p.y }); ev(G, { t: 'sfx', n: win ? 'questdone' : 'deny' });
-    return { ok: true, success: win, bonus, msg: win ? `강화 성공! ${it.n} ${sc.kind === 'weapon' ? '공격력' : '방어력'} +${bonus}` : `강화 실패… (${it.n}, 남은 횟수 ${inf.left - 1})` };
+    return { ok: true, success: win, bonus, chaos: res0, msg: win ? `강화 성공! ${it.n} ${({ weapon: '공격력', armor: '방어력', str: 'STR', dex: 'DEX', hp: 'HP', chaos: '혼돈' })[sc.kind]} ${sc.kind === 'chaos' ? '변화' : '+' + bonus}` : `강화 실패… (${it.n}, 남은 횟수 ${inf.left - 1})` };
   };
   // 진행 중인 퀘스트가 요구하는 개수만큼은 못 팔고, 남는 건 팔 수 있다 (퀘스트 아이템도 포함)
   E.lockedQty = (G, id) => { let n = 0; for (const qid in G.p.quests) { if (G.p.quests[qid].st !== 'active') continue; for (const g of D.QUESTS[qid].goals) if (g.item === id) n += g.n; } return n; };
@@ -216,8 +229,11 @@
   };
   // 3차 전직: Lv50 + 오르비스 시험 퀘스트(qt3) 완료. 직업을 바꾸면 3차는 다시 해야 한다(무료)
   E.canAdvance3 = (G) => { const p = G.p; if (!p.job) return { ok: false, msg: '먼저 2차 전직을 해야 해요' }; if (p.tier3) return { ok: false, msg: '이미 3차 전직을 했어요' }; if (p.lv < D.JOB3_LV) return { ok: false, msg: `Lv ${D.JOB3_LV} 이상부터 3차 전직을 할 수 있어요` }; if (E.qState(G, 'qt3') !== 'done') return { ok: false, msg: '「3차 전직의 시험」을 먼저 완료해야 해요' }; return { ok: true }; };
-  E.advance3 = function (G) { const p = G.p, c = E.canAdvance3(G); if (!c.ok) return c; p.tier3 = true; p.sp += 3; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `3차 전직! ${D.JOBS[p.job].n3}이(가) 되었어요` }); return { ok: true }; };
-  E.jobName = (p) => (p.job ? (p.tier3 ? D.JOBS[p.job].n3 : D.JOBS[p.job].n) : '전사');
+  E.advance3 = function (G) { const p = G.p, c = E.canAdvance3(G); if (!c.ok) return c; p.tier3 = true; p.sp += 5; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `3차 전직! ${D.JOBS[p.job].n3}이(가) 되었어요` }); return { ok: true }; };
+  // 4차 전직: Lv120 + 마가티아 시험(qt4) 완료
+  E.canAdvance4 = (G) => { const p = G.p; if (!p.tier3) return { ok: false, msg: '먼저 3차 전직을 해야 해요' }; if (p.tier4) return { ok: false, msg: '이미 4차 전직을 했어요' }; if (p.lv < D.JOB4_LV) return { ok: false, msg: `Lv ${D.JOB4_LV} 이상부터 4차 전직을 할 수 있어요` }; if (E.qState(G, 'qt4') !== 'done') return { ok: false, msg: '「4차 전직의 시험」을 먼저 완료해야 해요' }; return { ok: true }; };
+  E.advance4 = function (G) { const p = G.p, c = E.canAdvance4(G); if (!c.ok) return c; p.tier4 = true; p.sp += 5; p.ap += 5; const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `4차 전직! ${D.JOBS[p.job].n4}이(가) 되었어요` }); return { ok: true }; };
+  E.jobName = (p) => (p.job ? (p.tier4 ? D.JOBS[p.job].n4 : p.tier3 ? D.JOBS[p.job].n3 : D.JOBS[p.job].n) : '전사');
   E.canAdvance = (G) => { const p = G.p; if (p.job) return { ok: false, msg: '이미 전직했어요' }; if (p.lv < D.JOB_LV) return { ok: false, msg: `Lv ${D.JOB_LV} 이상부터 전직할 수 있어요` }; if (E.qState(G, 'q9') !== 'done') return { ok: false, msg: '「고대 골렘의 시련」을 먼저 완료해야 해요' }; return { ok: true }; };
   E.advance = function (G, jid) {
     const p = G.p, j = D.JOBS[jid]; const c = E.canAdvance(G); if (!j || !c.ok) return c.ok ? { ok: false, msg: '없는 직업이에요' } : c;
@@ -226,19 +242,19 @@
   // 스킬 레벨 상한: 캐릭터 레벨이 오를수록 천천히 열린다 (스킬 요구 레벨 +12~13 에서 만렙)
   E.skillCap = (G, s) => Math.min(s.maxLv, 3 + Math.floor(Math.max(0, G.p.lv - s.reqLv) * 0.8));
   // 스킬 포인트 총량을 스킬 필요량에 딱 맞춤: Lv2~30 합계 69(1차 스킬 7종 만렙, 파워 스트라이크 1레벨은 기본) + 전직 3 + Lv31~39 레벨당 3 = 직업 스킬 30
-  E.spEarned = (lv) => (lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69 + 3 * Math.min(lv - 30, 9)) + (lv > 50 ? 3 * Math.min(lv - 50, 9) : 0); // Lv51~59 레벨당 3 = 3차 직업 스킬 30
+  E.spEarned = (lv) => (lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69 + 3 * Math.min(lv - 30, 9)) + (lv > 70 ? 5 * Math.min(lv - 70, 9) : 0) + (lv > 120 ? 5 * Math.min(lv - 120, 9) : 0); // 2차 31~39 레벨당 3, 3차 71~79 레벨당 5, 4차 121~129 레벨당 5
   E.spSpent = (p) => { let n = 0; for (const sid in p.skills) n += Math.max(0, (p.skills[sid] || 0) - (sid === 'power' ? 1 : 0)); return n; };
   // 옛 저장 보정: 받은 포인트 총량이 새 기준보다 많으면 스킬을 초기화하고 기준량만 돌려준다
-  E.fixSp = function (G) { const p = G.p, earned = E.spEarned(p.lv) + (p.job ? 3 : 0) + (p.tier3 ? 3 : 0), spent = E.spSpent(p); if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
+  E.fixSp = function (G) { const p = G.p; if (p.tier3 && p.lv < D.JOB3_LV) p.tier3 = false; if (p.tier4 && (p.lv < D.JOB4_LV || !p.tier3)) p.tier4 = false; const earned = E.spEarned(p.lv) + (p.job ? 3 : 0) + (p.tier3 ? 5 : 0) + (p.tier4 ? 5 : 0), spent = E.spSpent(p); if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
   E.resetSkills = function (G) { const p = G.p; let back = 0; for (const sid in p.skills) { const l = p.skills[sid] || 0; const keep = sid === 'power' ? 1 : 0; back += Math.max(0, l - keep); if (keep) p.skills[sid] = keep; else delete p.skills[sid]; } p.sp += back; p.buffs = {}; return back; };
   // 직업 변경: 다른 직업을 체험해 볼 수 있게 언제든 가능. 스킬은 전부 초기화(포인트는 그대로 돌려받음), 못 쓰는 무기는 직업 기본 무기로 교체
   E.changeJob = function (G, jid) {
     const p = G.p; if (!p.job) return { ok: false, msg: '아직 2차 전직 전이에요' }; if (!D.JOBS[jid] || jid === p.job) return { ok: false, msg: '지금과 다른 직업을 골라 주세요' };
-    E.resetSkills(G); p.job = jid; p.tier3 = false; p.skCd = {}; E.checkGear(G); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `${D.JOBS[jid].n}(으)로 직업을 바꿨어요. 스킬 포인트를 다시 찍어 주세요!` }); return { ok: true };
+    E.resetSkills(G); p.job = jid; p.tier3 = false; p.tier4 = false; p.skCd = {}; E.checkGear(G); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `${D.JOBS[jid].n}(으)로 직업을 바꿨어요. 스킬 포인트를 다시 찍어 주세요!` }); return { ok: true };
   };
   E.learn = function (G, sid) {
     const p = G.p, s = D.SKILLS[sid]; const l = p.skills[sid] || 0;
-    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job) || (s.tier === 3 && !p.tier3) || l >= E.skillCap(G, s)) return false;
+    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job) || (s.tier === 3 && !p.tier3) || (s.tier === 4 && !p.tier4) || l >= E.skillCap(G, s)) return false;
     p.skills[sid] = l + 1; p.sp -= 1; ev(G, { t: 'sfx', n: 'equip' }); return true;
   };
 
@@ -247,7 +263,8 @@
   function playerHurt(G, rawAtk, srcX, mlv, kb) {
     const p = G.p; if (p.dead || p.inv_t > 0) return false;
     const st = E.stats(G);
-    let dmg = rawAtk * rr(G, 0.88, 1.12) * (1 - mitig(st.def, mlv));
+    let drv = 0; for (const k in p.buffs) if (/^dr/.test(k)) drv += p.buffs[k].val; drv = Math.min(0.7, drv); // 피해 감소 버프
+    let dmg = rawAtk * rr(G, 0.88, 1.12) * (1 - mitig(st.def, mlv)) * (1 - drv);
     dmg = Math.max(1, Math.round(dmg));
     p.hp -= dmg; p.inv_t = 1.0; p.hitFlash = 0.25; p.atkCd = 0;
     if (kb !== 0) { const dir = p.x < srcX ? -1 : 1; p.vx = dir * 170; p.vy = -200; p.knock = 0.22; p.onGround = false; p.climb = null; p.atk = null; }
@@ -327,10 +344,10 @@
       }
       p.mp -= cost; p.skCd[sid] = s.cd;
       const dur = sid === 'quake' ? 0.8 : sid === 'slash' ? Math.max(0.5, st.spd * 1.1) : Math.max(0.5, st.spd * 1.15);
-      const hits = s.hits || 1; a = { kind: sid, t: 0, dur: dur + 0.13 * (hits - 1), hit: dur * (sid === 'quake' ? 0.55 : 0.42), done: false, face: p.face, mult: s.mult(l), targets: s.targets, rng: s.rng + (st.rng - 58) * 0.6, combo: 0, hits, n: 0 };
+      const hits = s.hits || 1; a = { kind: sid, t: 0, dur: dur + 0.13 * (hits - 1), hit: dur * (sid === 'quake' ? 0.55 : 0.42), done: false, face: p.face, mult: s.mult(l), targets: s.targets, rng: s.rng + (st.rng - 58) * 0.6, combo: 0, hits, n: 0, fx: s.fx };
     }
     p.atk = a; p.atkCd = a.dur * 0.92; p.vx *= 0.3; if (p.onGround && !sid) p.vx += p.face * 50;
-    ev(G, { t: 'swing', kind: a.kind, face: p.face, combo: a.combo }); ev(G, { t: 'sfx', n: sid ? 'skill' : 'swing' });
+    ev(G, { t: 'swing', kind: a.kind, face: p.face, combo: a.combo, fx: a.fx }); ev(G, { t: 'sfx', n: sid ? 'skill' : 'swing' });
     return true;
   }
   function resolveAttack(G) {
@@ -473,6 +490,12 @@
     for (const pt of G.map.portals) if (Math.abs(p.x - pt.x) < 38 && p.onGround && (pt.y === undefined || Math.abs(p.y - pt.y) < 10)) return { type: 'portal', portal: pt };
     return null;
   };
+  // 도시 이동(비공정·택시): 레벨이 되면 어느 마을로든 요금을 내고 바로 이동
+  E.travelFee = (tw) => (tw.min <= 38 ? 500 : Math.round(tw.min * 80));
+  E.travel = function (G, id) {
+    const p = G.p, tw = D.TOWNS.find((t) => t.id === id); if (!tw) return { ok: false, msg: '갈 수 없는 곳이에요' }; if (p.lv < tw.min) return { ok: false, msg: `Lv ${tw.min} 이상부터 갈 수 있어요` };
+    const fee = E.travelFee(tw); if (p.meso < fee) return { ok: false, msg: `요금 ${fee} 메소가 부족해요` }; p.meso -= fee; ev(G, { t: 'sfx', n: 'portal' }); ev(G, { t: 'fade' }); E.loadMap(G, id, { x: tw.x }); return { ok: true };
+  };
   // 배: 승선료를 내면 75초 항해. 항해 중 일정 확률(40%)로 크림슨 발록이 습격한다.
   E.boardShip = function (G, dest, fee) {
     const p = G.p; fee = fee == null ? 3000 : fee; if (!D.MAPS[dest]) return { ok: false, msg: '갈 수 없는 곳이에요' };
@@ -506,6 +529,7 @@
       if (did) ev(G, { t: 'petDrink' });
     }
     // 스킬 큐
+    if (inp.buffAll) { inp.buffAll = false; if (!p.dead) castAllBuffs(G); }
     // 스킬 입력은 0.7초 동안 보관: 공격 모션·피격 중에 눌러도 끝나는 즉시 나감
     while (inp.skills.length) { const s = inp.skills.shift(); if (!p.dead) p.skBuf = { sid: s, t: 0.7 }; }
     if (p.skBuf) { p.skBuf.t -= dt; const sb = p.skBuf; if (p.dead || sb.t <= 0) p.skBuf = null; else if (!p.atk && p.atkCd <= 0 && !p.climb) { p.skBuf = null; startAttack(G, sb.sid); } }

@@ -32,13 +32,27 @@ function cast(G, sid) { G.input.skills.push(sid); for (let i = 0; i < 70; i++) {
 // 직업 변경: 스킬 포인트가 돌아오고, 새 직업 스킬만 배우며, 안 맞는 무기는 교체된다
 { const g = jobGame('spearman'); g.p.inv.sp5 = 1; g.p.inv.mc2 = 1; const total = g.p.sp + E.spSpent(g.p); const r = E.changeJob(g, 'page'); ok(r.ok && g.p.job === 'page', '창→페이지 직업 변경'); ok(g.p.sp === total && E.spSpent(g.p) === 0, '스킬 포인트 전부 환급 (' + g.p.sp + ')'); ok(E.learn(g, 'charge') && !E.learn(g, 'crusher'), '새 직업 스킬만 배움'); ok(g.p.equip.weapon === 'mc0' && g.p.inv.sp4 > 0 || g.p.equip.weapon === 'mc0', '창은 가방으로, 페이지 기본 무기 장착 (' + g.p.equip.weapon + ')'); ok(!E.changeJob(g, 'page').ok, '같은 직업으로는 변경 불가'); }
 
-// 3차 전직: Lv50 + 시험 퀘스트, 새 스킬, SP 총량이 딱 맞는지, 직업 변경 시 3차 해제
-{ const g = jobGame('fighter'); g.p.lv = 49; ok(!E.canAdvance3(g).ok, 'Lv49는 3차 전직 불가'); g.p.lv = 50; ok(!E.canAdvance3(g).ok && /시험/.test(E.canAdvance3(g).msg), '시험 퀘스트 전에는 불가');
+// 3차 전직(Lv70) · 4차 전직(Lv120): 시험 퀘스트, 새 스킬, SP 총량, 직업 변경 시 해제
+{ const g = jobGame('fighter'); g.p.lv = 69; ok(!E.canAdvance3(g).ok, 'Lv69는 3차 전직 불가'); g.p.lv = 70; ok(!E.canAdvance3(g).ok && /시험/.test(E.canAdvance3(g).msg), '시험 퀘스트 전에는 불가');
   g.p.quests.qt3 = { st: 'done', prog: [] }; ok(E.canAdvance3(g).ok && E.advance3(g).ok && g.p.tier3 && E.jobName(g.p) === '크루세이더', '크루세이더로 3차 전직');
-  g.p.sp = 3; ok(E.learn(g, 'brandish') && !E.learn(g, 'elcharge'), '3차: 내 직업 스킬만'); const d0 = E.stats(g).maxDmg; g.p.skills.fmaster3 = 10; ok(E.stats(g).maxDmg > d0, '크루세이더 숙련 반영');
-  const g2 = jobGame('page'); g2.p.lv = 50; g2.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(g2); ok(E.jobName(g2.p) === '나이트', '나이트'); const g3 = jobGame('spearman'); g3.p.lv = 50; g3.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(g3); ok(E.jobName(g3.p) === '드래곤나이트', '드래곤나이트');
-  const sp = jobGame('spearman'); sp.p.lv = 59; sp.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(sp); sp.p.sp = E.spEarned(59) + 6 - E.spSpent(sp.p) - 0; for (const k of D.SKILL_ORDER) for (let i = 0; i < 12; i++) E.learn(sp, k); ok(sp.p.sp === 0 && sp.p.skills.dragonfury === 10 && sp.p.skills.dragonblood === 10 && sp.p.skills.smaster3 === 10, 'Lv59: 1·2·3차 스킬 전부 만렙에 SP 정확히 0 (남은 ' + sp.p.sp + ')');
-  const ch = jobGame('fighter'); ch.p.lv = 50; ch.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(ch); E.changeJob(ch, 'page'); ok(!ch.p.tier3 && ch.p.job === 'page', '직업을 바꾸면 3차 전직 해제(다시 3차 필요)');
-  const fx = jobGame('page'); fx.p.lv = 60; fx.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(fx); fx.p.sp = 0; ok(!E.fixSp(fx) || true, 'fixSp 호출 가능');
+  g.p.sp = 5; ok(E.learn(g, 'brandish') && !E.learn(g, 'elcharge'), '3차: 내 직업 스킬만'); const d0 = E.stats(g).maxDmg; g.p.skills.fmaster3 = 10; ok(E.stats(g).maxDmg > d0, '크루세이더 숙련 반영');
+  const g2 = jobGame('page'); g2.p.lv = 70; g2.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(g2); ok(E.jobName(g2.p) === '나이트', '나이트'); const g3 = jobGame('spearman'); g3.p.lv = 70; g3.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(g3); ok(E.jobName(g3.p) === '드래곤나이트', '드래곤나이트');
+  const sp = jobGame('spearman'); sp.p.lv = 79; sp.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(sp); sp.p.sp = E.spEarned(79) + 3 + 5 - E.spSpent(sp.p); for (const k of D.SKILL_ORDER) for (let i = 0; i < 12; i++) E.learn(sp, k); const t3ids = ['dragonfury', 'dragonblood', 'smaster3', 'dragonroar', 'dragonthrust'];
+  ok(sp.p.sp === 0 && t3ids.every((k) => sp.p.skills[k] === 10), 'Lv79: 1·2·3차 스킬(3차 5개) 전부 만렙에 SP 정확히 0 (남은 ' + sp.p.sp + ')');
+  // 4차
+  const h = jobGame('fighter'); h.p.lv = 119; h.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(h); ok(!E.canAdvance4(h).ok, 'Lv119는 4차 불가'); h.p.lv = 120; ok(!E.canAdvance4(h).ok && /시험/.test(E.canAdvance4(h).msg), '4차 시험 전엔 불가');
+  h.p.quests.qt4 = { st: 'done', prog: [] }; ok(E.canAdvance4(h).ok && E.advance4(h).ok && E.jobName(h.p) === '히어로', '히어로로 4차 전직'); h.p.sp = 5; ok(E.learn(h, 'rageupper') && !E.learn(h, 'holymace'), '4차: 내 직업 스킬만');
+  const hh = jobGame('page'); hh.p.lv = 129; hh.p.quests.qt3 = { st: 'done', prog: [] }; hh.p.quests.qt4 = { st: 'done', prog: [] }; E.advance3(hh); E.advance4(hh); ok(E.jobName(hh.p) === '팔라딘', '팔라딘'); hh.p.sp = E.spEarned(129) + 3 + 5 + 5 - E.spSpent(hh.p); for (const k of D.SKILL_ORDER) for (let i = 0; i < 12; i++) E.learn(hh, k);
+  const need = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness', 'charge', 'guard', 'pmastery', 'elcharge', 'achilles', 'pmaster3', 'blast3', 'guardwall', 'holymace', 'holyblast', 'blessing', 'guardian', 'paladinwill'];
+  ok(hh.p.sp === 0 && need.every((k) => hh.p.skills[k] === 10), 'Lv129: 4차까지 전부 만렙에 SP 정확히 0 (남은 ' + hh.p.sp + ')');
+  const dr = jobGame('page'); dr.p.lv = 80; dr.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(dr); dr.p.sp = 20; for (let i = 0; i < 10; i++) E.learn(dr, 'guardwall'); const G2 = dr; G2.p.hp = 99999; G2.p.baseHp = 99999; G2.p.inv_t = 0; E.loadMap(G2, 'rock1', null);
+  const ch = jobGame('fighter'); ch.p.lv = 70; ch.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(ch); E.changeJob(ch, 'page'); ok(!ch.p.tier3 && !ch.p.tier4 && ch.p.job === 'page', '직업을 바꾸면 3차·4차 전직 해제');
+  const fx = jobGame('page'); fx.p.lv = 60; fx.p.tier3 = true; E.fixSp(fx); ok(!fx.p.tier3, '레벨 미달 3차는 해제(옛 저장 보정)');
 }
+
+// 버프 일괄: 배운 버프를 한 번에 켠다
+{ const g = jobGame('fighter'); g.p.lv = 130; g.p.quests.qt3 = { st: 'done', prog: [] }; g.p.quests.qt4 = { st: 'done', prog: [] }; E.advance3(g); E.advance4(g); g.p.sp = 999; for (const k of D.SKILL_ORDER) for (let i = 0; i < 12; i++) E.learn(g, k); g.p.mp = 99999;
+  const bf = E.usableBuffs(g); ok(bf.length >= 6, '파이터 4차: 버프가 여러 개 (' + bf.length + '개)'); E.buffAll(g); E.step(g, 1 / 60); g.events.length = 0;
+  ok(bf.every((k) => g.p.buffs[D.SKILLS[k].buff]), '버프 일괄: 모든 버프가 한 번에 켜짐'); const mpAfter = g.p.mp; E.buffAll(g); E.step(g, 1 / 60); ok(g.p.mp < mpAfter, '다시 누르면 갱신(MP 소모)');
+  const g2 = jobGame('page'); g2.p.mp = 1; E.buffAll(g2); E.step(g2, 1 / 60); ok(Object.keys(g2.p.buffs).length === 0, 'MP가 모자라면 아무것도 안 켜짐'); }
 console.log(fails ? 'FAILED ' + fails : 'ALL OK'); process.exit(fails ? 1 : 0);

@@ -9,7 +9,7 @@ for (const id of D.QUEST_ORDER) {
 }
 for (const k of Object.keys(D.QUESTS)) if (!D.QUEST_ORDER.includes(k)) f('QUEST_ORDER 누락 ' + k);
 // 시뮬레이션: 모든 퀘스트를 순서대로 완료 가능한지(레벨 무시하고 목표 채워서)
-const G = E.newGame('q', 5); G.p.lv = 70; let done = 0;
+const G = E.newGame('q', 5); G.p.lv = 200; let done = 0;
 for (let pass = 0; pass < 3; pass++) for (const id of D.QUEST_ORDER) { if (E.qState(G, id) === 'avail') { E.qAccept(G, id); const q = D.QUESTS[id]; q.goals.forEach((g, i) => { if (g.kill) G.p.quests[id].prog[i] = g.n; else G.p.inv[g.item] = (G.p.inv[g.item] || 0) + g.n; }); if (E.qComplete(G, id)) done++; } }
 if (done !== D.QUEST_ORDER.length - (D.QUESTS.q9 ? 1 : 0) && done < D.QUEST_ORDER.length - 1) f('완료 가능한 퀘스트 수 ' + done);
 console.log('퀘스트', D.QUEST_ORDER.length, '개 · 시뮬 완료', done, bad ? '· FAILED ' + bad : '· ALL OK'); process.exit(bad ? 1 : 0);

@@ -115,7 +115,7 @@
     };
   };
   A._v = { puff, cloudBank, mkLayer, hash, rgba, haze, mount, island };
-  A.customBg = function (map, vw, vh) { const th = A.THEMES[map.theme]; const f = BG[map.theme]; if (!f) return null; return { th, custom: f(map, vw, vh, th), layers: [], clouds: [] }; };
+  A.customBg = function (map, vw, vh) { const th = A.THEMES[map.theme]; const f = BG[map.theme] || (th && th.style && A._bgStyles && A._bgStyles[th.style]); if (!f) return null; return { th, custom: f(map, vw, vh, th), layers: [], clouds: [] }; };
 
   /* ───────── 분위기 효과 (눈·불씨·빛줄기·비네트) ───────── */
   A.drawAtmos = function (c, G, cx, cy, VW, VH, t) {

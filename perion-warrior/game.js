@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzza';
+  const BUILD = '20261125zzzc';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -99,16 +99,16 @@
   function doFade() { const f = $('fade'); f.style.opacity = 1; setTimeout(() => { f.style.opacity = 0; }, 140); }
 
   /* ───────── 이벤트 처리 ───────── */
-  const FXCOL = { basic: '#cfe8ff', power: '#ffb066', slash: '#7ad8ff', quake: '#ffcc66', rblow: '#ff6a4a', charge: '#ffe98a', crusher: '#7ae0a0' };
+  const FXCOL = { brandish: '#ffb066', elcharge: '#ffe98a', dragonfury: '#7ae0a0', swordpanic: '#ff6a4a', shout: '#ffcc66', blast3: '#ffd0a0', dragonroar: '#9af0c0', dragonthrust: '#b6ffd0', rageupper: '#ff6a4a', swordflash: '#ffe08a', holymace: '#fff0a0', holyblast: '#ffe98a', darkspear: '#b08aff', cataclysm: '#ff9a6a', basic: '#cfe8ff', power: '#ffb066', slash: '#7ad8ff', quake: '#ffcc66', rblow: '#ff6a4a', charge: '#ffe98a', crusher: '#7ae0a0' };
   function handleEvents() {
     const p = G.p; const ev = G.events; G.events = [];
     for (const e of ev) {
       switch (e.t) {
         case 'sfx': Snd.sfx(e.n); if (e.n === 'potion') p.tut.potion = 1; if (e.n === 'jump') p.tut.jump = 1; if (e.n === 'skill') p.tut.skill = 1; break;
         case 'swing': { p.tut.atk = 1; const st = E.stats(G), a = p.atk; if (!a) break; const cx = p.x + e.face * 6, cy = p.y - 24;
-          if (e.kind === 'power' || e.kind === 'rblow' || e.kind === 'crusher') fx({ type: 'beam', x: cx, y: cy + 2, face: e.face, r: a.rng * 1.15, col: FXCOL[e.kind] || '#ffb066', life: 0.3, delay: 0 });
-          else if (e.kind === 'quake') { fx({ type: 'ring', x: p.x, y: p.y - 2, r: 40, flat: 0.25, col: '#ffcc66', size: 5, life: 0.5 }); }
-          else fx({ type: 'arc', kind: e.kind, face: e.face, combo: e.combo, r: Math.max(34, a.rng * 0.78), col: e.kind === 'basic' ? (D.ITEMS[p.equip.weapon].wt === 'axe' ? '#ffd9a0' : D.ITEMS[p.equip.weapon].wt === 'great' ? '#ffe0ff' : D.ITEMS[p.equip.weapon].wt === 'spear' ? '#c8ffd8' : D.ITEMS[p.equip.weapon].wt === 'mace' ? '#ffe3b8' : FXCOL.basic) : FXCOL[e.kind], life: e.kind === 'slash' ? 0.42 : 0.26, delay: 0 }), fxs[fxs.length - 1].delay = 0;
+          const kk = (e.fx && e.kind !== 'basic') ? e.fx : e.kind; if (kk === 'power' || e.kind === 'rblow' || e.kind === 'crusher') fx({ type: 'beam', x: cx, y: cy + 2, face: e.face, r: a.rng * 1.15, col: FXCOL[e.kind] || FXCOL[kk] || '#ffb066', life: 0.3, delay: 0 });
+          else if (kk === 'quake') { fx({ type: 'ring', x: p.x, y: p.y - 2, r: 40, flat: 0.25, col: '#ffcc66', size: 5, life: 0.5 }); }
+          else fx({ type: 'arc', kind: (kk === 'slash' ? 'slash' : e.kind), face: e.face, combo: e.combo, r: Math.max(34, a.rng * 0.78), col: e.kind === 'basic' ? (D.ITEMS[p.equip.weapon].wt === 'axe' ? '#ffd9a0' : D.ITEMS[p.equip.weapon].wt === 'great' ? '#ffe0ff' : D.ITEMS[p.equip.weapon].wt === 'spear' ? '#c8ffd8' : D.ITEMS[p.equip.weapon].wt === 'mace' ? '#ffe3b8' : FXCOL.basic) : FXCOL[e.kind], life: e.kind === 'slash' ? 0.42 : 0.26, delay: 0 }), fxs[fxs.length - 1].delay = 0;
           if (e.kind === 'rblow') { fx({ type: 'ring', x: cx + e.face * a.rng * 0.7, y: p.y - 24, r: 38, col: '#ff5a3a', size: 7, life: 0.38 }); G.shake = Math.max(G.shake, 1); }
           else if (e.kind === 'crusher') { for (let k = 1; k <= 2; k++) fx({ type: 'beam', x: cx, y: cy + 2 + (k % 2 ? -5 : 5), face: e.face, r: a.rng * 1.1, col: '#b6ffd0', life: 0.2, delay: k * 0.13 }); }
           else if (e.kind === 'charge') { fx({ type: 'ring', x: p.x, y: p.y - 24, r: 64, flat: 0.55, col: '#fff0a0', size: 6, life: 0.42 }); }
@@ -208,17 +208,22 @@
   }
 
   /* ───────── 스킬 버튼 ───────── */
+  // 퀵슬롯: 공격 스킬 최대 6개 (직접 지정하거나 자동 배치) + 버프는 '버프 일괄' 버튼 하나
+  function atkCands() { const p = G.p; return D.SKILL_ORDER.filter((sid) => { const s = D.SKILLS[sid]; return s.kind === 'atk' && (p.skills[sid] || 0) > 0 && p.lv >= s.reqLv && (!s.job || s.job === p.job) && !(s.tier === 3 && !p.tier3) && !(s.tier === 4 && !p.tier4); }); }
+  function skillScore(sid) { const s = D.SKILLS[sid], l = G.p.skills[sid]; return (s.mult(l) * (s.hits || 1) * Math.min(3, s.targets || 1)) / Math.max(0.7, s.cd); }
+  function quickSkills() { const cand = atkCands(); let sl = (G.p.settings.slots || []).filter((id) => cand.includes(id)); if (!sl.length) sl = cand.slice().sort((a, b) => skillScore(b) - skillScore(a)).slice(0, 5); return sl.slice(0, 6); }
   function buildSkillBtns() {
     const box = $('skills'); box.innerHTML = '';
-    const list = D.SKILL_ORDER.filter((s) => D.SKILLS[s].kind !== 'passive' && (G.p.skills[s] || 0) > 0);
-    for (const sid of list) {
-      const s = D.SKILLS[sid]; const b = document.createElement('button'); b.className = 'rb' + (s.kind === 'buff' ? ' buff' : ''); b.dataset.sid = sid; b.innerHTML = `<span class="ic">${s.icon}</span><span class="cd"></span><span class="mp">${s.mp(G.p.skills[sid])}</span><span class="act"></span>`;
+    for (const sid of quickSkills()) {
+      const s = D.SKILLS[sid]; const b = document.createElement('button'); b.className = 'rb'; b.dataset.sid = sid; b.innerHTML = `<span class="ic">${s.icon}</span><span class="cd"></span><span class="mp">${s.mp(G.p.skills[sid])}</span><span class="act"></span>`;
       bindBtn(b, () => { if (started && !paused) E.skill(G, sid); }); box.appendChild(b);
     }
+    const bf = E.usableBuffs(G);
+    if (bf.length) { const b = document.createElement('button'); b.className = 'rb buff'; b.dataset.sid = '_buffs'; b.innerHTML = `<span class="ic">✨</span><span class="cd"></span><span class="mp">${bf.reduce((a, sid) => a + D.SKILLS[sid].mp(G.p.skills[sid]), 0)}</span><span class="act"></span>`; bindBtn(b, () => { if (started && !paused) E.buffAll(G); }); box.appendChild(b); }
     hc.sk = null;
   }
   function updateSkillBtns() {
-    const p = G.p; for (const b of $('skills').children) { const sid = b.dataset.sid, s = D.SKILLS[sid], l = p.skills[sid] || 0; const cd = p.skCd[sid] > 0 ? Math.min(100, p.skCd[sid] / Math.max(0.5, s.cd) * 100) : 0; b.querySelector('.cd').style.height = cd + '%'; b.classList.toggle('nomp', p.mp < s.mp(l)); b.querySelector('.act').style.display = s.kind === 'buff' && p.buffs[s.buff] ? 'block' : 'none'; }
+    const p = G.p; for (const b of $('skills').children) { const sid = b.dataset.sid; if (sid === '_buffs') { const bf = E.usableBuffs(G), cost = bf.reduce((x, k) => x + D.SKILLS[k].mp(p.skills[k]), 0); b.classList.toggle('nomp', p.mp < cost); b.querySelector('.act').style.display = bf.length && bf.every((k) => p.buffs[D.SKILLS[k].buff]) ? 'block' : 'none'; continue; } const s = D.SKILLS[sid], l = p.skills[sid] || 0; const cd = p.skCd[sid] > 0 ? Math.min(100, p.skCd[sid] / Math.max(0.5, s.cd) * 100) : 0; b.querySelector('.cd').style.height = cd + '%'; b.classList.toggle('nomp', p.mp < s.mp(l)); b.querySelector('.act').style.display = s.kind === 'buff' && p.buffs[s.buff] ? 'block' : 'none'; }
   }
 
   /* ───────── 조작 바인딩 ───────── */
@@ -256,7 +261,7 @@
       if (paused) { if (k === 'Escape' || k === 'i') closeModal(); return; }
       if (k === ' ' || k === 'Alt') { e.preventDefault(); if (!e.repeat) E.tapJump(G); }
       else if (k === 'z' || k === 'Z' || k === 'Control' || k === 'j') G.input.attack = true;
-      else if (k >= '1' && k <= '5') { const l = D.SKILL_ORDER.filter((s) => D.SKILLS[s].kind !== 'passive' && (G.p.skills[s] || 0) > 0); if (l[+k - 1]) E.skill(G, l[+k - 1]); }
+      else if (k >= '1' && k <= '6') { const l = quickSkills(); if (l[+k - 1]) E.skill(G, l[+k - 1]); } else if (k === 'b' || k === 'B') E.buffAll(G);
       else if (k === 'h') E.potion(G, 'hp'); else if (k === 'm') E.potion(G, 'mp');
       else if (k === 'Enter' || k === 'e') doContext(); else if (k === 'i') openMenu('inv');
     });
@@ -321,6 +326,8 @@
       else if (k === 'use') { E.useItem(G, v); if (!p.inv[v]) menuSel = null; if (G.mapId === 'perion' && D.ITEMS[v].town) { closeModal(); return; } }
       else if (k === 'enh') { enhAnim(v, w); return; }
       else if (k === 'learn') { E.learn(G, v); buildSkillBtns(); }
+      else if (k === 'qs') { const st = G.p.settings; let cur = quickSkills().slice(); if (cur.includes(v)) cur = cur.filter((x) => x !== v); else { if (cur.length >= 6) cur.shift(); cur.push(v); } st.slots = cur; buildSkillBtns(); }
+      else if (k === 'qsauto') { G.p.settings.slots = []; buildSkillBtns(); }
       else if (k === 'sreset') { E.resetSkills(G); buildSkillBtns(); updateHud(true); }
       else if (k === 'stat') { E.addStat(G, v, +w || 1); }
       else if (k === 'ctl') { const st = G.p.settings; if (v === 'reset') { st.padX = st.padY = st.btnX = st.btnY = 0; } else { st[v] = Math.max(-30, Math.min(160, (st[v] || 0) + (+w || 0))); } applyCtl(); }
@@ -352,7 +359,8 @@
   function tabSkill() {
     const p = G.p; let s = `<div class="card row2"><span style="flex:1">남은 스킬 포인트 <b style="font-size:17px">${p.sp}</b> <small style="color:#cdbbe8">(총량이 스킬에 딱 맞아요)</small></span></div>`;
     if (!p.job) s += `<div class="card" style="font-size:12px">⚔️ <b>2차 전직</b>: Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후 마을의 교관 발도에게 가면 <b>파이터 / 페이지 / 스피어맨</b> 중 하나로 전직해요.</div>`; else s += `<div class="card" style="font-size:12px">${D.JOBS[p.job].icon} 현재 직업 <b style="color:${D.JOBS[p.job].col}">${E.jobName(p)}</b>${p.tier3 ? '' : ` <small style="color:#cdbbe8">· Lv ${D.JOB3_LV} + 오르비스 시험 후 3차 전직</small>`}</div>`;
-    for (const sid of D.SKILL_ORDER) { const k = D.SKILLS[sid], l = p.skills[sid] || 0, lock = p.lv < k.reqLv; if (k.job && k.job !== p.job) continue; if (k.tier === 3 && !p.tier3) continue; s += `<div class="sk ${lock ? 'lock' : ''}"><div class="ic">${k.icon}</div><div class="t"><b>${k.n}</b> <span style="color:#ffe08a">Lv ${l}/${k.maxLv}</span>${k.kind === 'passive' ? ' <span style="color:#9fe">[패시브]</span>' : k.kind === 'buff' ? ' <span style="color:#9fe">[버프]</span>' : ''}<br>${lock ? `<span style="color:#ff8a8a">Lv ${k.reqLv} 이상부터 배울 수 있어요</span>` : esc(k.desc(Math.max(1, l)))}</div>${!lock && l < k.maxLv ? (l >= E.skillCap(G, k) ? `<small style="color:#ff8a8a">Lv ${k.reqLv + Math.ceil((l + 1 - 3) / 0.8)}<br>필요</small>` : `<button class="btn sm green" data-a="learn:${sid}" ${p.sp < 1 ? 'disabled' : ''}>＋</button>`) : ''}</div>`; }
+    { const qs = quickSkills(); s += `<div class="card" style="font-size:12px">⭐ <b>퀵슬롯</b> ${qs.length ? qs.map((id) => D.SKILLS[id].icon).join(' ') : '(공격 스킬을 배우면 자동으로 채워져요)'} <small style="color:#cdbbe8">· 화면 버튼은 최대 6개, 버프는 ✨ 한 버튼으로 한 번에 켜요</small><br><button class="btn sm gray" data-a="qsauto">자동 배치</button> <small style="color:#cdbbe8">스킬 옆 ⭐를 눌러 직접 고를 수 있어요</small></div>`; }
+    for (const sid of D.SKILL_ORDER) { const k = D.SKILLS[sid], l = p.skills[sid] || 0, lock = p.lv < k.reqLv; if (k.job && k.job !== p.job) continue; if (k.tier === 3 && !p.tier3) continue; if (k.tier === 4 && !p.tier4) continue; s += `<div class="sk ${lock ? 'lock' : ''}"><div class="ic">${k.icon}</div><div class="t"><b>${k.n}</b> <span style="color:#ffe08a">Lv ${l}/${k.maxLv}</span>${k.kind === 'passive' ? ' <span style="color:#9fe">[패시브]</span>' : k.kind === 'buff' ? ' <span style="color:#9fe">[버프]</span>' : ''}<br>${lock ? `<span style="color:#ff8a8a">Lv ${k.reqLv} 이상부터 배울 수 있어요</span>` : esc(k.desc(Math.max(1, l)))}</div>${!lock && l > 0 && k.kind === 'atk' ? `<button class="btn sm ${quickSkills().includes(sid) ? '' : 'gray'}" data-a="qs:${sid}">⭐</button>` : ''}${!lock && l < k.maxLv ? (l >= E.skillCap(G, k) ? `<small style="color:#ff8a8a">Lv ${k.reqLv + Math.ceil((l + 1 - 3) / 0.8)}<br>필요</small>` : `<button class="btn sm green" data-a="learn:${sid}" ${p.sp < 1 ? 'disabled' : ''}>＋</button>`) : ''}</div>`; }
     s += `<div class="row2"><button class="btn sm gray" data-a="sreset">스킬 초기화(무료)</button></div><div class="card" style="font-size:11px">💡 스킬 레벨은 캐릭터 레벨이 오를수록 더 올릴 수 있어요.</div>`;
     return s;
   }
@@ -415,9 +423,10 @@
       stage.classList.remove('busy'); stage.classList.add(r.success ? 'ok' : 'fail');
       const fl = stage.querySelector('.flash'); if (r.success) { fl.classList.add('on'); spark('#fff27a', 34, true); spark('#ffffff', 14, true); Snd.sfx('enhOk'); } else { spark('#6a6a78', 18, false); Snd.sfx('enhFail'); }
       for (const e of held) G.events.push(e); handleEvents();
-      const total = r.success && sc.kind !== 'restore' ? (sc.kind === 'weapon' ? `공격력 <b style="color:#7aff9a">+${r.bonus}</b> (강화 누계 +${after.atk})` : `방어력 <b style="color:#7aff9a">+${r.bonus}</b> (강화 누계 +${after.def})`) : '';
+      const sg = (v) => `<b style="color:${v >= 0 ? '#7aff9a' : '#ff8a8a'}">${v >= 0 ? '+' : ''}${v}</b>`; const LBL = { weapon: ['공격력', 'atk'], armor: ['방어력', 'def'], str: ['STR', 'str'], dex: ['DEX', 'dex'], hp: ['최대 HP', 'hp'] };
+      const total = r.success && sc.kind !== 'restore' ? (sc.kind === 'hammer' ? '강화 가능 횟수 <b style="color:#7aff9a">+1</b>' : sc.kind === 'chaos' && r.chaos ? `${r.chaos.w ? '공격력' : '방어력'} ${sg(r.chaos.a)} · STR ${sg(r.chaos.s)} · DEX ${sg(r.chaos.d)} · HP ${sg(r.chaos.h)}` : `${LBL[sc.kind][0]} ${sg(r.bonus)} (강화 누계 ${sg(after[LBL[sc.kind][1]])})`) : '';
       const again = p.inv[sid] > 0 && (sc.kind === 'restore' ? after.used > 0 : after.left > 0);
-      root.querySelector('.res').innerHTML = (r.success ? `<div class="big ok">✨ ${sc.kind === 'restore' ? '복구 성공' : '강화 성공'}! ✨</div>` : `<div class="big bad">${sc.kind === 'restore' ? '복구 실패…' : '강화 실패…'}</div>`) + `<div style="color:#ffe08a;font-weight:800">${slotLabel} · ${gnameC(gid, gidx)}</div>` + (total ? `<div>${total}</div>` : '') + `<div style="color:#cdbbe8">남은 강화 횟수 <b>${after.left}/${after.slots}</b>${r.success || sc.kind === 'restore' ? '' : ' (실패해도 횟수는 줄어요)'}</div>`;
+      root.querySelector('.res').innerHTML = (r.success ? `<div class="big ok">✨ ${sc.kind === 'restore' ? '복구 성공' : sc.kind === 'hammer' ? '망치질 성공' : '강화 성공'}! ✨</div>` : `<div class="big bad">${sc.kind === 'restore' ? '복구 실패…' : '강화 실패…'}</div>`) + `<div style="color:#ffe08a;font-weight:800">${slotLabel} · ${gnameC(gid, gidx)}</div>` + (total ? `<div>${total}</div>` : '') + `<div style="color:#cdbbe8">남은 강화 횟수 <b>${after.left}/${after.slots}</b>${r.success || sc.kind === 'restore' ? '' : ' (실패해도 횟수는 줄어요)'}</div>`;
       root.querySelector('.btns').innerHTML = (again ? `<button class="btn green" data-a="again">🔨 한 번 더 바르기 (${p.inv[sid]}장)</button>` : '') + '<button class="btn gray" data-a="back">🎒 가방으로</button>';
       modal.dataset.lock = '';
     }, 2500);
@@ -454,7 +463,7 @@
         const cost = Math.round(G.p.lv * 4); text = `어서 오세요, 여관 '바위 베개'예요!\n푹 쉬면 HP·MP가 가득 차요.\n이용료는 **${cost} 메소**랍니다.\n\n🤫 *손님들 사이에 이런 소문이 돌아요… 개미굴 깊은 곳 **맨 위 발판 끝**, 그리고 불꽃 협곡 **맨 위 오른쪽 발판**에 지도에도 없는 비밀 길이 있대요.*`;
         opts.push({ label: `🛏️ 쉬기 (${cost} 메소)`, cls: 'green', fn: () => { const r = E.innHeal(G); Snd.sfx(r.ok ? 'levelup' : 'deny'); if (r.ok) { fx({ type: 'ring', x: G.p.x, y: G.p.y - 20, r: 40, col: '#9fffb0', size: 5, life: 0.7 }); dlg(npc, '푹 쉬셨나요? 몸이 가벼워졌을 거예요! 😊', [{ label: '고마워요', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } });
       } else if (npc.role === 'shop') {
-        text = (npc.shop === 'potion' || npc.shop === 'potion2') ? '어서 와요! 물약과 귀환 주문서를 팔아요.\n사냥 전엔 물약 챙기는 거 잊지 마세요!' : npc.shop === 'scroll' ? '어서 오세요, 주문서 가게예요 ✨\n여기선 **100% 주문서**만 팔아요.\n**60%**와 **10%** 주문서는 몬스터가 떨어뜨리니 사냥하며 모아 보세요!' : '크하하, 불꽃 튀는 대장간에 어서 와라!\n무기와 방어구가 있다. 레벨에 맞는 걸 골라!';
+        const sk = npc.shopKind || npc.shop; text = (sk === 'potion' || sk === 'potion2') ? '어서 와요! 물약과 귀환 주문서를 팔아요.\n사냥 전엔 물약 챙기는 거 잊지 마세요!' : sk === 'scroll' ? '어서 오세요, 주문서 가게예요 ✨\n여기선 **100% 주문서**(공격·방어·힘·민첩·체력)와 **황금 망치**를 팔아요.\n**60%·30%·10%** 주문서와 **혼돈의 주문서**는 몬스터·보스가 떨어뜨리니 사냥하며 모아 보세요!' : '크하하, 불꽃 튀는 대장간에 어서 와라!\n무기와 방어구가 있다. 레벨에 맞는 걸 골라!';
         opts.push({ label: '🛒 물건 보기 (사기·팔기)', cls: 'green', fn: () => shop(npc) });
       } else if (npc.role === 'master') {
         const cadv = E.canAdvance(G);
@@ -474,10 +483,18 @@
         const fee = 3000, to = D.MAPS[npc.dest];
         text = `나는 ${npc.n}. ${to.n}행 배를 운항한다네.\n\n🚢 승선료 **${fmt(fee)} 메소**, 항해는 약 75초.\n⚠️ 가끔 **크림슨 발록**이 배를 습격한다네. 물약을 챙기게!`;
         opts.push({ label: `🚢 ${to.n}행 배 타기 (${fmt(fee)} 메소)`, cls: 'green', fn: () => { const r = E.boardShip(G, npc.dest, fee); if (!r.ok) { dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); return; } handleEvents(); closeModal(); save(); toastBanner('🚢 출항! ' + to.n + '(으)로 갑니다'); } });
+      } else if (npc.role === 'travel') {
+        text = '어디로 모셔다 드릴까요? 🧭\n레벨이 되는 도시라면 요금만 내면 바로 갈 수 있어요.';
+        for (const tw of D.TOWNS) { if (tw.id === G.mapId) continue; const fee = E.travelFee(tw), low = G.p.lv < tw.min; opts.push({ label: `🧭 ${tw.n} <small>(Lv ${tw.min}+ · ${fmt(fee)} 메소)</small>`, cls: low ? 'gray' : '', dis: low, fn: () => { const r = E.travel(G, tw.id); if (!r.ok) { dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); return; } handleEvents(); closeModal(); save(); toastBanner('🧭 ' + tw.n + '에 도착!'); } }); }
+      } else if (npc.role === 'master4') {
+        const c4 = E.canAdvance4(G), pp = G.p;
+        if (pp.tier4) text = `🌟 **${E.jobName(pp)}**이로군. 시간의 끝에 선 자여, 더 높은 곳을 향해 가라!`;
+        else if (c4.ok) { text = `시험을 통과했군. **4차 전직**을 하겠나?\n\n${D.JOBS[pp.job].icon} ${D.JOBS[pp.job].n3} → **${D.JOBS[pp.job].n4}**\n새 스킬 5개와 큰 능력 보너스가 주어진다. (SP +5, 능력치 +5)`; opts.push({ label: `🌟 ${D.JOBS[pp.job].n4}(으)로 4차 전직`, cls: 'green', fn: () => { const r = E.advance4(G); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`4차 전직! ${E.jobName(pp)}`); dlg(npc, `좋다! 오늘부터 너는 **${E.jobName(pp)}**이다.\n스킬 탭에서 새 스킬을 배워라!`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }); }
+        else text = `나는 시간의 관문을 지키는 크로노스다. 4차 전직은 **Lv ${D.JOB4_LV} 이상**, 3차 전직을 마친 자에게 시험을 내린다.\n(${c4.msg})`;
       } else if (npc.role === 'master3') {
         const c3 = E.canAdvance3(G), pp = G.p;
         if (pp.tier3) text = `⚜️ **${E.jobName(pp)}**이로군. 하늘의 기사단은 너를 자랑스럽게 여긴다!`;
-        else if (c3.ok) { text = `시험을 통과했군. **3차 전직**을 하겠나?\n\n${D.JOBS[pp.job].icon} ${D.JOBS[pp.job].n} → **${D.JOBS[pp.job].n3}**\n새 스킬 3개와 능력 보너스가 주어진다. (SP +3, 능력치 +5)`; opts.push({ label: `⚜️ ${D.JOBS[pp.job].n3}(으)로 3차 전직`, cls: 'green', fn: () => { const r = E.advance3(G); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`3차 전직! ${E.jobName(pp)}`); dlg(npc, `좋다! 오늘부터 너는 **${E.jobName(pp)}**이다.\n스킬 탭에서 새 스킬을 배워라!`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }); }
+        else if (c3.ok) { text = `시험을 통과했군. **3차 전직**을 하겠나?\n\n${D.JOBS[pp.job].icon} ${D.JOBS[pp.job].n} → **${D.JOBS[pp.job].n3}**\n새 스킬 3개와 능력 보너스가 주어진다. (SP +5, 능력치 +5)`; opts.push({ label: `⚜️ ${D.JOBS[pp.job].n3}(으)로 3차 전직`, cls: 'green', fn: () => { const r = E.advance3(G); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`3차 전직! ${E.jobName(pp)}`); dlg(npc, `좋다! 오늘부터 너는 **${E.jobName(pp)}**이다.\n스킬 탭에서 새 스킬을 배워라!`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }); }
         else text = `나는 천공 기사단장 헬마다. 3차 전직은 **Lv ${D.JOB3_LV} 이상**, 2차 전직을 마친 자에게 시험을 내린다.\n(${c3.msg})`;
       }
       if (npc.role === 'chest') {
@@ -640,8 +657,8 @@
     else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
   }
   // 업데이트 소식: 새 소식 번호가 바뀌면 한 번만 보여 준다 (소식을 고칠 땐 NEWS_ID 도 올릴 것)
-  const NEWS_ID = 'n6';
-  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.', '🔄 교관 발도에게서 <b>직업을 바꿀</b> 수 있어요 (스킬 초기화, 포인트 환급). 다른 직업도 체험해 보세요!', '🔱 스피어맨 <b>드래곤 크러셔</b>가 3연속 찌르기로 바뀌었어요.', '🚢 <b>오르비스 대확장!</b> 마을 오른쪽 <b>페리온 항구</b>에서 배를 타고(3,000 메소) 하늘의 도시 <b>오르비스</b>로! 항해 중 <b>크림슨 발록</b>이 무작위로 습격해요 (손톱·투구 드랍).', '☁️ 새 사냥터 4곳 (구름 정원·천상의 정원·얼음 협곡·눈보라 고원), 보스 <b>얼음 군주</b>, 히든 스트리트 2곳 추가, 새 장비 20종, 퀘스트 15개. 최대 레벨 70!', '⚜️ <b>3차 전직</b> (크루세이더·나이트·드래곤나이트): Lv50 + 오르비스 시험 후 천공 기사단장 헬마에게.', '🕳️ <b>히든 스트리트</b> 2곳! 개미굴 깊은 곳 맨 위 발판 끝 / 불꽃 협곡 맨 위 오른쪽 발판에 숨은 포탈이 있어요 (경험치·드랍 보너스).', '🔊 주문서 붙는/터지는 소리! 모든 사냥터·보스가 <b>메이플 원곡 BGM</b>으로 바뀌었어요 (설정에서 끌 수 있어요).', '🧾 상점에서 장비를 팔 때 <b>한 개씩 강화 상태</b>를 보고 팔 수 있어요 (강화된 건 값을 더 쳐 줘요).', '⚙️ 스탯 초기화해도 장비가 벗겨지지 않고 <b>비활성</b>으로 표시돼요. 스탯을 올리면 다시 켜져요.', '👹 <b>보스 패턴 개편</b> — 발판 위에서도 맞아요! 붉은 <b>바닥!/발판!</b> 표시가 뜨면 안전한 곳으로 이동하세요.'];
+  const NEWS_ID = 'n7';
+  const NEWS = ['🌍 <b>만렙 200!</b> 원작처럼 2차 Lv30 · <b>3차 Lv70</b> · <b>4차 Lv120</b>. 오르비스의 <b>비공정 조종사</b>가 새 도시들로 데려다 줘요: 루디브리엄 · 아쿠아로드 · 리프레 · 무릉 · 마가티아 · 아리안트 · 시간의 신전 · 에델슈타인 · 코스모스 (각 도시마다 사냥터 2곳 · 보스 · 히든 스트리트).', '⚜️ <b>4차 전직</b>(히어로·팔라딘·다크나이트)은 마가티아의 관문지기에게. 3차·4차 스킬이 직업당 5개로 늘었어요.', '⭐ 스킬 <b>퀵슬롯</b>: 공격 스킬은 최대 6개(자동 배치 또는 스킬 탭의 ⭐로 직접 지정), 버프는 ✨ 버튼 한 번에 전부 켜요.', '📜 <b>주문서 확장</b>: 30% 단계, 힘·민첩·체력 주문서, 황금 망치(강화 횟수 +1), 혼돈의 주문서(도박!).', '🕳️ 히든 스트리트, 🚢 오르비스, 🔄 직업 변경, 🐾 펫 줍기는 그대로예요. 설정에서 <b>고화질 효과</b>를 끌 수도 있어요.'];
   function showNews() {
     let seen = null; try { seen = localStorage.getItem('pw.news'); } catch (e) {} if (seen === NEWS_ID) return;
     try { localStorage.setItem('pw.news', NEWS_ID); } catch (e) {}

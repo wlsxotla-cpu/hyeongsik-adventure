@@ -1,6 +1,6 @@
 // 보스 패턴 점검: 보스마다 공격 종류가 다양하고, 발판 위에 가만히 서 있어도(발판 캠핑) 바닥에 서 있어도 맞는지
 const E = require('../engine.js'), D = require('../data.js'); let bad = 0; const f = (m) => { console.log('FAIL ' + m); bad++; };
-for (const id of ['bosstree', 'bossgolem', 'zakum', 'frost', 'ship']) {
+for (const id of ['bosstree', 'bossgolem', 'zakum', 'frost', 'ship'].concat(D.REGIONS.map((r) => 'boss_' + r.town.replace('town_', '')))) {
   const kinds = new Set(); const res = {};
   for (const where of ['ground', 'platform']) {
     const G = E.newGame('b', 5); const p = G.p; p.lv = 60; if (id === 'ship') { p.meso = 9999; E.loadMap(G, 'port', 'back'); E.boardShip(G, 'orbis'); G.ship.t = 9999; G.ship.bal = true; G.ship.balAt = 9999; } else E.loadMap(G, id, 'back'); const m = G.map;

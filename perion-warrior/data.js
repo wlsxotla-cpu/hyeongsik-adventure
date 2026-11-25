@@ -4,7 +4,7 @@
   const D = {};
 
   /* ───────── 경험치 / 공식 ───────── */
-  D.MAX_LV = 70; D.JOB_LV = 30; D.JOB3_LV = 50;
+  D.MAX_LV = 200; D.JOB_LV = 30; D.JOB3_LV = 70; D.JOB4_LV = 120; // 원작처럼 2차 30 · 3차 70 · 4차 120 · 만렙 200
   D.expToNext = (lv) => Math.round((9 * lv * lv + 12 * lv + 2) * (1 + lv / 20));
   D.monExp = (lv) => Math.round(1.5 * Math.pow(lv, 1.5) + 4);
   D.monHp = (lv) => Math.round(11 + 2.7 * Math.pow(lv, 1.95));
@@ -30,6 +30,15 @@
   add('scW10', { n: '무기 공격력 주문서 10%', t: 'scroll', kind: 'weapon', rate: 0.1, mark: '공', icon: '📜', col: '#ff8a2a', price: 1500, desc: '착용 중인 무기의 공격력을 크게 올려요. 성공 확률 10%. 보스에게서 얻을 수 있어요.' });
   add('scA60', { n: '방어구 방어력 주문서 60%', t: 'scroll', kind: 'armor', rate: 0.6, mark: '방', icon: '📜', col: '#3e7bfa', price: 700, desc: '착용 중인 투구·갑옷·장갑·신발의 방어력을 올려요. 성공 확률 60%.' });
   add('scA10', { n: '방어구 방어력 주문서 10%', t: 'scroll', kind: 'armor', rate: 0.1, mark: '방', icon: '📜', col: '#8a5cff', price: 1500, desc: '착용 중인 방어구의 방어력을 크게 올려요. 성공 확률 10%. 보스에게서 얻을 수 있어요.' });
+
+
+  // ───────── 장비 주문서 확장: 30% 단계 · 능력치 주문서(힘/민첩/체력 ×4단계) · 황금 망치 · 혼돈의 주문서 ─────────
+  add('scW30', { n: '무기 공격력 주문서 30%', t: 'scroll', kind: 'weapon', rate: 0.3, mark: '공', icon: '📜', col: '#ff6a3a', price: 1000, desc: '착용 중인 무기의 공격력을 꽤 올려요. 성공 확률 30%. 성공·실패와 상관없이 강화 가능 횟수가 1 줄어요.' });
+  add('scA30', { n: '방어구 방어력 주문서 30%', t: 'scroll', kind: 'armor', rate: 0.3, mark: '방', icon: '📜', col: '#5a8cff', price: 1000, desc: '착용 중인 방어구의 방어력을 꽤 올려요. 성공 확률 30%. 성공·실패와 상관없이 강화 가능 횟수가 1 줄어요.' });
+  { const ST = [['S', '힘', 'str', 'STR', '#e05a3a'], ['D', '민첩', 'dex', 'DEX', '#3ac07a'], ['H', '체력', 'hp', '최대 HP', '#e05a8a']], RT = [[100, 1, 700], [60, 0.6, 1400], [30, 0.3, 2800], [10, 0.1, 7000]];
+    for (const [k, nm, kind, lab, col] of ST) for (const [pc, rate, price] of RT) add('sc' + k + pc, { n: nm + ' 주문서 ' + pc + '%', t: 'scroll', kind, rate, mark: nm[0], icon: '📜', col, price, desc: `모든 장비에 쓸 수 있어요. 성공하면 ${lab}이(가) 오르고, 성공·실패와 상관없이 강화 가능 횟수가 1 줄어요. 성공 확률 ${pc}%.` }); }
+  add('scG', { n: '황금 망치', t: 'scroll', kind: 'hammer', rate: 1, mark: '망', icon: '🔨', col: '#ffd24a', price: 20000, desc: '장비의 강화 가능 횟수를 1 늘려요. 장비 하나에 2번까지만 쓸 수 있어요. 성공 확률 100%.' });
+  add('scC60', { n: '혼돈의 주문서 60%', t: 'scroll', kind: 'chaos', rate: 0.6, mark: '혼', icon: '🌀', col: '#b05aff', price: 12000, desc: '모든 장비에 쓸 수 있어요. 성공하면 공격력/방어력·STR·DEX·HP가 제각각 오르거나 내려가요(도박!). 성공 확률 60%, 강화 가능 횟수가 1 줄어요. 보스에게서 얻을 수 있어요.' });
 
   // 기타(팔기·퀘스트)
   const etc = (id, n, icon, price, col) => add(id, { n, t: 'etc', icon, price, col: col || '#8b8f9c', desc: '잡다한 전리품. 상점에 팔 수 있다.' });
@@ -165,9 +174,9 @@
   };
   // ── 2차 전직 (Lv 30 + 고대 골렘의 시련 완료) ──
   D.JOBS = {
-    fighter: { n3: '크루세이더', n: '파이터', icon: '⚔️', col: '#ff9a6a', wts: ['sword', 'great'], wtn: '검·양손검', desc: '[검/양손검] 공격력이 가장 강한 공격형. 전 스킬 데미지가 올라가고, 강한 한 방(레이징 블로우)과 버서크로 보스를 녹인다.', bonus: '공격력 +8%' },
-    page: { n3: '나이트', n: '페이지', icon: '🛡️', col: '#8fb6ff', wts: ['axe', 'mace'], wtn: '도끼·둔기', start: 'mc0', desc: '[도끼/둔기] 방어와 체력이 높은 탱커형. 파워 가드·방어 마스터리로 맞아도 버티며, 홀리 차지로 여러 마리를 쓸어낸다.', bonus: '방어력 +8, 최대 HP +8%' },
-    spearman: { n3: '드래곤나이트', n: '스피어맨', icon: '🔱', col: '#7ae0a0', wts: ['spear'], wtn: '창', start: 'sp0', desc: '[창] 체력과 치명타가 좋은 사냥형. 드래곤 크러셔로 넓게 쓸고, 하이퍼 바디로 HP를 크게 늘린다.', bonus: '최대 HP +10%, 치명타 +3%' },
+    fighter: { n4: '히어로', n3: '크루세이더', n: '파이터', icon: '⚔️', col: '#ff9a6a', wts: ['sword', 'great'], wtn: '검·양손검', desc: '[검/양손검] 공격력이 가장 강한 공격형. 전 스킬 데미지가 올라가고, 강한 한 방(레이징 블로우)과 버서크로 보스를 녹인다.', bonus: '공격력 +8%' },
+    page: { n4: '팔라딘', n3: '나이트', n: '페이지', icon: '🛡️', col: '#8fb6ff', wts: ['axe', 'mace'], wtn: '도끼·둔기', start: 'mc0', desc: '[도끼/둔기] 방어와 체력이 높은 탱커형. 파워 가드·방어 마스터리로 맞아도 버티며, 홀리 차지로 여러 마리를 쓸어낸다.', bonus: '방어력 +8, 최대 HP +8%' },
+    spearman: { n4: '다크나이트', n3: '드래곤나이트', n: '스피어맨', icon: '🔱', col: '#7ae0a0', wts: ['spear'], wtn: '창', start: 'sp0', desc: '[창] 체력과 치명타가 좋은 사냥형. 드래곤 크러셔로 넓게 쓸고, 하이퍼 바디로 HP를 크게 늘린다.', bonus: '최대 HP +10%, 치명타 +3%' },
   };
   Object.assign(D.SKILLS, {
     rblow: { job: 'fighter', n: '레이징 블로우', icon: '🗡️', kind: 'atk', reqLv: 30, maxLv: 10, mp: (l) => 14 + l, mult: (l) => 2.6 + 0.25 * l, targets: 1, rng: 84, cd: 1.6, fx: 'power',
@@ -191,26 +200,53 @@
   });
   // ── 3차 전직 (Lv 50 + 오르비스 시험 퀘스트): 크루세이더 / 나이트 / 드래곤나이트 ──
   Object.assign(D.SKILLS, {
-    brandish: { job: 'fighter', tier: 3, n: '브랜디쉬', icon: '🌙', kind: 'atk', reqLv: 50, maxLv: 10, mp: (l) => 26 + l, mult: (l) => 2.2 + 0.18 * l, hits: 2, targets: 3, rng: 112, cd: 2.4, fx: 'power',
+    brandish: { job: 'fighter', tier: 3, n: '브랜디쉬', icon: '🌙', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 26 + l, mult: (l) => 2.2 + 0.18 * l, hits: 2, targets: 3, rng: 112, cd: 2.4, fx: 'power',
       desc: (l) => `검을 두 번 휘둘러 앞의 적 최대 3명을 ${Math.round((2.2 + 0.18 * l) * 100)}% 위력으로 2연타. (MP ${26 + l})` },
-    soulroar: { job: 'fighter', tier: 3, n: '소울 로어', icon: '🐲', kind: 'buff', reqLv: 50, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'atk3', val: (l) => 0.2 + l * 0.03,
+    soulroar: { job: 'fighter', tier: 3, n: '소울 로어', icon: '🐲', kind: 'buff', reqLv: 70, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'atk3', val: (l) => 0.2 + l * 0.03,
       desc: (l) => `${50 + l * 5}초 동안 공격력 +${Math.round((0.2 + l * 0.03) * 100)}% (다른 공격 버프와 중첩). (MP ${30 + l})` },
-    fmaster3: { job: 'fighter', tier: 3, n: '크루세이더 숙련', icon: '📕', kind: 'passive', reqLv: 50, maxLv: 10,
+    fmaster3: { job: 'fighter', tier: 3, n: '크루세이더 숙련', icon: '📕', kind: 'passive', reqLv: 70, maxLv: 10,
       desc: (l) => `공격력 +${l * 1.5}%, 치명타 확률 +${l}%p.` },
-    elcharge: { job: 'page', tier: 3, n: '엘리멘탈 차지', icon: '⚡', kind: 'atk', reqLv: 50, maxLv: 10, mp: (l) => 28 + l, mult: (l) => 3.4 + 0.26 * l, targets: 5, rng: 130, cd: 3.0, fx: 'slash',
+    elcharge: { job: 'page', tier: 3, n: '엘리멘탈 차지', icon: '⚡', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 28 + l, mult: (l) => 3.4 + 0.26 * l, targets: 5, rng: 130, cd: 3.0, fx: 'slash',
       desc: (l) => `속성의 힘을 실은 일격으로 최대 5명을 ${Math.round((3.4 + 0.26 * l) * 100)}% 위력으로 공격. (MP ${28 + l})` },
-    achilles: { job: 'page', tier: 3, n: '아킬레스', icon: '🏺', kind: 'buff', reqLv: 50, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'def3', val: (l) => 40 + l * 8,
+    achilles: { job: 'page', tier: 3, n: '아킬레스', icon: '🏺', kind: 'buff', reqLv: 70, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'def3', val: (l) => 40 + l * 8,
       desc: (l) => `${50 + l * 5}초 동안 방어력 +${40 + l * 8} (다른 방어 버프와 중첩). (MP ${30 + l})` },
-    pmaster3: { job: 'page', tier: 3, n: '나이트 숙련', icon: '📗', kind: 'passive', reqLv: 50, maxLv: 10,
+    pmaster3: { job: 'page', tier: 3, n: '나이트 숙련', icon: '📗', kind: 'passive', reqLv: 70, maxLv: 10,
       desc: (l) => `방어력 +${l * 4}, 최대 HP +${l * 2}%.` },
-    dragonfury: { job: 'spearman', tier: 3, n: '드래곤 퓨리', icon: '🔥', kind: 'atk', reqLv: 50, maxLv: 10, mp: (l) => 32 + l, mult: (l) => 1.0 + 0.12 * l, hits: 4, targets: 2, rng: 135, cd: 3.2, fx: 'power',
+    dragonfury: { job: 'spearman', tier: 3, n: '드래곤 퓨리', icon: '🔥', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 32 + l, mult: (l) => 1.0 + 0.12 * l, hits: 4, targets: 2, rng: 135, cd: 3.2, fx: 'power',
       desc: (l) => `용의 힘으로 앞의 적(최대 2명)을 4연속 가격. 한 번에 ${Math.round((1.0 + 0.12 * l) * 100)}% 위력 × 4타. (MP ${32 + l})` },
-    dragonblood: { job: 'spearman', tier: 3, n: '드래곤 블러드', icon: '🩸', kind: 'buff', reqLv: 50, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'atk4', val: (l) => 0.22 + l * 0.03,
+    dragonblood: { job: 'spearman', tier: 3, n: '드래곤 블러드', icon: '🩸', kind: 'buff', reqLv: 70, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'atk4', val: (l) => 0.22 + l * 0.03,
       desc: (l) => `${50 + l * 5}초 동안 공격력 +${Math.round((0.22 + l * 0.03) * 100)}% (다른 공격 버프와 중첩). (MP ${30 + l})` },
-    smaster3: { job: 'spearman', tier: 3, n: '드래곤 숙련', icon: '📙', kind: 'passive', reqLv: 50, maxLv: 10,
+    smaster3: { job: 'spearman', tier: 3, n: '드래곤 숙련', icon: '📙', kind: 'passive', reqLv: 70, maxLv: 10,
       desc: (l) => `치명타 확률 +${(l * 1.2).toFixed(1)}%p, 최소 데미지 비율 +${l * 2}%p.` },
   });
-  D.SKILL_ORDER = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness', 'rblow', 'berserk', 'fmastery', 'charge', 'guard', 'pmastery', 'crusher', 'hyper', 'smastery', 'brandish', 'soulroar', 'fmaster3', 'elcharge', 'achilles', 'pmaster3', 'dragonfury', 'dragonblood', 'smaster3'];
+  // ── 3차 추가 스킬 (직업당 총 5개) ──
+  Object.assign(D.SKILLS, {
+    swordpanic: { job: 'fighter', tier: 3, n: '소드 패닉', icon: '💢', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 36 + l, mult: (l) => 7.5 + 0.6 * l, targets: 1, rng: 100, cd: 4.0, fx: 'power', desc: (l) => `혼신의 일격으로 앞의 적 1명을 ${Math.round((7.5 + 0.6 * l) * 100)}% 위력으로 강타. (MP ${36 + l})` },
+    shout: { job: 'fighter', tier: 3, n: '샤우트', icon: '📢', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 40 + l, mult: (l) => 2.4 + 0.2 * l, targets: 8, rng: 170, cd: 5.5, fx: 'quake', desc: (l) => `크게 외쳐 주변 최대 8명을 ${Math.round((2.4 + 0.2 * l) * 100)}% 위력으로 공격. (MP ${40 + l})` },
+    blast3: { job: 'page', tier: 3, n: '블래스트', icon: '☄️', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 36 + l, mult: (l) => 2.6 + 0.2 * l, hits: 3, targets: 1, rng: 120, cd: 4.0, fx: 'power', desc: (l) => `앞의 적을 3연속 가격. 한 번에 ${Math.round((2.6 + 0.2 * l) * 100)}% 위력 × 3타. (MP ${36 + l})` },
+    guardwall: { job: 'page', tier: 3, n: '가드월', icon: '🧱', kind: 'buff', reqLv: 70, maxLv: 10, mp: (l) => 34 + l, cd: 1, dur: (l) => 40 + l * 4, buff: 'dr1', val: (l) => 0.2 + l * 0.02, desc: (l) => `${40 + l * 4}초 동안 받는 피해 ${Math.round((0.2 + l * 0.02) * 100)}% 감소. (MP ${34 + l})` },
+    dragonroar: { job: 'spearman', tier: 3, n: '드래곤 로어', icon: '🐲', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 38 + l, mult: (l) => 2.8 + 0.22 * l, targets: 6, rng: 180, cd: 5.0, fx: 'quake', desc: (l) => `포효로 주변 최대 6명을 ${Math.round((2.8 + 0.22 * l) * 100)}% 위력으로 공격. (MP ${38 + l})` },
+    dragonthrust: { job: 'spearman', tier: 3, n: '드래곤 스러스트', icon: '🏹', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 38 + l, mult: (l) => 1.6 + 0.14 * l, hits: 5, targets: 1, rng: 140, cd: 4.2, fx: 'power', desc: (l) => `창으로 앞의 적을 5연속 찌른다. 한 번에 ${Math.round((1.6 + 0.14 * l) * 100)}% 위력 × 5타. (MP ${38 + l})` },
+  });
+  // ── 4차 전직 (Lv 120 + 마가티아 시험): 히어로 / 팔라딘 / 다크나이트, 직업당 5개 ──
+  Object.assign(D.SKILLS, {
+    rageupper: { job: 'fighter', tier: 4, n: '레이지 어퍼', icon: '🗡️', kind: 'atk', reqLv: 120, maxLv: 10, mp: (l) => 48 + l, mult: (l) => 2.6 + 0.2 * l, hits: 6, targets: 2, rng: 130, cd: 3.5, fx: 'power', desc: (l) => `앞의 적(최대 2명)을 6연속 베어 올린다. 한 번에 ${Math.round((2.6 + 0.2 * l) * 100)}% 위력 × 6타. (MP ${48 + l})` },
+    swordflash: { job: 'fighter', tier: 4, n: '소드 플래시', icon: '⚡', kind: 'atk', reqLv: 120, maxLv: 10, mp: (l) => 56 + l, mult: (l) => 3.6 + 0.3 * l, targets: 10, rng: 210, cd: 6.0, fx: 'quake', desc: (l) => `검기를 사방으로 터뜨려 최대 10명을 ${Math.round((3.6 + 0.3 * l) * 100)}% 위력으로 공격. (MP ${56 + l})` },
+    enrage: { job: 'fighter', tier: 4, n: '인레이지', icon: '😤', kind: 'buff', reqLv: 120, maxLv: 10, mp: (l) => 50 + l, cd: 1, dur: (l) => 60 + l * 5, buff: 'atk5', val: (l) => 0.35 + l * 0.04, desc: (l) => `${60 + l * 5}초 동안 공격력 +${Math.round((0.35 + l * 0.04) * 100)}% (다른 공격 버프와 중첩). (MP ${50 + l})` },
+    stance: { job: 'fighter', tier: 4, n: '가디언 스탠스', icon: '🛡️', kind: 'buff', reqLv: 120, maxLv: 10, mp: (l) => 50 + l, cd: 1, dur: (l) => 60 + l * 5, buff: 'dr2', val: (l) => 0.25 + l * 0.02, desc: (l) => `${60 + l * 5}초 동안 받는 피해 ${Math.round((0.25 + l * 0.02) * 100)}% 감소. (MP ${50 + l})` },
+    herowill: { job: 'fighter', tier: 4, n: '히어로의 의지', icon: '📕', kind: 'passive', reqLv: 120, maxLv: 10, desc: (l) => `공격력 +${l * 2}%, 치명타 확률 +${l}%p.` },
+    holymace: { job: 'page', tier: 4, n: '성스러운 철퇴', icon: '🔨', kind: 'atk', reqLv: 120, maxLv: 10, mp: (l) => 48 + l, mult: (l) => 2.7 + 0.2 * l, hits: 6, targets: 2, rng: 130, cd: 3.5, fx: 'slash', desc: (l) => `성스러운 힘으로 앞의 적(최대 2명)을 6연속 내려친다. 한 번에 ${Math.round((2.7 + 0.2 * l) * 100)}% 위력 × 6타. (MP ${48 + l})` },
+    holyblast: { job: 'page', tier: 4, n: '신성한 폭발', icon: '💥', kind: 'atk', reqLv: 120, maxLv: 10, mp: (l) => 56 + l, mult: (l) => 3.5 + 0.3 * l, targets: 10, rng: 210, cd: 6.0, fx: 'quake', desc: (l) => `신성한 폭발로 최대 10명을 ${Math.round((3.5 + 0.3 * l) * 100)}% 위력으로 공격. (MP ${56 + l})` },
+    blessing: { job: 'page', tier: 4, n: '블레싱', icon: '🙏', kind: 'buff', reqLv: 120, maxLv: 10, mp: (l) => 50 + l, cd: 1, dur: (l) => 60 + l * 5, buff: 'atk6', val: (l) => 0.3 + l * 0.03, desc: (l) => `${60 + l * 5}초 동안 공격력 +${Math.round((0.3 + l * 0.03) * 100)}% (다른 공격 버프와 중첩). (MP ${50 + l})` },
+    guardian: { job: 'page', tier: 4, n: '가디언', icon: '🏰', kind: 'buff', reqLv: 120, maxLv: 10, mp: (l) => 50 + l, cd: 1, dur: (l) => 60 + l * 5, buff: 'def4', val: (l) => 100 + l * 12, desc: (l) => `${60 + l * 5}초 동안 방어력 +${100 + l * 12} (다른 방어 버프와 중첩). (MP ${50 + l})` },
+    paladinwill: { job: 'page', tier: 4, n: '팔라딘의 의지', icon: '📗', kind: 'passive', reqLv: 120, maxLv: 10, desc: (l) => `방어력 +${l * 6}, 최대 HP +${l * 3}%.` },
+    darkspear: { job: 'spearman', tier: 4, n: '다크 스피어', icon: '🌑', kind: 'atk', reqLv: 120, maxLv: 10, mp: (l) => 48 + l, mult: (l) => 2.2 + 0.18 * l, hits: 7, targets: 2, rng: 145, cd: 3.5, fx: 'power', desc: (l) => `어둠의 창으로 앞의 적(최대 2명)을 7연속 꿰뚫는다. 한 번에 ${Math.round((2.2 + 0.18 * l) * 100)}% 위력 × 7타. (MP ${48 + l})` },
+    cataclysm: { job: 'spearman', tier: 4, n: '대재앙', icon: '🌋', kind: 'atk', reqLv: 120, maxLv: 10, mp: (l) => 56 + l, mult: (l) => 3.6 + 0.3 * l, targets: 10, rng: 210, cd: 6.0, fx: 'quake', desc: (l) => `대지를 가르는 재앙으로 최대 10명을 ${Math.round((3.6 + 0.3 * l) * 100)}% 위력으로 공격. (MP ${56 + l})` },
+    beholder: { job: 'spearman', tier: 4, n: '비홀더', icon: '👁️', kind: 'buff', reqLv: 120, maxLv: 10, mp: (l) => 50 + l, cd: 1, dur: (l) => 60 + l * 5, buff: 'atk7', val: (l) => 0.34 + l * 0.04, desc: (l) => `${60 + l * 5}초 동안 공격력 +${Math.round((0.34 + l * 0.04) * 100)}% (다른 공격 버프와 중첩). (MP ${50 + l})` },
+    revenge: { job: 'spearman', tier: 4, n: '복수', icon: '🔥', kind: 'buff', reqLv: 120, maxLv: 10, mp: (l) => 50 + l, cd: 1, dur: (l) => 60 + l * 5, buff: 'dr3', val: (l) => 0.25 + l * 0.02, desc: (l) => `${60 + l * 5}초 동안 받는 피해 ${Math.round((0.25 + l * 0.02) * 100)}% 감소. (MP ${50 + l})` },
+    dkwill: { job: 'spearman', tier: 4, n: '다크나이트의 의지', icon: '📙', kind: 'passive', reqLv: 120, maxLv: 10, desc: (l) => `치명타 확률 +${(l * 1.5).toFixed(1)}%p, 최소 데미지 비율 +${l * 2}%p.` },
+  });
+  D.SKILL_ORDER = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness', 'rblow', 'berserk', 'fmastery', 'charge', 'guard', 'pmastery', 'crusher', 'hyper', 'smastery', 'brandish', 'soulroar', 'fmaster3', 'elcharge', 'achilles', 'pmaster3', 'dragonfury', 'dragonblood', 'smaster3', 'swordpanic', 'shout', 'blast3', 'guardwall', 'dragonroar', 'dragonthrust', 'rageupper', 'swordflash', 'enrage', 'stance', 'herowill', 'holymace', 'holyblast', 'blessing', 'guardian', 'paladinwill', 'darkspear', 'cataclysm', 'beholder', 'revenge', 'dkwill'];
 
   /* ───────── 몬스터 ───────── */
   const M = {};
@@ -254,12 +290,18 @@
   mon('yeti', '설인 골렘', 57, 'golem', { hue: 'ice', hp: 44000, atk: 295, def: 262, speed: 46, w: 62, h: 70, ai: 'shoot', aggro: 300, drops: [['yeticore', 0.45], ['frostcore', 0.2], ['hp5', 0.07], ['mp4', 0.06]], eq: [['ar7', 0.007], ['gs6', 0.005], ['sp7', 0.005], ['ax7', 0.005]] });
   mon('balrog', '크림슨 발록', 45, 'balrog', { boss: true, ai: 'bossbalrog', hp: 200000, atk: 340, def: 150, exp: 32000, speed: 30, w: 120, h: 150, aggro: 700, mesos: [30000, 45000], drops: [['balrogclaw', 1], ['hp5', 1], ['hp5', 0.8], ['mp4', 1]], eq: [['hmb', 0.25], ['sw6', 0.3], ['gs5', 0.25], ['ar6', 0.3], ['ax6', 0.25], ['mc6', 0.25], ['sp6', 0.25]] });
   mon('frostlord', '얼음 군주', 58, 'frostlord', { boss: true, ai: 'bossfrost', hp: 430000, atk: 410, def: 270, exp: 80000, speed: 28, w: 130, h: 150, aggro: 800, mesos: [60000, 90000], drops: [['frostcrown', 1], ['hp5', 1], ['hp5', 0.8], ['mp4', 1]], eq: [['hmf', 0.2], ['sw7', 0.3], ['gs6', 0.25], ['ar7', 0.3], ['ax7', 0.25], ['mc7', 0.25], ['sp7', 0.25]] });
-  M.balrog.drops.push(['scW10', 1], ['scA10', 1], ['scW60', 1]); M.frostlord.drops.push(['scW10', 2], ['scA10', 2], ['scW60', 2]);
+  M.balrog.drops.push(['scW10', 1], ['scA10', 1], ['scW60', 1], ['scC60', 0.5], ['scG', 0.3]); M.frostlord.drops.push(['scW10', 2], ['scA10', 2], ['scW60', 2], ['scC60', 1], ['scG', 0.6], ['scS10', 0.5], ['scD10', 0.5], ['scH10', 0.5]);
   mon('zakum', '자쿰', 32, 'zakum', { boss: true, ai: 'bosszakum', hp: 210000, atk: 320, def: 105, exp: 12000, speed: 28, w: 120, h: 140, aggro: 700, mesos: [16000, 24000], drops: [['zeye', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['hmk', 0.2], ['sw4', 0.3], ['gs3', 0.3], ['ar4', 0.3], ['ax4', 0.2], ['mc4', 0.2], ['sp4', 0.2]] });
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 115000, atk: 245, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
   D.MON = M;
   // 주문서 드랍
-  for (const id in M) { const m = M[id]; if (m.boss) continue; if (m.lv >= 3) m.drops.push(['scW100', 0.02], ['scA100', 0.02]); if (m.lv >= 8) m.drops.push(['scW60', 0.035], ['scA60', 0.035]); if (m.lv >= 14) m.drops.push(['scW10', 0.01], ['scA10', 0.01]); }
+  // 주문서 드랍 규칙 (생성된 몬스터도 같은 함수를 쓴다)
+  const scrollDrops = (m) => {
+    if (m.lv >= 3) m.drops.push(['scW100', 0.02], ['scA100', 0.02]); if (m.lv >= 8) m.drops.push(['scW60', 0.035], ['scA60', 0.035]); if (m.lv >= 14) m.drops.push(['scW10', 0.01], ['scA10', 0.01]);
+    if (m.lv >= 20) m.drops.push(['scS100', 0.015], ['scD100', 0.015], ['scH100', 0.015]); if (m.lv >= 30) m.drops.push(['scS60', 0.01], ['scD60', 0.01], ['scH60', 0.01]);
+    if (m.lv >= 40) m.drops.push(['scW30', 0.012], ['scA30', 0.012], ['scS30', 0.006], ['scD30', 0.006], ['scH30', 0.006]); if (m.lv >= 55) m.drops.push(['scS10', 0.003], ['scD10', 0.003], ['scH10', 0.003], ['scG', 0.003]); if (m.lv >= 60) m.drops.push(['scC60', 0.004]);
+  };
+  for (const id in M) { const m = M[id]; if (m.boss) continue; scrollDrops(m); }
   M.bosstree.drops.push(['scW10', 1], ['scA10', 0.6]); M.bossgolem.drops.push(['scW10', 1], ['scA10', 1]); M.zakum.drops.push(['scW10', 1], ['scA10', 1], ['scW60', 1]);
 
   /* ───────── 맵 ───────── */
@@ -457,24 +499,13 @@
       portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toTrial', label: '페리온 마을' }],
       npcs: [{ id: 'chest', n: '고대 상자', x: xc, y, role: 'chest', look: 'chest' }] };
   })();
-  // 자동 밧줄: 위아래로 겹치는 발판 사이마다 밧줄을 놓아 모든 발판을 걸어서(밧줄로) 오를 수 있게 한다 (점프맵·마을 제외)
-  for (const id in maps) {
-    const m = maps[id]; if (m.town || id === 'trial') continue; m.ladders = m.ladders || [];
-    for (const B of m.plats) {
-      let A = null; for (const q of m.plats) { if (q.y > B.y && q.y - B.y <= 90 && Math.min(q.x + q.w, B.x + B.w) - Math.max(q.x, B.x) >= 40 && (!A || q.y < A.y)) A = q; }
-      if (!A) continue;
-      const lo = Math.max(A.x, B.x) + 14, hi = Math.min(A.x + A.w, B.x + B.w) - 14; if (hi - lo < 10) continue; const x = Math.round((lo + hi) / 2);
-      if (m.ladders.some((l) => Math.abs(l.x - x) < 70 && l.y1 === B.y)) continue;
-      m.ladders.push({ x, y1: B.y, y2: A.y });
-    }
-  }
   D.MAPS = maps;
 
   /* ───────── 상점 ───────── */
   D.SHOPS = {
     potion: { n: '소비 상점', items: ['hp1', 'hp2', 'hp3', 'hp4', 'mp1', 'mp2', 'mp3', 'scroll'] },
     smith: { n: '장비 상점', items: ['sw1', 'ax1', 'gs1', 'mc1', 'sp1', 'sw2', 'ax2', 'gs2', 'mc2', 'sp2', 'mc3', 'sp3', 'hm1', 'hm2', 'hm3', 'ar1', 'ar2', 'ar3', 'gl1', 'gl2', 'gl3', 'sh1', 'sh2', 'sh3'] },
-    scroll: { n: '주문서 상점 (100% 주문서만 판매)', items: ['scW100', 'scA100'] },
+    scroll: { n: '주문서 상점 (100% 주문서·황금 망치)', items: ['scW100', 'scA100', 'scS100', 'scD100', 'scH100', 'scG'] },
     potion2: { n: '오르비스 잡화점', items: ['hp3', 'hp4', 'hp5', 'mp2', 'mp3', 'mp4', 'scroll'] },
     smith2: { n: '오르비스 장비 상점', items: ['sw6', 'ax6', 'gs5', 'mc6', 'sp6', 'hm6', 'ar6', 'gl5', 'sh6', 'sw7', 'ax7', 'gs6', 'mc7', 'sp7', 'hm7', 'ar7', 'gl6', 'sh7'] },
   };
@@ -687,7 +718,7 @@
       doing: '발록은 배를 탈 때 무작위로 나타난다. 항구에서 오르비스행 배를 타 보게!',
       done: '해냈구먼! 선원들이 크게 감사할 걸세. 보상일세.',
       goals: [{ item: 'balrogclaw', n: 1 }], reward: { exp: 120000, meso: 150000, items: [['scW10', 5], ['scA10', 5], ['hp5', 20], ['mp4', 20]] } },
-    qt3: { n: '3차 전직의 시험', npc: 'o_master3', lv: 50, pre: 'qo6',
+    qt3: { n: '3차 전직의 시험', npc: 'o_master3', lv: 70, pre: 'qo6',
       ask: '너의 힘이 3차 전직에 이르렀는지 시험하겠다. 얼음 협곡의 **얼음 골렘 15마리**를 처치하고, 천상의 정원 가고일에게서 **가고일 파편 10개**를 가져와라. 통과하면 **3차 전직**을 시켜 주마!',
       doing: '얼음 골렘은 얼음 협곡에, 가고일은 천상의 정원에 있다.',
       done: '시험을 통과했다! 이제 3차 전직을 할 수 있다. 나에게 다시 말을 걸어라.',
@@ -719,6 +750,131 @@
       goals: [{ kill: 'frostlord', n: 1 }, { item: 'frostcrown', n: 1 }], reward: { exp: 400000, meso: 500000, items: [['hmf', 1], ['scW10', 5], ['scA10', 5], ['hp5', 50], ['mp4', 50]] } },
   };
   D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qv1', 'qv2', 'qv3', 'qc4', 'q9', 'qz', 'qh1', 'qh2', 'qh3', 'qh4', 'qo1', 'qo2', 'qo3', 'qo4', 'qo5', 'qo6', 'qo7', 'qo8', 'qb1', 'qt3', 'qo9', 'qo10', 'qo11', 'qo12', 'qf'];
+
+
+  // ═════════════════ 만렙 200 월드 생성기: 마을 9곳 + 사냥터 2곳 + 보스 + 히든 + 장비 세트 + 퀘스트 ═════════════════
+  // 원작처럼 1차(~29) · 2차 30 · 3차 70 · 4차 120 · 만렙 200. 수치는 레벨 공식으로 만든다.
+  const GL = {
+    hp: (L) => Math.round(30.5 * Math.pow(L, 1.8) * Math.pow(Math.max(1, L / 60), 0.9)), atk: (L) => Math.round(295 * Math.pow(L / 57, 1.1)), def: (L) => Math.round(262 * Math.pow(L / 57, 0.8)),
+    exp: (L) => Math.round(D.expToNext(L) * (0.0055 - 0.0025 * Math.max(0, L - 58) / 142)),
+  };
+  D.GL = GL;
+  // 포션 단계
+  add('hp6', { n: '슈퍼 엘릭서', t: 'use', icon: '🧪', col: '#ffd0e8', heal: 5500, price: 3500, desc: 'HP 5500 회복' });
+  add('hp7', { n: '프리미엄 엘릭서', t: 'use', icon: '🧪', col: '#ffb0d8', heal: 14000, price: 9000, desc: 'HP 14000 회복' });
+  add('hp8', { n: '마스터 엘릭서', t: 'use', icon: '🧪', col: '#ff90c8', heal: 36000, price: 22000, desc: 'HP 36000 회복' });
+  add('hp9', { n: '신의 영약', t: 'use', icon: '🧪', col: '#ff70b8', heal: 90000, price: 55000, desc: 'HP 90000 회복' });
+  add('mp5', { n: '슈퍼 마나 엘릭서', t: 'use', icon: '💧', col: '#8a90ff', mana: 2500, price: 3000, desc: 'MP 2500 회복' });
+  add('mp6', { n: '프리미엄 마나 엘릭서', t: 'use', icon: '💧', col: '#7a80ff', mana: 6000, price: 8000, desc: 'MP 6000 회복' });
+  add('mp7', { n: '마스터 마나 엘릭서', t: 'use', icon: '💧', col: '#6a70ff', mana: 15000, price: 20000, desc: 'MP 15000 회복' });
+  add('mp8', { n: '신의 마나 영약', t: 'use', icon: '💧', col: '#5a60ff', mana: 38000, price: 50000, desc: 'MP 38000 회복' });
+  const potTier = (L) => (L < 75 ? ['hp5', 'mp4'] : L < 105 ? ['hp6', 'mp5'] : L < 140 ? ['hp7', 'mp6'] : L < 175 ? ['hp8', 'mp7'] : ['hp9', 'mp8']);
+  const WMUL = { sword: 2.5, axe: 3.0, great: 3.5, mace: 3.2, spear: 3.6 }, WNAME = { sword: '검', axe: '도끼', great: '대검', mace: '망치', spear: '창' }, WSPD = { sword: 0.42, axe: 0.52, great: 0.62, mace: 0.5, spear: 0.55 }, WRNG = { sword: 66, axe: 64, great: 88, mace: 64, spear: 94 };
+  const genSet = (rid, tag, name, col, L) => {
+    const ids = []; const price = (k) => Math.round(Math.pow(L, 2.7) * k);
+    for (const wt of ['sword', 'axe', 'great', 'mace', 'spear']) { const id = `g${rid}${tag}_${wt}`; eq(id, `${name} ${WNAME[wt]}`, 'weapon', L, { gen: true, wt, atk: Math.round(L * WMUL[wt]), spd: WSPD[wt], rng: WRNG[wt] + Math.round(L / 40), str: Math.round(L * 0.1), dex: (wt === 'sword' || wt === 'spear') ? Math.round(L * 0.07) : 0, price: price(6), col, desc: `${name}의 힘이 깃든 ${WNAME[wt]}` }); ids.push(id); }
+    eq(`g${rid}${tag}_hm`, `${name} 투구`, 'helmet', L, { gen: true, def: Math.round(L * 0.7), hp: Math.round(L * 1.6), str: Math.round(L * 0.05), price: price(2.6), col, desc: `${name}의 투구` }); ids.push(`g${rid}${tag}_hm`);
+    eq(`g${rid}${tag}_ar`, `${name} 갑옷`, 'armor', L, { gen: true, def: Math.round(L * 1.5), hp: Math.round(L * 3.2), str: Math.round(L * 0.06), price: price(5.5), col, desc: `${name}의 갑옷` }); ids.push(`g${rid}${tag}_ar`);
+    eq(`g${rid}${tag}_gl`, `${name} 장갑`, 'gloves', L, { gen: true, def: Math.round(L * 0.35), atk: Math.round(L * 0.06), price: price(2.2), col, desc: `${name}의 장갑` }); ids.push(`g${rid}${tag}_gl`);
+    eq(`g${rid}${tag}_sh`, `${name} 장화`, 'shoes', L, { gen: true, def: Math.round(L * 0.35), dex: Math.round(L * 0.05), price: price(2.2), col, desc: `${name}의 장화` }); ids.push(`g${rid}${tag}_sh`);
+    return ids;
+  };
+  const ART = { woodmask: { w: 34, h: 44, ai: 'hop', icon: '🎭' }, boar: { w: 48, h: 34, ai: 'charge', icon: '🐗' }, golem: { w: 52, h: 60, ai: 'shoot', icon: '🗿' }, ant: { w: 38, h: 28, ai: 'walk', icon: '🐜' }, stump: { w: 40, h: 38, ai: 'walk', icon: '🪵' } };
+  const REG = [
+    { id: 'ludi', n: '루디브리엄', theme: 'toy', lv: [60, 72], sets: ['장난감', '시계태엽'], gc: ['#f0a8c8', '#e0b030'], hunts: ['장난감 공장', '시계탑'], boss: { n: '시계탑의 피에로 왕', art: 'balrog', tint: ['#7a3ac0', '#c8a0ff'] }, hid: '비밀 인형방', deco: ['#fbe7f0', '#e05a7a', '#5a8ae0'], npc: ['토리', '인형사 미미', '완구점 팡팡', '태엽 장인 기어', '장난감 병정 대장 루디', '비행선 조종사 팝'],
+      mons: [['장난감 병정', 'woodmask', '#e0524a'], ['태엽 멧돼지', 'boar', '#f0b030'], ['블록 골렘', 'golem', '#4a8ae0'], ['시계 개미', 'ant', '#c8a050'], ['인형 그루터기', 'stump', '#d070b0'], ['피에로 가면', 'woodmask', '#7a5ae0']] },
+    { id: 'aqua', n: '아쿠아로드', theme: 'ocean', lv: [72, 88], sets: ['산호', '심해'], gc: ['#f08a9a', '#3a8ac8'], hunts: ['산호 숲', '심해 협곡'], boss: { n: '심해의 군주', art: 'frostlord', tint: ['#1a4a78', '#4ab0c8'] }, hid: '가라앉은 보물선', deco: ['#d8f0f0', '#3a9ac0', '#f08a9a'], npc: ['말미잘 여관', '진주상 펄', '해초 약방 켈프', '조개 대장장이 쉘', '인어 경비대장 마리나', '고래 택시 웨일'],
+      mons: [['해파리 가면', 'woodmask', '#7ad0f0'], ['가시 복어', 'boar', '#40a0b0'], ['산호 골렘', 'golem', '#e07a8a'], ['바다 개미', 'ant', '#4a8ab0'], ['조개 그루터기', 'stump', '#c8b090'], ['심해 가면', 'woodmask', '#2a4a8a']] },
+    { id: 'leafre', n: '리프레', theme: 'dragon', lv: [88, 102], sets: ['용비늘', '용혼'], gc: ['#5aa070', '#e0b030'], hunts: ['용의 숲', '와이번 협곡'], boss: { n: '용의 군주', art: 'zakum', tint: ['#3a7a50', '#ffd24a'] }, hid: '고대 용의 둥지', deco: ['#e8f0d0', '#4a9a5a', '#c8a030'], npc: ['둥지 여관', '용알 상인 드레이', '비늘 약사 스케일', '용비늘 대장장이 파이어', '용기사 대장 리프', '용 조련사 와이번'],
+      mons: [['새끼 용 가면', 'woodmask', '#7ac060'], ['용비늘 멧돼지', 'boar', '#5aa070'], ['용암석 골렘', 'golem', '#a06a40'], ['와이번 개미', 'ant', '#b09040'], ['고대 숲 그루터기', 'stump', '#6a8a40'], ['용사 가면', 'woodmask', '#d0a030']] },
+    { id: 'mulung', n: '무릉', theme: 'bamboo', lv: [102, 116], sets: ['죽림', '도장'], gc: ['#8ab050', '#d06040'], hunts: ['대나무 숲', '수련 도장'], boss: { n: '무릉의 사범', art: 'bossgolem', tint: '#8a7a60' }, hid: '숨겨진 수련실', deco: ['#f4ecd0', '#6a9a50', '#c04a3a'], npc: ['다도 여관', '약초꾼 선화', '죽공예 상인 죽', '도장 대장장이 철', '도장 사범 무진', '학 택시 청학'],
+      mons: [['대나무 가면', 'woodmask', '#8ab050'], ['호랑이 멧돼지', 'boar', '#e0a040'], ['석상 골렘', 'golem', '#9a9a8a'], ['수련 개미', 'ant', '#c0b090'], ['도장 그루터기', 'stump', '#a07840'], ['수도승 가면', 'woodmask', '#d06040']] },
+    { id: 'magatia', n: '마가티아', theme: 'alchemy', lv: [116, 130], sets: ['연금', '현자'], gc: ['#a070d0', '#d0b050'], hunts: ['연금술 실험실', '고대 지하 서고'], boss: { n: '연금술사 장로', art: 'balrog', tint: ['#6a30a0', '#e0b8ff'] }, hid: '금지된 연구실', deco: ['#ece4f8', '#7a4ab0', '#50a8a0'], npc: ['플라스크 여관', '약제사 아르카', '시약 상인 레트', '연금 대장장이 골드', '연금술사 협회장 라자', '마법 열차 차장'],
+      mons: [['연금 가면', 'woodmask', '#a070d0'], ['변이 멧돼지', 'boar', '#8a60a0'], ['플라스크 골렘', 'golem', '#50a8a0'], ['독충 개미', 'ant', '#80b040'], ['마법 그루터기', 'stump', '#9060b0'], ['고대 가면', 'woodmask', '#d0b050']] },
+    { id: 'ariant', n: '아리안트', theme: 'desert', lv: [130, 145], sets: ['사막', '파라오'], gc: ['#d0a050', '#e0c030'], hunts: ['모래 언덕', '피라미드 입구'], boss: { n: '사막의 파라오', art: 'bossgolem', tint: '#d0a050' }, hid: '파라오의 비밀 무덤', deco: ['#f8ecc8', '#c08a40', '#5a9ac0'], npc: ['오아시스 여관', '향신료 상인 사하', '낙타 약방 카밀', '사막 대장장이 샌드', '투기장 대장 아리', '낙타 택시 카라반'],
+      mons: [['모래 가면', 'woodmask', '#d8b070'], ['전갈 개미', 'ant', '#c08040'], ['사막 멧돼지', 'boar', '#d09050'], ['모래 골렘', 'golem', '#d0a060'], ['선인장 그루터기', 'stump', '#70a050'], ['미라 가면', 'woodmask', '#e0d0a0']] },
+    { id: 'temple', n: '시간의 신전', theme: 'clock', lv: [145, 160], sets: ['톱니', '시간'], gc: ['#c0a050', '#7a8ac8'], hunts: ['망각의 길', '기억의 회랑'], boss: { n: '시간의 지배자', art: 'zakum', tint: ['#4a5a8a', '#ffe08a'] }, hid: '멈춰 버린 시간', deco: ['#efe6d6', '#8a7a58', '#6a7ab0'], npc: ['모래시계 여관', '시계방 약사 크로노', '태엽 상인 기어', '시간 대장장이 템포', '신전 수호대장 에온', '시간의 안내자 모멘트'],
+      mons: [['톱니 가면', 'woodmask', '#c0a050'], ['시간 멧돼지', 'boar', '#6a8ab0'], ['태엽 골렘', 'golem', '#b08a50'], ['모래시계 개미', 'ant', '#a0a0b0'], ['시계 그루터기', 'stump', '#8a7a5a'], ['망각의 가면', 'woodmask', '#5a5a8a']] },
+    { id: 'edel', n: '에델슈타인', theme: 'steam', lv: [160, 175], sets: ['증기', '강철'], gc: ['#a89a78', '#7080a0'], hunts: ['증기 공장', '지하 광산'], boss: { n: '철의 군주', art: 'frostlord', tint: ['#8a90a0', '#e0a040'] }, hid: '폐기된 연구소', deco: ['#e8e0d4', '#8a7a68', '#c08a40'], npc: ['굴뚝 여관', '기계 약사 볼트', '부품 상인 너트', '증기 대장장이 스팀', '저항군 대장 에델', '비공정 정비사 프롭'],
+      mons: [['증기 가면', 'woodmask', '#8a8a90'], ['기계 멧돼지', 'boar', '#a05040'], ['철골 골렘', 'golem', '#7080a0'], ['나사 개미', 'ant', '#a09060'], ['굴뚝 그루터기', 'stump', '#6a5a4a'], ['폭주 로봇 가면', 'woodmask', '#c04040']] },
+    { id: 'cosmos', n: '코스모스', theme: 'space', lv: [175, 200], sets: ['별빛', '공허'], gc: ['#a0a0ff', '#5a3aa8'], hunts: ['유성 평원', '공허의 심연'], boss: { n: '코스모스의 지배자', art: 'balrog', tint: ['#2a1a6a', '#a0c0ff'] }, hid: '은하의 틈', deco: ['#e0e0f8', '#5a4ab0', '#a0a0ff'], npc: ['별똥별 여관', '성운 약사 네뷸라', '우주 상인 코멧', '운석 대장장이 아스트로', '은하 수호대장 갤럭시', '우주선 조종사 오리온'],
+      mons: [['별빛 가면', 'woodmask', '#a0a0ff'], ['혜성 멧돼지', 'boar', '#6a6aff'], ['운석 골렘', 'golem', '#6a5a8a'], ['우주 개미', 'ant', '#5a8aff'], ['성운 그루터기', 'stump', '#7a5ab0'], ['공허의 가면', 'woodmask', '#3a2a5a']] },
+  ];
+  D.REGIONS = REG.map((r) => ({ id: r.id, n: r.n, town: 'town_' + r.id, min: r.lv[0] - 2, lv: r.lv }));
+  D.TOWNS = [{ id: 'perion', n: '페리온', min: 1, x: 700 }, { id: 'orbis', n: '오르비스', min: 38, x: 450 }].concat(D.REGIONS.map((r) => ({ id: r.town, n: r.n, min: r.min, x: 400 })));
+  const QRW = [0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.45];
+  const genQuests = {}; const genOrder = [];
+  REG.forEach((r, ri) => {
+    const [L0, L1] = r.lv, span = L1 - L0, Lb = L1 + 2, [hpP, mpP] = potTier(L0);
+    const mids = [], tag = r.id;
+    // 몬스터 6 + 재료 6
+    r.mons.forEach((mm, i) => {
+      const L = Math.round(L0 + i * (span - 2) / 5), A = ART[mm[1]]; const mat = `${tag}m${i}`; etc(mat, `${mm[0]} 조각`, A.icon, Math.round(Math.pow(L, 1.9)), mm[2]); mids.push(mat);
+    });
+    const setA = genSet(tag, 'a', r.sets[0], r.gc[0], L0 + 2), setB = genSet(tag, 'b', r.sets[1], r.gc[1], L0 + Math.round(span * 0.65));
+    r.mons.forEach((mm, i) => {
+      const L = Math.round(L0 + i * (span - 2) / 5), A = ART[mm[1]]; const pool = i < 3 ? setA : setB; const eqd = [0, 1, 2].map((k) => [pool[(i * 3 + k) % pool.length], 0.008]);
+      mon(`${tag}${i}`, mm[0], L, mm[1], { hue: mm[2], hp: GL.hp(L), atk: GL.atk(L), def: GL.def(L), exp: GL.exp(L), speed: 58 + Math.round(L / 6), w: A.w, h: A.h, ai: A.ai, aggro: 260, mesos: [Math.round(L * L * 0.7), Math.round(L * L * 1.2)], drops: [[mids[i], 0.5], [potTier(L)[0], 0.07], [potTier(L)[1], 0.05]], eq: eqd });
+      scrollDrops(M[`${tag}${i}`]);
+    });
+    // 보스 + 증표 + 전용 투구
+    const bl = Lb, bid = `${tag}b`, tk = `${tag}tk`; etc(tk, `${r.boss.n}의 증표`, '🏵️', 0, r.gc[1]);
+    const bh = `${tag}bh`; eq(bh, `${r.boss.n}의 투구`, 'helmet', bl - 4, { gen: true, def: Math.round(bl * 0.9), atk: Math.round(bl * 0.12), str: Math.round(bl * 0.1), dex: Math.round(bl * 0.1), hp: Math.round(bl * 9), slots: 10, price: Math.round(Math.pow(bl, 2.7) * 8), col: Array.isArray(r.boss.tint) ? r.boss.tint[1] : r.boss.tint, desc: `${r.boss.n}를 쓰러뜨린 자의 투구. 강화 가능 횟수 10회!` });
+    const ais = ['bosszakum', 'bossbalrog', 'bossfrost'];
+    mon(bid, r.boss.n, bl, r.boss.art, { boss: true, ai: ais[ri % 3], tint: r.boss.tint, hp: GL.hp(bl) * 12, atk: Math.round(GL.atk(bl) * 1.2), def: Math.round(GL.def(bl) * 1.1), exp: Math.round(D.expToNext(bl) * 0.35), speed: 30, w: 125, h: 148, aggro: 800, mesos: [bl * bl * 6, bl * bl * 9], drops: [[tk, 1], [potTier(bl)[0], 1], [potTier(bl)[0], 0.8], [potTier(bl)[1], 1], ['scW10', 1], ['scA10', 1], ['scC60', 0.6], ['scG', 0.5], ['scS10', 0.5], ['scD10', 0.5], ['scH10', 0.5]], eq: [[bh, 0.2]].concat(setB.map((id) => [id, 0.22])) });
+    // 포션·장비 상점
+    D.SHOPS['tpot_' + tag] = { n: `${r.n} 잡화점`, items: [hpP, mpP, potTier(L1)[0], potTier(L1)[1], 'scroll'].filter((x, i, a) => a.indexOf(x) === i) };
+    D.SHOPS['tsm_' + tag] = { n: `${r.n} 장비 상점`, items: setA.concat(setB) };
+    // 맵
+    const T = 'town_' + tag, H1 = tag + '_h1', H2 = tag + '_h2', BM = 'boss_' + tag, HM = 'hid_' + tag, mon3 = (a) => a.map((i) => `${tag}${i}`);
+    const q = (k) => `${tag}q${k}`;
+    maps[T] = { id: T, n: r.n, sub: '마을', lvTxt: `마을 · Lv ${L0}~${L1}`, town: true, w: 2800, h: 460, theme: r.theme, bgm: 'town_' + tag, deco: r.deco, plats: [P(0, 400, 2800, 1), P(1150, 330, 340), P(2050, 330, 320)], ladders: [{ x: 1220, y1: 330, y2: 400 }, { x: 2120, y1: 330, y2: 400 }], spawns: [],
+      portals: [{ id: 'toHunt', x: 2720, to: H1, tx: 'back', label: r.hunts[0], lv: `Lv ${L0}~${Math.round(L0 + span / 2)}`, col: '#9cf' }],
+      npcs: [
+        { id: tag + '_inn', n: r.npc[0], x: 520, role: 'inn', look: 'innkeeper', quests: [] },
+        { id: tag + '_potion', n: r.npc[1], x: 860, role: 'shop', shop: 'tpot_' + tag, shopKind: 'potion', look: 'merchant', quests: [q(2)] },
+        { id: tag + '_smith', n: r.npc[3], x: 1320, y: 330, role: 'shop', shop: 'tsm_' + tag, shopKind: 'smith', look: 'smith', quests: [q(4)] },
+        { id: tag + '_scribe', n: r.npc[2], x: 1700, role: 'shop', shop: 'scroll', shopKind: 'scroll', look: 'scribe', quests: [q(6)] },
+        { id: tag + '_captain', n: r.npc[4], x: 2200, y: 330, role: 'quest', look: 'captain', quests: [q(1), q(3), q(5), q(7)] },
+        { id: tag + '_travel', n: r.npc[5], x: 2480, role: 'travel', look: 'miner', quests: [] },
+      ].concat(tag === 'magatia' ? [{ id: 'mag_master4', n: '시간의 관문지기 크로노스', x: 2600, role: 'master4', look: 'master', quests: ['qt4'] }] : []) };
+    huntMap(H1, r.hunts[0], `Lv ${L0}~${Math.round(L0 + span * 0.55)}`, r.theme, 'hunt_' + tag, mon3([0, 1, 2]), [{ id: 'back', x: 60, to: T, tx: 'toHunt', label: r.n }, { id: 'next', x: 2740, to: H2, tx: 'back', label: r.hunts[1], lv: `Lv ${Math.round(L0 + span * 0.4)}~${L1}`, col: '#cfe' }]);
+    huntMap(H2, r.hunts[1], `Lv ${Math.round(L0 + span * 0.4)}~${L1}`, r.theme, 'hunt_' + tag, mon3([3, 4, 5]), [{ id: 'back', x: 60, to: H1, tx: 'next', label: r.hunts[0] }, { id: 'next', x: 2740, to: BM, tx: 'back', label: r.boss.n, lv: `Lv ${bl - 2}+ 보스`, col: '#f96' }, { id: 'hid', x: 1020, y: 228, to: HM, tx: 'back', label: r.hid, hidden: true, col: '#b8f' }]);
+    maps[BM] = { id: BM, n: `${r.boss.n}의 방`, sub: '보스', lvTxt: `Lv ${bl - 2}+ 보스`, w: 2000, h: 460, theme: r.theme, bgm: 'boss_' + tag, boss: bid, bossX: 1400, plats: [P(0, 400, 2000, 1), P(160, 330, 280), P(1560, 330, 280), P(860, 238, 280)], ladders: [{ x: 980, y1: 238, y2: 400 }], spawns: [], portals: [{ id: 'back', x: 60, to: H2, tx: 'next', label: r.hunts[1] }], npcs: [] };
+    maps[HM] = { id: HM, n: r.hid, sub: '히든 스트리트', lvTxt: `Lv ${Math.round(L0 + span * 0.4)}~${L1} · 경험치×1.6 드랍×1.5`, w: 2200, h: 520, theme: r.theme, bgm: 'hidden', expMul: 1.6, dropMul: 1.5,
+      plats: [P(0, 460, 2200, 1), P(160, 392, 300), P(640, 392, 300), P(1120, 392, 300), P(1600, 392, 320), P(400, 324, 280), P(900, 324, 260), P(1380, 324, 260), P(1860, 324, 240), P(640, 256, 260), P(1160, 256, 260), P(1640, 256, 240)], ladders: [{ x: 300, y1: 392, y2: 460 }, { x: 1700, y1: 392, y2: 460 }],
+      spawns: [[3, 0, 5], [4, 0, 4], [5, 0, 3], [3, 1, 3], [4, 2, 3], [5, 3, 3], [3, 4, 3], [4, 5, 3], [5, 6, 3], [4, 7, 3], [3, 8, 3], [5, 9, 3], [4, 10, 3], [3, 11, 3]].map((a) => ({ m: `${tag}${a[0]}`, p: a[1], n: a[2] })), portals: [{ id: 'back', x: 60, to: H2, tx: 'hid', label: r.hunts[1] }], npcs: [] };
+    // 퀘스트 7개
+    const ex = (lv, k) => Math.round(D.expToNext(lv) * QRW[k - 1]), me = (lv, k) => Math.round(Math.pow(lv, 2.2) * (1 + k * 0.4));
+    const mk = (k, name, npc, lv, ask, doing, done, goals, items) => { const id = q(k); genQuests[id] = { n: name, npc, lv, pre: k === 1 ? null : q(k - 1), ask, doing, done, goals, reward: { exp: ex(lv, k), meso: me(lv, k), items } }; genOrder.push(id); };
+    const M0 = (i) => r.mons[i][0], Lv = (k) => Math.round(L0 + (k - 1) * span / 7);
+    mk(1, `${r.hunts[0]} 정찰`, tag + '_captain', Lv(1), `${r.n}에 온 걸 환영한다! **${M0(0)} 40마리**를 처치해 길을 열어 주게.`, `${r.hunts[0]}은(는) 마을 오른쪽 끝 포탈이다.`, '수고했네! 이건 약소한 보상일세.', [{ kill: `${tag}0`, n: 40 }], [[hpP, 15], [mpP, 15], [setA[7], 1]]);
+    mk(2, `${M0(1)} 사냥 부탁`, tag + '_potion', Lv(2), `물약 재료가 부족해요! **${r.mons[1][0]} 조각 15개**만 모아 주세요.`, `${r.mons[1][0]}에게서 가끔 나와요.`, '정말 고마워요! 물약을 드릴게요.', [{ item: mids[1], n: 15 }], [[hpP, 25], [mpP, 25]]);
+    mk(3, `${M0(2)} 소탕`, tag + '_captain', Lv(3), `**${M0(2)} 45마리**를 처치해 주게. 놈들이 점점 많아지고 있네.`, `${r.hunts[0]} 깊은 곳에 있다.`, '훌륭하네! 투구를 받게.', [{ kill: `${tag}2`, n: 45 }], [[setA[5], 1], ['scW60', 3], ['scA60', 3]]);
+    mk(4, `${M0(3)}의 부품`, tag + '_smith', Lv(4), `${M0(3)}의 조각으로 최고의 장비를 만들 수 있지. **${r.mons[3][0]} 조각 20개**를 가져오게.`, `${r.hunts[1]}에 나온다.`, '이거면 충분하군! 약속한 갑옷이야.', [{ item: mids[3], n: 20 }], [[setA[6], 1], ['scW30', 2], ['scA30', 2]]);
+    mk(5, `${M0(4)} 토벌`, tag + '_captain', Lv(5), `**${M0(4)} 50마리**를 처치하게. 길을 막고 있어서 곤란하다네.`, `${r.hunts[1]}에 많네.`, '대단하군! 보급품을 받게.', [{ kill: `${tag}4`, n: 50 }], [[potTier(Lv(5))[0], 40], [potTier(Lv(5))[1], 40], [setB[8], 1]]);
+    mk(6, `${M0(5)}의 비밀`, tag + '_scribe', Lv(6), `${M0(5)}에게서 얻는 조각으로 특별한 주문서를 만들 수 있어요! **${r.mons[5][0]} 조각 20개**를 모아 주세요.`, `${r.hunts[1]}의 가장 안쪽에서 나와요.`, '고마워요! 특별한 주문서를 드릴게요 ✨', [{ item: mids[5], n: 20 }], [['scS30', 3], ['scD30', 3], ['scH30', 3], ['scG', 1]]);
+    mk(7, `${r.boss.n} 토벌`, tag + '_captain', Lb - 2, `**${r.boss.n}**가 깨어났다! 처치하고 **${r.boss.n}의 증표**를 가져오게. 전설의 장비를 내주겠네.`, `${r.hunts[1]} 오른쪽 끝 포탈이 보스의 방이다.`, '해냈군! 영웅이라 부르겠네. 보상을 받게.', [{ kill: bid, n: 1 }, { item: tk, n: 1 }], [[setB[6], 1], [setB[0], 1], [setB[1], 1], [setB[2], 1], [setB[3], 1], [setB[4], 1], ['scC60', 2], ['scG', 2]]);
+  });
+  // 4차 전직의 시험 (마가티아, Lv120): 마가티아 사냥터 몬스터 + 재료
+  genQuests.qt4 = { n: '4차 전직의 시험', npc: 'mag_master4', lv: 120, pre: 'magatiaq3', ask: '4차 전직은 전사의 끝에 이른 자만 받을 수 있다. 마가티아의 **플라스크 골렘 30마리**를 처치하고, **독충 개미 조각 20개**를 가져와라. 통과하면 **4차 전직**을 시켜 주마!',
+    doing: '마가티아의 연금술 실험실과 고대 지하 서고를 살펴라.', done: '시험을 통과했다! 이제 4차 전직을 할 수 있다. 나에게 다시 말을 걸어라.', goals: [{ kill: 'magatia2', n: 30 }, { item: 'magatiam3', n: 20 }], reward: { exp: Math.round(D.expToNext(120) * 0.5), meso: 400000, items: [['scW10', 3], ['scA10', 3], ['scG', 2]] } };
+  genOrder.splice(genOrder.indexOf('magatiaq3') + 1, 0, 'qt4');
+  // 오르비스 -> 새 지역: 비공정 조종사
+  maps.orbis.npcs.push({ id: 'o_travel', n: '비공정 조종사 하리', x: 2800, role: 'travel', look: 'miner', quests: [] });
+  Object.assign(D.QUESTS, genQuests); D.QUEST_ORDER = D.QUEST_ORDER.concat(genOrder);
+
+  // 자동 밧줄: 위아래로 겹치는 발판 사이마다 밧줄을 놓아 모든 발판을 걸어서(밧줄로) 오를 수 있게 한다 (점프맵·마을 제외)
+  for (const id in maps) {
+    const m = maps[id]; if (m.town || id === 'trial') continue; m.ladders = m.ladders || [];
+    for (const B of m.plats) {
+      let A = null; for (const q of m.plats) { if (q.y > B.y && q.y - B.y <= 90 && Math.min(q.x + q.w, B.x + B.w) - Math.max(q.x, B.x) >= 40 && (!A || q.y < A.y)) A = q; }
+      if (!A) continue;
+      const lo = Math.max(A.x, B.x) + 14, hi = Math.min(A.x + A.w, B.x + B.w) - 14; if (hi - lo < 10) continue; const x = Math.round((lo + hi) / 2);
+      if (m.ladders.some((l) => Math.abs(l.x - x) < 70 && l.y1 === B.y)) continue;
+      m.ladders.push({ x, y1: B.y, y2: A.y });
+    }
+  }
 
   root.DATA = D;
   if (typeof module !== 'undefined' && module.exports) module.exports = D;

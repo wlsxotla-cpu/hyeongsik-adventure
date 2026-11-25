@@ -20,7 +20,17 @@
   // 고목의 숲=Ellinia: Missing You / 보스(고목 대장·바위왕)=Horntail / 불꽃 협곡=El Nath: Abandoned Mine(Dead Mine) / 자쿰=Zakum: Final Fight / 히든 스트리트=Sleepywood: Ancient Move(Ant Tunnel) / 시련의 탑=Ellinia: Moonlight Shadow(수련의 숲)
   S.ytMap = { town: '9lwOsX763N0', field: 'kOhEqf0wPnE', cave: 'fdoT7nTWMO8', quarry: 'fdoT7nTWMO8', forest: '2NoF8PHQJqQ', boss: 'WnLrTMmnyBc', lava: 'WmHOENuKkmk', zakum: 'rEtDrkAYs68', hidden: 'w9HagZ099c0', trial: 'XYtHWyrVm30',
     // 오르비스 확장: 오르비스=Upon the Sky / 항구=Shinin' Harbor / 배=Aqua Road: Shining Sea / 구름 정원=Orbis: Come with Me / 천상의 정원=Ellinia: When the Morning Comes / 얼음 협곡=El Nath: Snowy Village / 눈보라 고원=El Nath: Mine Quest / 서리 왕좌=El Nath: Hell Gate
-    orbis: 'fTYJEdEcTbA', port: 'DThWMbPZXy8', ship: '3jdRxzy3K9s', cloud: 'sNCwJu5Buz0', garden: 'gfgBDs8z6WE', ice1: 'X6X7U5V9Obk', ice2: '8LaAGZ5kxvk', frost: '923LpjaA9Ps' };
+    orbis: 'fTYJEdEcTbA', port: 'DThWMbPZXy8', ship: '3jdRxzy3K9s', cloud: 'sNCwJu5Buz0', garden: 'gfgBDs8z6WE', ice1: 'X6X7U5V9Obk', ice2: '8LaAGZ5kxvk', frost: '923LpjaA9Ps',
+    // 만렙 200 확장 지역 (마을 · 사냥터 · 보스)
+    town_ludi: '49AZqVhXVeU', hunt_ludi: '0_PTb2pxygU', boss_ludi: 'PmuoAR2ce3o',
+    town_aqua: 'EnHRl2Wnabk', hunt_aqua: 'qc5Qqw7ABAU', boss_aqua: 'ctsqJ-Xl9_0',
+    town_leafre: 'Dsis2wyHQD0', hunt_leafre: 'z3jhg8KffPI', boss_leafre: 'Lo59n_tMGSM',
+    town_mulung: '2VMCpGe9MGc', hunt_mulung: 'OweBGLQHWaA', boss_mulung: '1vsFZSBuQR8',
+    town_magatia: '5FDFLwPw0bU', hunt_magatia: 'odqz1-z8CdI', boss_magatia: 'znZUun0KOQU',
+    town_ariant: 'w1RgDSoOajw', hunt_ariant: 'q9swmo6309U', boss_ariant: 'RQ35yqS4XZg',
+    town_temple: '6uCaEDM-Kf8', hunt_temple: 'TpKE4mKFSZY', boss_temple: 'mPdotLdAe7k',
+    town_edel: '4dOKSVa5_L8', hunt_edel: 'HWZesN4Uj-Y', boss_edel: 'uJU2L5oVGrg',
+    town_cosmos: 'ZYeUnqsCnxg', hunt_cosmos: 'pioNmMn2L5Q', boss_cosmos: 'vViTIGuujaY' };
   // 유튜브 재생이 막혔을 때 쓸 합성 BGM (새 구역은 비슷한 분위기의 곡으로)
   S.alias = { orbis: 'town', port: 'town', ship: 'field', cloud: 'field', garden: 'forest', ice1: 'cave', ice2: 'quarry', frost: 'boss' };
   S.ytId = null; S.ytReady = false; S.ytCur = null; S.ytOn = false; S.ytWant = false; S.ytFail = false; S.yt = null;
@@ -107,7 +117,7 @@
   };
   S.play = function (name) {
     if (S.track === name) return; S.track = name; if (!S.ctx) return;
-    if (S.timer) clearInterval(S.timer); S.timer = null; const T = TR[name] || TR[S.alias[name]]; if (!T) return;
+    if (S.timer) clearInterval(S.timer); S.timer = null; const T = TR[name] || TR[S.alias[name] || (name.indexOf('town_') === 0 ? 'town' : name.indexOf('hunt_') === 0 ? 'quarry' : name.indexOf('boss_') === 0 ? 'boss' : '')]; if (!T) return;
     if (S.ytMap[name] && S.ytOn && !S.ytFail) { S.ytPlay(S.ytMap[name]); return; }
     S.ytPause();
     S.step = 0; S.next = S.ctx.currentTime + 0.1;
