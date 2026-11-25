@@ -25,6 +25,14 @@
     gs2: { w: 5.4, blade: '#dde3ee', guard: '#4a5262', grip: '#3a2a22', style: 'serrated' },
     gs3: { w: 5.6, blade: '#ff9c7a', guard: '#7a2a2a', grip: '#2a1a1a', style: 'dragon', glow: '#ff7a3a', gem: '#ffd24a', lenK: 1.05 },
   };
+  // 강화 등급 색 (메이플처럼 올릴수록 색이 달라짐): +1~2 하늘 / +3~4 보라 / +5~6 금 / +7 이상 빨강
+  A.enhColor = (ok) => (ok >= 7 ? '#ff5a4a' : ok >= 5 ? '#ffd24a' : ok >= 3 ? '#b98cff' : ok >= 1 ? '#8fd8ff' : null);
+  function weaponAura(c, wp, len) {
+    const col = A.enhColor(wp.enh); if (!col) return; const t = (typeof performance !== 'undefined' ? performance.now() : 0) / 1000; const e = wp.enh;
+    c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = col; c.lineCap = 'round';
+    c.globalAlpha = Math.min(0.75, 0.28 + 0.1 * Math.sin(t * 5) + e * 0.04); c.lineWidth = 4 + Math.min(5, e * 0.8); c.beginPath(); c.moveTo(0, -len * 0.2); c.lineTo(0, -len * 1.02); c.stroke();
+    c.shadowColor = col; c.shadowBlur = 6 + e * 2; c.globalAlpha = 0.9; c.lineWidth = 1.6; c.stroke(); c.restore();
+  }
   function weapon(c, wp, len) {
     const id = wp.id && WPS[wp.id] ? wp.id : (wp.wt === 'axe' ? 'ax1' : wp.wt === 'great' ? 'gs1' : 'sw0');
     const S = Object.assign({}, WPS[id]); if (!wp.id && wp.col) { S.blade = wp.col; S.head = wp.col; }
@@ -177,7 +185,7 @@
     c.save(); c.translate(5.5 + ex, -23 + bob); c.rotate(ang);
     c.beginPath(); rrect(c, -2.5, 0, 5, 11, 2.4); fillStroke(c, shade(armor, 0.05), 1.8);
     c.translate(0, 11.5);
-    if (!cl && o.weapon) { c.save(); c.rotate(wang); weapon(c, o.weapon, o.weapon.len || 24); c.restore(); }
+    if (!cl && o.weapon) { c.save(); c.rotate(wang); weapon(c, o.weapon, o.weapon.len || 24); weaponAura(c, o.weapon, o.weapon.len || 24); c.restore(); }
     gloveShape(c, o.gloveId, o.gloves, skin);
     c.restore();
     c.restore();
@@ -187,7 +195,7 @@
   const TIER = { ar0: 0, ar1: 1, ar2: 2, ar3: 3, ar4: 4 };
   A.playerLook = function (G, extra) {
     const p = G.p, D = root.DATA; const eq = p.equip; const ar = D.ITEMS[eq.armor], w = D.ITEMS[eq.weapon], h = eq.helmet && D.ITEMS[eq.helmet], gl = eq.gloves && D.ITEMS[eq.gloves], sh = eq.shoes && D.ITEMS[eq.shoes];
-    return Object.assign({ armor: ar ? ar.col : '#c9b48a', armorId: ar ? ar.id : 'ar0', tier: ar ? (TIER[ar.id] || 0) : 0, pants: '#5a4636', shoes: sh ? sh.col : '#6b4426', shoeId: sh ? sh.id : null, gloves: gl ? gl.col : null, gloveId: gl ? gl.id : null, helmet: h ? h.id : null, helmetCol: h ? h.col : null, band: h ? null : '#d6343c', weapon: w ? { id: w.id, wt: w.wt, col: w.col, len: w.wt === 'great' ? 26 : 24 } : null }, extra || {});
+    return Object.assign({ armor: ar ? ar.col : '#c9b48a', armorId: ar ? ar.id : 'ar0', tier: ar ? (TIER[ar.id] || 0) : 0, pants: '#5a4636', shoes: sh ? sh.col : '#6b4426', shoeId: sh ? sh.id : null, gloves: gl ? gl.col : null, gloveId: gl ? gl.id : null, helmet: h ? h.id : null, helmetCol: h ? h.col : null, band: h ? null : '#d6343c', weapon: w ? { id: w.id, wt: w.wt, col: w.col, len: w.wt === 'great' ? 26 : 24, enh: (p.enh && p.enh[w.id] && p.enh[w.id].ok) || 0 } : null }, extra || {});
   };
   A.drawPlayer = function (c, G, t) {
     const p = G.p; const look = A.playerLook(G, { t, face: p.face, walk: p.walkT, moving: Math.abs(p.vx) > 18 && p.onGround, air: !p.onGround && !p.climb, climb: !!p.climb, climbT: p.climbT, atk: p.atk, hurt: p.hitFlash > 0 || p.dead });

@@ -272,11 +272,12 @@
   /* ───────── 아이템 설명 ───────── */
   const ico = (id, cls) => { const u = Art.itemIconUrl(id); const it = D.ITEMS[id]; return u ? `<img class="ii ${cls || ''}" src="${u}" alt="">` : it.icon; };
   const enhOf = (id, idx) => E.recOf(G, id, idx);
-  const enhBadge = (id, idx) => { const o = enhOf(id, idx).ok; return o ? `<span class="en">+${o}</span>` : ''; };
+  const enhBadge = (id, idx) => { const o = enhOf(id, idx).ok; return o ? `<span class="en" style="color:${Art.enhColor(o)}">+${o}</span>` : ''; };
   const gname = (id, idx) => D.ITEMS[id].n + (enhOf(id, idx).ok ? ` +${enhOf(id, idx).ok}` : '');
+  const gnameC = (id, idx) => { const o = enhOf(id, idx).ok; return esc(D.ITEMS[id].n) + (o ? ` <span style="color:${Art.enhColor(o)};text-shadow:0 0 6px ${Art.enhColor(o)}">+${o}</span>` : ''); };
   const SLOTN = { weapon: '무기', helmet: '투구', armor: '갑옷', gloves: '장갑', shoes: '신발' };
   function itemInfo(id, idx) {
-    const it = D.ITEMS[id]; let s = `<div class="nm">${ico(id, 'mini')} ${esc(gname(id, idx))}</div>`;
+    const it = D.ITEMS[id]; let s = `<div class="nm">${ico(id, 'mini')} ${gnameC(id, idx)}</div>`;
     if (it.t === 'equip') {
       const cur = G.p.equip[it.slot] && D.ITEMS[G.p.equip[it.slot]]; const en = enhOf(id, idx), inf = E.enhInfo(G, id, idx); const row = (k, lab) => { const v = it[k] || 0, c = cur ? (cur[k] || 0) : 0; if (!v && !c && !(en[k])) return ''; const d = v - c; return `${lab} <b>${v}</b>${en[k] ? ` <span style="color:#7aff9a">(+${en[k]} 강화)</span>` : ''}${cur && cur.id !== id && d ? ` <span style="color:${d > 0 ? '#7aff9a' : '#ff8a8a'}">(${d > 0 ? '▲' : '▼'}${Math.abs(d)})</span>` : ''}<br>`; };
       s += `<div style="color:#bda8e0">${SLOTN[it.slot]}${it.wt ? ' · ' + ({ sword: '한손검', axe: '도끼', great: '대검' })[it.wt] : ''}</div>`;
@@ -327,7 +328,7 @@
     if (menuSel && D.ITEMS[menuSel]) { const id = menuSel, it = D.ITEMS[id]; const worn = menuIdx === null && p.equip[it.slot] === id; s += `<div class="card">${itemInfo(id, menuIdx)}<div class="row2" style="margin-top:7px;flex-wrap:wrap">`;
       if (it.t === 'equip') { if (worn) s += it.slot === 'weapon' ? '<span style="color:#cdbbe8">착용 중 (무기는 다른 무기로 교체해요)</span>' : `<button class="btn sm gray" data-a="un:${it.slot}">벗기</button>`; else s += `<button class="btn sm green" data-a="eq:${id}:${menuIdx === null ? '' : menuIdx}" ${p.lv < it.lv || !(p.inv[id] > 0) ? 'disabled' : ''}>착용</button>`; }
       if (it.t === 'use') s += `<button class="btn sm green" data-a="use:${id}">사용</button>`;
-      if (it.t === 'scroll') { const tg = E.scrollTargets(G, id); s += tg.length ? tg.map((t) => `<button class="btn sm green" data-a="enh:${id}:${t.key}" ${t.left <= 0 && it.kind !== 'restore' ? 'disabled' : ''}>${t.bag ? '🎒 가방' : '착용'} ${SLOTN[t.slot]}: ${esc(D.ITEMS[t.id].n)}${t.ok ? ' +' + t.ok : ''} (${t.left}/${t.slots}) 에 사용</button>`).join('') : '<span style="color:#ffb86a">사용할 수 있는 장비를 착용하세요</span>'; }
+      if (it.t === 'scroll') { const tg = E.scrollTargets(G, id); s += tg.length ? tg.map((t) => `<button class="btn sm green" data-a="enh:${id}:${t.key}" ${t.left <= 0 && it.kind !== 'restore' ? 'disabled' : ''}>${t.bag ? '🎒 가방' : '착용'} ${SLOTN[t.slot]}: ${esc(D.ITEMS[t.id].n)}${t.ok ? ` <span style="color:${Art.enhColor(t.ok)}">+${t.ok}</span>` : ''} (${t.left}/${t.slots}) 에 사용</button>`).join('') : '<span style="color:#ffb86a">사용할 수 있는 장비를 착용하세요</span>'; }
       s += '<button class="btn sm gray" data-a="sel:' + id + (menuIdx === null ? '' : ':' + menuIdx) + '">닫기</button></div></div>'; }
     const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]); const order = { equip: 0, scroll: 1, use: 2, etc: 3 };
     ids.sort((a, b) => order[D.ITEMS[a].t] - order[D.ITEMS[b].t] || (D.ITEMS[a].lv || 0) - (D.ITEMS[b].lv || 0));
@@ -391,7 +392,7 @@
       for (const e of held) G.events.push(e); handleEvents();
       const total = r.success && sc.kind !== 'restore' ? (sc.kind === 'weapon' ? `공격력 <b style="color:#7aff9a">+${r.bonus}</b> (강화 누계 +${after.atk})` : `방어력 <b style="color:#7aff9a">+${r.bonus}</b> (강화 누계 +${after.def})`) : '';
       const again = p.inv[sid] > 0 && (sc.kind === 'restore' ? after.used > 0 : after.left > 0);
-      root.querySelector('.res').innerHTML = (r.success ? `<div class="big ok">✨ ${sc.kind === 'restore' ? '복구 성공' : '강화 성공'}! ✨</div>` : `<div class="big bad">${sc.kind === 'restore' ? '복구 실패…' : '강화 실패…'}</div>`) + `<div style="color:#ffe08a;font-weight:800">${slotLabel} · ${esc(gname(gid, gidx))}</div>` + (total ? `<div>${total}</div>` : '') + `<div style="color:#cdbbe8">남은 강화 횟수 <b>${after.left}/${after.slots}</b>${r.success || sc.kind === 'restore' ? '' : ' (실패해도 횟수는 줄어요)'}</div>`;
+      root.querySelector('.res').innerHTML = (r.success ? `<div class="big ok">✨ ${sc.kind === 'restore' ? '복구 성공' : '강화 성공'}! ✨</div>` : `<div class="big bad">${sc.kind === 'restore' ? '복구 실패…' : '강화 실패…'}</div>`) + `<div style="color:#ffe08a;font-weight:800">${slotLabel} · ${gnameC(gid, gidx)}</div>` + (total ? `<div>${total}</div>` : '') + `<div style="color:#cdbbe8">남은 강화 횟수 <b>${after.left}/${after.slots}</b>${r.success || sc.kind === 'restore' ? '' : ' (실패해도 횟수는 줄어요)'}</div>`;
       root.querySelector('.btns').innerHTML = (again ? `<button class="btn green" data-a="again">🔨 한 번 더 바르기 (${p.inv[sid]}장)</button>` : '') + '<button class="btn gray" data-a="back">🎒 가방으로</button>';
       modal.dataset.lock = '';
     }, 2500);
