@@ -12,7 +12,7 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'sps', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3', 'tier4', 'slots', 'auction'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'sps', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3', 'tier4', 'slots', 'auction', 'daily'];
   E.newPlayer = function (name) {
     return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, sps: { 1: 0, 2: 0, 3: 0, 4: 0 }, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
@@ -33,10 +33,20 @@
 
   /* ───────── 능력치 ───────── */
   E.sk = (G, sid) => G.p.skills[sid] || 0;
+  // 세트 효과: 같은 세트 장비를 2·3·4·5부위 착용하면 단계별로 보너스 (지역 장비 세트, 효과가 켜진 부위만 센다)
+  E.setInfo = function (G, inactive) {
+    const p = G.p, cnt = {}, lvs = {}, names = {}; inactive = inactive || [];
+    for (const slot in p.equip) { if (inactive.includes(slot)) continue; const it = D.ITEMS[p.equip[slot]]; if (!it || !it.gen) continue; const key = it.id.replace(/_[a-z]+$/, ''); cnt[key] = (cnt[key] || 0) + 1; lvs[key] = it.lv; names[key] = it.n.replace(/ \S+$/, ''); }
+    let best = null; for (const k in cnt) if (cnt[k] >= 2 && (!best || cnt[k] > cnt[best])) best = k; if (!best) return null;
+    const n = cnt[best], L = lvs[best], bonus = {}; const add = (o) => { for (const x in o) bonus[x] = (bonus[x] || 0) + Math.round(o[x]); };
+    if (n >= 2) add({ def: L * 0.4 }); if (n >= 3) add({ hp: L * 2.5 }); if (n >= 4) add({ atk: L * 0.6 }); if (n >= 5) add({ atk: L * 0.8, str: L * 0.2, def: L * 0.5 });
+    return { key: best, name: names[best], n, L, bonus, tiers: [[2, '방어 +' + Math.round(L * 0.4)], [3, 'HP +' + Math.round(L * 2.5)], [4, '공격 +' + Math.round(L * 0.6)], [5, '공격 +' + Math.round(L * 0.8) + ' · STR +' + Math.round(L * 0.2) + ' · 방어 +' + Math.round(L * 0.5)]] };
+  };
   E.stats = function (G) {
     const p = G.p; const b = { atk: 0, def: 0, str: 0, dex: 0, hp: 0 };
     const inactive = []; // 능력치(STR/DEX)·직업이 안 맞아 꺼진 장비: 낀 채로 두되 효과만 없다 (스탯을 올리면 다시 켜짐)
     for (const slot in p.equip) { const it = D.ITEMS[p.equip[slot]]; if (!it) continue; if (!E.canWear(G, it).ok) { inactive.push(slot); continue; } b.atk += it.atk || 0; b.def += it.def || 0; b.str += it.str || 0; b.dex += it.dex || 0; b.hp += it.hp || 0; const en = p.enh && p.enh[it.id]; if (en) { b.atk += en.atk || 0; b.def += en.def || 0; b.str += en.str || 0; b.dex += en.dex || 0; b.hp += en.hp || 0; } }
+    { const si = E.setInfo(G, inactive); if (si) for (const k in si.bonus) b[k] = (b[k] || 0) + si.bonus[k]; }
     const w = (D.ITEMS[p.equip.weapon] && !inactive.includes('weapon')) ? D.ITEMS[p.equip.weapon] : (p.equip.weapon ? { atk: 6, spd: 0.5, rng: 50, wt: 'sword' } : D.ITEMS.sw0); // 무기가 꺼지면 맨손
     const str = p.str + b.str, dex = p.dex + b.dex;
     const tough = p.skills.toughness || 0, mast = p.skills.mastery || 0;
@@ -329,6 +339,24 @@
     ev(G, { t: 'sfx', n: r.crit ? 'crit' : 'hit' });
     if (m.hp <= 0) killMon(G, m);
   }
+  /* ───── 오늘의 퀘스트: 매일(기기 날짜 기준) 새로 3개. 사냥 N마리 · 적정 레벨 사냥 · 보스(Lv25+)/추가 사냥 ───── */
+  const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+  E.dailyRoll = function (G, key) {
+    const p = G.p; key = key || todayKey(); if (p.daily && p.daily.date === key) return false; const L = p.lv, ex = D.expToNext(L);
+    const nAny = Math.min(150, 50 + Math.floor(L / 3)), nLv = Math.min(80, 25 + Math.floor(L / 6));
+    const list = [
+      { k: 'any', txt: '몬스터 ' + nAny + '마리 사냥', n: nAny, c: 0, rew: { exp: Math.round(ex * 0.22), meso: L * 80 } },
+      { k: 'near', txt: '레벨 ' + Math.max(1, L - 6) + ' 이상 몬스터 ' + nLv + '마리 사냥', n: nLv, c: 0, rew: { exp: Math.round(ex * 0.3), meso: L * 120 } },
+      L >= 25 ? { k: 'boss', txt: '보스 1마리 처치', n: 1, c: 0, rew: { exp: Math.round(ex * 0.5), meso: L * 250, item: L >= 60 ? 'scS60' : 'scS100' } } : { k: 'any', txt: '몬스터 ' + (nAny + 30) + '마리 추가 사냥', n: nAny + 30, c: 0, rew: { exp: Math.round(ex * 0.35), meso: L * 100, item: 'scS100' } },
+    ];
+    p.daily = { date: key, list, claimed: [false, false, false] }; return true;
+  };
+  E.dailyProg = function (G, def) { const p = G.p; E.dailyRoll(G); p.daily.list.forEach((q, i) => { if (p.daily.claimed[i] || q.c >= q.n) return; if (q.k === 'any' || (q.k === 'near' && def.lv >= p.lv - 6) || (q.k === 'boss' && def.boss)) { q.c++; if (q.c >= q.n) ev(G, { t: 'msg', text: '📅 오늘의 퀘스트 완료! 퀘스트 탭에서 보상을 받으세요.' }); } }); };
+  E.dailyClaim = function (G, i) {
+    const p = G.p; E.dailyRoll(G); const q = p.daily.list[i]; if (!q || p.daily.claimed[i] || q.c < q.n) return { ok: false };
+    p.daily.claimed[i] = true; p.meso += q.rew.meso; gainExp(G, q.rew.exp, G.p.x, G.p.y - 40); if (q.rew.item) E.addItem(G, q.rew.item, 1);
+    ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `📅 보상: 경험치 ${q.rew.exp.toLocaleString()} · 메소 ${q.rew.meso.toLocaleString()}${q.rew.item ? ' · ' + D.ITEMS[q.rew.item].n : ''}` }); return { ok: true };
+  };
   function killMon(G, m) {
     m.dead = true; m.deadT = 0.0; m.hp = 0; const def = m.def, p = G.p;
     ev(G, { t: 'kill', x: m.x, y: m.y, id: m.id, boss: def.boss });
@@ -343,7 +371,7 @@
     const dm = G.map.dropMul || 1;
     for (const [id, pr] of def.drops) if (rand(G) < pr * dm * (1 + p.luk * 0.002)) dropLoot(G, m.x, m.y - 14, { id, n: 1 });
     for (const [id, pr] of def.eq) if (rand(G) < pr * dm * (1 + p.luk * 0.002)) dropLoot(G, m.x, m.y - 14, { id, n: 1 });
-    p.kills[m.id] = (p.kills[m.id] || 0) + 1;
+    p.kills[m.id] = (p.kills[m.id] || 0) + 1; E.dailyProg(G, def);
     for (const qid in p.quests) { const q = p.quests[qid]; if (q.st !== 'active') continue; D.QUESTS[qid].goals.forEach((g, i) => { if (g.kill === m.id && q.prog[i] < g.n) { q.prog[i]++; ev(G, { t: 'qprog', q: qid }); } }); }
     m.slot.respT = m.slot.once ? 1e9 : (def.boss ? 90 : rr(G, 7, 12));
     if (def.ai === 'bossbalrog') ev(G, { t: 'bgm', n: 'ship' });

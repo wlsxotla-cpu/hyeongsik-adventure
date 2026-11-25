@@ -250,16 +250,16 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 </div>
 <script>
 // 자동 업데이트 확인: version.txt(캐시 안 씀)와 이 페이지의 빌드가 다르면 새 주소로 다시 열어 최신 파일을 받는다 (홈화면 앱 캐시 대응)
-(function () { try { var B = '20261125zzzk'; if (!window.fetch) return; fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) { t = (t || '').trim(); if (/^\d+[a-z]*$/.test(t) && t !== B) { var k = 'pw.upd.' + t; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); location.replace(location.pathname + '?r=' + t); } }).catch(function () {}); } catch (e) {} })();
+(function () { try { var B = '20261125zzzl'; if (!window.fetch) return; fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) { t = (t || '').trim(); if (/^\d+[a-z]*$/.test(t) && t !== B) { var k = 'pw.upd.' + t; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); location.replace(location.pathname + '?r=' + t); } }).catch(function () {}); } catch (e) {} })();
 </script>
-<script src="data.js?v=20261125zzzk"></script>
-<script src="engine.js?v=20261125zzzk"></script>
-<script src="art.js?v=20261125zzzk"></script>
-<script src="vis.js?v=20261125zzzk"></script>
-<script src="vis2.js?v=20261125zzzk"></script>
-<script src="vis3.js?v=20261125zzzk"></script>
-<script src="net.js?v=20261125zzzk"></script>
-<script src="audio.js?v=20261125zzzk"></script>
-<script src="game.js?v=20261125zzzk"></script>
+<script src="data.js?v=20261125zzzl"></script>
+<script src="engine.js?v=20261125zzzl"></script>
+<script src="art.js?v=20261125zzzl"></script>
+<script src="vis.js?v=20261125zzzl"></script>
+<script src="vis2.js?v=20261125zzzl"></script>
+<script src="vis3.js?v=20261125zzzl"></script>
+<script src="net.js?v=20261125zzzl"></script>
+<script src="audio.js?v=20261125zzzl"></script>
+<script src="game.js?v=20261125zzzl"></script>
 </body>
 </html>

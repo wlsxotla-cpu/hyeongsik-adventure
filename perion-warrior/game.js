@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzzk';
+  const BUILD = '20261125zzzl';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -362,6 +362,7 @@
       else if (k === 'netjoin') { const code = prompt('친구가 알려 준 방 코드를 입력하세요 (5글자)', ''); if (code) Net.join(code, (ok) => { if (ok) logLine('👥 방에 들어왔어요! (' + Net.code + ')', 'i'); }); }
       else if (k === 'netleave') { Net.leave(); }
       else if (k === 'qb') { const st = G.p.settings; const off = st.buffOff || (st.buffOff = []); const i = off.indexOf(v); if (i >= 0) off.splice(i, 1); else off.push(v); buildSkillBtns(); }
+      else if (k === 'dclaim') { E.dailyClaim(G, +v); updateHud(true); }
       else if (k === 'sktab') { skTabSel = +v; }
       else if (k === 'qsauto') { G.p.settings.slots = []; buildSkillBtns(); }
       else if (k === 'sreset') { E.resetSkills(G); buildSkillBtns(); updateHud(true); }
@@ -381,6 +382,7 @@
     const p = G.p; let s = '<div class="eqrow">';
     for (const sl of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[sl]; const it = id && D.ITEMS[id]; const off = it && !E.canWear(G, it).ok; s += `<div class="c"><button class="slot eq ${it ? '' : 'empty'} ${off ? 'off' : ''}" ${it ? `data-a="sel:${id}:e"` : ''} style="width:100%">${it ? ico(id) : SLOTN[sl]}${it ? `<span class="lv">Lv${it.lv}</span>${enhBadge(id)}` : ''}${off ? '<span class="offt">비활성</span>' : ''}</button>${SLOTN[sl]}</div>`; }
     s += '</div>';
+    { const si = E.setInfo(G, Object.keys(p.equip).filter((sl) => D.ITEMS[p.equip[sl]] && !E.canWear(G, D.ITEMS[p.equip[sl]]).ok)); if (si) s += `<div class="card" style="font-size:12px">🧩 <b>${esc(si.name)} 세트</b> ${si.n}/5<br>${si.tiers.map((t) => `<span style="color:${si.n >= t[0] ? '#9fe69f' : '#8a8a9a'}">${t[0]}세트: ${t[1]}</span>`).join('<br>')}</div>`; else s += `<div class="card" style="font-size:11px;color:#9a8ab0">🧩 같은 지역 세트 장비를 2부위 이상 맞추면 세트 효과가 생겨요.</div>`; }
     if (menuSel && D.ITEMS[menuSel]) { const id = menuSel, it = D.ITEMS[id]; const worn = menuIdx === null && p.equip[it.slot] === id; s += `<div class="card">${itemInfo(id, menuIdx)}<div class="row2" style="margin-top:7px;flex-wrap:wrap">`;
       if (it.t === 'equip') { if (worn) s += it.slot === 'weapon' ? '<span style="color:#cdbbe8">착용 중 (무기는 다른 무기로 교체해요)</span>' : `<button class="btn sm gray" data-a="un:${it.slot}">벗기</button>`; else s += `<button class="btn sm green" data-a="eq:${id}:${menuIdx === null ? '' : menuIdx}" ${!E.canWear(G, it).ok || !(p.inv[id] > 0) ? 'disabled' : ''}>착용</button>` + (E.canWear(G, it).ok ? '' : `<small style="color:#ff8a8a"> ${E.canWear(G, it).msg}</small>`); }
       if (it.t === 'use') s += `<button class="btn sm green" data-a="use:${id}">사용</button>`;
@@ -414,7 +416,7 @@
     return s;
   }
   function tabQuest() {
-    const p = G.p; let s = ''; const act = [], done = [], avail = [];
+    const p = G.p; E.dailyRoll(G); let s = `<div class="card" style="font-size:12px">📅 <b>오늘의 퀘스트</b> <small style="color:#cdbbe8">· 매일 새로 바뀌어요</small>${p.daily.list.map((q, i) => { const done = q.c >= q.n, cl = p.daily.claimed[i]; return `<div class="row2" style="margin-top:5px;align-items:center"><span style="flex:1;${cl ? 'color:#8a8a9a' : ''}">${esc(q.txt)} <b style="color:${done ? '#9fe69f' : '#ffe36a'}">${Math.min(q.c, q.n)}/${q.n}</b><br><small style="color:#cdbbe8">경험치 ${q.rew.exp.toLocaleString()} · 💰${q.rew.meso.toLocaleString()}${q.rew.item ? ' · ' + esc(D.ITEMS[q.rew.item].n) : ''}</small></span>${cl ? '<small>✔ 받음</small>' : `<button class="btn sm green" data-a="dclaim:${i}" ${done ? '' : 'disabled'}>받기</button>`}</div>`; }).join('')}</div>`; const act = [], done = [], avail = [];
     for (const qid of D.QUEST_ORDER) { const st = E.qState(G, qid); if (st === 'active' || st === 'ready') act.push(qid); else if (st === 'done') done.push(qid); else if (st === 'avail') avail.push(qid); }
     if (!act.length) { const o = E.objective(G); s += `<div class="card">진행 중인 퀘스트가 없어요.<br><b>${esc(o.txt)}</b></div>`; }
     for (const qid of act) { const q = D.QUESTS[qid], ready = E.qState(G, qid) === 'ready'; s += `<div class="card qrow ${ready ? 'ready' : ''}"><div class="nm">${esc(q.n)} <small style="color:#cdbbe8">Lv ${q.lv}</small></div><div style="color:#cdbbe8">${esc(E.npcName(q.npc))}</div>` + E.qProg(G, qid).map((g) => `<div>${esc(g.txt)} <b>${g.cur}/${g.n}</b><div class="pbar"><i style="width:${Math.min(100, g.cur / g.n * 100)}%"></i></div></div>`).join('') + `<div style="margin-top:4px">${ready ? '✅ <b>완료! NPC에게 돌아가세요</b>' : esc(q.doing)}</div></div>`; }

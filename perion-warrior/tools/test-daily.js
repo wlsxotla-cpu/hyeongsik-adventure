@@ -1,0 +1,11 @@
+const E = require('../engine.js'), D = require('../data.js');
+let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++; };
+const G = E.newGame('d', 1), p = G.p; p.lv = 40; E.dailyRoll(G, '2026-1-1');
+ok(p.daily.list.length === 3 && p.daily.list[2].k === 'boss', '3개 생성, Lv25+ 는 보스 퀘스트');
+ok(!E.dailyRoll(G, '2026-1-1') && E.dailyRoll(G, '2026-1-2'), '같은 날엔 유지, 날짜 바뀌면 새로 생성');
+const q0 = p.daily.list[0]; for (let i = 0; i < q0.n; i++) E.dailyProg(G, { lv: 40, boss: false });
+ok(p.daily.list[0].c === q0.n && p.daily.list[2].c === 0, '일반 사냥은 보스 퀘스트에 안 셈');
+const m0 = p.meso, ex = p.exp; ok(E.dailyClaim(G, 0).ok && p.meso > m0 && !E.dailyClaim(G, 0).ok, '보상 1회만 수령');
+E.dailyProg(G, { lv: 40, boss: true }); ok(p.daily.list[2].c === 1, '보스 처치 집계');
+const lo = E.newGame('l', 2); lo.p.lv = 10; E.dailyRoll(lo, 'x'); ok(lo.p.daily.list[2].k === 'any', '저레벨은 보스 대신 추가 사냥');
+console.log(fails ? 'FAILED ' + fails : 'ALL OK'); process.exit(fails ? 1 : 0);
