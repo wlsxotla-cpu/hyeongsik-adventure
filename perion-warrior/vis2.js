@@ -4,11 +4,38 @@
   const A = root.Art; if (!A || !A._v) return;
   const TAU = Math.PI * 2, seeded = A.seeded, rrect = A.rrect, V = A._v, puff = V.puff;
   const OUT = '#2b1c14';
+  function crate(c, x, gy, w) { c.beginPath(); rrect(c, x, gy - w, w, w, 3); fs(c, '#b8844a', 2); c.strokeStyle = OUT; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, gy - w); c.lineTo(x + w, gy); c.moveTo(x + w, gy - w); c.lineTo(x, gy); c.stroke(); }
   function fs(c, fill, lw) { c.fillStyle = fill; c.fill(); c.lineWidth = lw || 2; c.strokeStyle = OUT; c.lineJoin = 'round'; c.stroke(); }
 
   /* ───────── 지형 질감 (테마별) ───────── */
+
+  /* ───────── 기존 테마(숲·동굴·사원·바위산·채석장) 지형 장식 ───────── */
+  function baseThemeFx(c, map, th) {
+    const id = map.theme;
+    for (const p of map.plats) {
+      const r2 = seeded(Math.floor(p.x * 5 + p.y * 3 + 9)), solid = p.solid;
+      if (id === 'forest') {
+        for (let x = p.x + 6; x < p.x + p.w - 6; x += 7 + r2() * 12) { c.strokeStyle = ['#2f7a26', '#4aa63a', '#6ac24a'][(r2() * 3) | 0]; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, p.y - 1); c.quadraticCurveTo(x + (r2() - 0.5) * 5, p.y - 6, x + (r2() - 0.5) * 8, p.y - 7 - r2() * 5); c.stroke(); }
+        for (let x = p.x + 24; x < p.x + p.w - 20; x += 60 + r2() * 90) { const t = r2(); if (t < 0.4) { c.fillStyle = '#f3e9d0'; c.fillRect(x - 1.5, p.y - 8, 3, 8); c.beginPath(); c.ellipse(x, p.y - 9, 6, 4, 0, Math.PI, 0); fs(c, '#d6342c', 1.4); c.fillStyle = '#fff'; c.fillRect(x - 3, p.y - 11, 1.6, 1.6); c.fillRect(x + 1, p.y - 12, 1.6, 1.6); } else if (t < 0.75) { c.save(); c.shadowColor = '#6ad8ff'; c.shadowBlur = 8; c.fillStyle = '#7ae8ff'; c.fillRect(x - 1, p.y - 7, 2, 7); c.beginPath(); c.ellipse(x, p.y - 8, 5, 3.4, 0, Math.PI, 0); c.fill(); c.restore(); } else { for (let k = 0; k < 5; k++) { c.strokeStyle = '#3a8a2a'; c.lineWidth = 2; c.beginPath(); c.moveTo(x, p.y); c.quadraticCurveTo(x + (k - 2) * 7, p.y - 10, x + (k - 2) * 11, p.y - 5); c.stroke(); } } }
+        if (!solid) for (let x = p.x + 12; x < p.x + p.w - 8; x += 36 + r2() * 46) { const l = 14 + r2() * 30; c.strokeStyle = '#2f6a2a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x, p.y + 20); c.quadraticCurveTo(x + (r2() - 0.5) * 8, p.y + 20 + l * 0.5, x + (r2() - 0.5) * 6, p.y + 20 + l); c.stroke(); for (let k = 1; k <= 3; k++) { c.fillStyle = '#4aa63a'; c.beginPath(); c.ellipse(x + (k % 2 ? -3 : 3), p.y + 20 + l * k / 3.2, 3.4, 1.8, 0.5, 0, TAU); c.fill(); } }
+      } else if (id === 'cave' || id === 'cave2') {
+        const cry = id === 'cave2';
+        if (!solid) for (let x = p.x + 10; x < p.x + p.w - 8; x += 14 + r2() * 24) { const l = 8 + r2() * 20; c.beginPath(); c.moveTo(x - 4, p.y + 21); c.lineTo(x, p.y + 21 + l); c.lineTo(x + 4, p.y + 21); c.closePath(); fs(c, A.shade(th.rock, 0.12), 1.3); if (r2() < 0.3) { c.fillStyle = 'rgba(160,210,255,.8)'; c.beginPath(); c.ellipse(x, p.y + 25 + l, 1.2, 2.2, 0, 0, TAU); c.fill(); } }
+        for (let x = p.x + 30; x < p.x + p.w - 24; x += 80 + r2() * 120) { c.save(); c.shadowColor = cry ? '#c07aff' : '#7ae8c8'; c.shadowBlur = 12; for (let k = 0; k < 3; k++) { const hh = 10 + r2() * 16; c.beginPath(); c.moveTo(x + k * 7 - 3, p.y - 1); c.lineTo(x + k * 7 - 1, p.y - hh); c.lineTo(x + k * 7 + 3, p.y - hh * 0.8); c.lineTo(x + k * 7 + 4, p.y - 1); c.closePath(); fs(c, cry ? ['#d8a8ff', '#a878f0', '#e8c8ff'][k] : ['#8af0d8', '#5ad0b0', '#b8fff0'][k], 1.1); } c.restore(); }
+        c.fillStyle = cry ? 'rgba(160,120,255,.22)' : 'rgba(80,200,120,.2)'; for (let x = p.x + 10; x < p.x + p.w - 10; x += 30 + r2() * 40) { c.beginPath(); c.ellipse(x, p.y + 2, 10 + r2() * 8, 2.4, 0, 0, TAU); c.fill(); }
+      } else if (id === 'temple') {
+        if (solid) for (let x = p.x + 40; x < p.x + p.w - 30; x += 190 + r2() * 160) { c.fillStyle = '#3a2a4a'; c.fillRect(x - 3, p.y - 20, 6, 20); c.beginPath(); c.arc(x, p.y - 22, 6, 0, TAU); fs(c, '#4a3858', 1.6); c.save(); c.globalCompositeOperation = 'lighter'; const g = c.createRadialGradient(x, p.y - 28, 1, x, p.y - 28, 34); g.addColorStop(0, 'rgba(200,140,255,.8)'); g.addColorStop(1, 'rgba(200,140,255,0)'); c.fillStyle = g; c.fillRect(x - 34, p.y - 62, 68, 68); c.fillStyle = 'rgba(255,220,255,.9)'; c.beginPath(); c.moveTo(x - 3, p.y - 26); c.quadraticCurveTo(x, p.y - 42, x + 3, p.y - 26); c.fill(); c.restore(); }
+        c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(190,140,255,.45)'; c.lineWidth = 1.4; for (let x = p.x + 16; x < p.x + p.w - 20; x += 46 + r2() * 40) { c.beginPath(); c.moveTo(x, p.y + 8); c.lineTo(x + 8, p.y + 8); c.lineTo(x + 8, p.y + 14); c.lineTo(x + 16, p.y + 14); c.stroke(); } c.restore();
+        if (!solid) for (let x = p.x + 14; x < p.x + p.w - 10; x += 38 + r2() * 30) { c.strokeStyle = '#6a5a7a'; c.lineWidth = 1.6; c.setLineDash([3, 2]); c.beginPath(); c.moveTo(x, p.y + 22); c.lineTo(x, p.y + 22 + 16 + r2() * 20); c.stroke(); c.setLineDash([]); }
+      } else if (id === 'rock' || id === 'rock2' || id === 'quarry' || id === 'town') {
+        for (let x = p.x + 18; x < p.x + p.w - 16; x += 44 + r2() * 90) { const t = r2(); if (t < 0.5) { c.fillStyle = id === 'quarry' ? '#8a6a4a' : '#3f8a30'; for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(x + (k - 1) * 7, p.y - 4 - (k === 1 ? 3 : 0), 6 + (k === 1 ? 2 : 0), 0, TAU); c.fill(); } c.strokeStyle = OUT; c.lineWidth = 1.2; c.beginPath(); c.arc(x, p.y - 7, 8, Math.PI * 1.05, Math.PI * 1.95); c.stroke(); } else { c.beginPath(); c.moveTo(x - 7, p.y); c.lineTo(x - 4, p.y - 8); c.lineTo(x + 3, p.y - 10); c.lineTo(x + 8, p.y); c.closePath(); fs(c, id === 'quarry' ? '#7a5a40' : '#8a8f98', 1.4); c.fillStyle = 'rgba(255,255,255,.2)'; c.fillRect(x - 3, p.y - 8, 4, 2); } }
+        if (id === 'quarry' && solid) for (let x = p.x + 220; x < p.x + p.w - 100; x += 520 + r2() * 300) { crate(c, x, p.y, 30); crate(c, x + 32, p.y, 24); c.strokeStyle = OUT; c.lineWidth = 3; c.beginPath(); c.moveTo(x + 70, p.y); c.lineTo(x + 62, p.y - 34); c.stroke(); c.strokeStyle = '#a0703c'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x + 70, p.y); c.lineTo(x + 62, p.y - 34); c.stroke(); c.beginPath(); c.moveTo(x + 54, p.y - 36); c.lineTo(x + 70, p.y - 40); c.lineTo(x + 58, p.y - 30); c.closePath(); fs(c, '#9aa3b2', 1.2); }
+      }
+    }
+  }
+
   A.terrainFx = function (c, map, th, rnd) {
-    const id = map.theme; if (!['ice', 'sky', 'lava', 'sea'].includes(id)) return;
+    const id = map.theme; if (!['ice', 'sky', 'lava', 'sea'].includes(id)) return baseThemeFx(c, map, th);
     for (const p of map.plats) {
       const r2 = seeded(Math.floor(p.x * 3 + p.y * 7 + 5)), solid = p.solid;
       if (id === 'ice') {
@@ -22,10 +49,10 @@
         if (!solid) for (let x = p.x + 8; x < p.x + p.w - 6; x += 18) puff(c, x, p.y + 26 + r2() * 6, 0.45 + r2() * 0.3, 0.8);
         if (solid) for (let x = p.x + 30; x < p.x + p.w - 20; x += 90 + r2() * 160) { c.fillStyle = '#ffffff'; for (let k = 0; k < 5; k++) { c.beginPath(); c.arc(x + Math.cos(k * 1.256) * 4, p.y - 8 + Math.sin(k * 1.256) * 4, 2.4, 0, TAU); c.fill(); } c.fillStyle = '#ffd24a'; c.beginPath(); c.arc(x, p.y - 8, 2, 0, TAU); c.fill(); c.strokeStyle = '#3a8a2a'; c.lineWidth = 1.3; c.beginPath(); c.moveTo(x, p.y - 6); c.lineTo(x, p.y); c.stroke(); }
       } else if (id === 'lava') {
-        // 식은 용암 바위 + 이글거리는 균열
-        c.fillStyle = '#2a1a1c'; c.beginPath(); c.moveTo(p.x - 1, p.y + 6); c.lineTo(p.x - 1, p.y - 1); for (let x = p.x; x <= p.x + p.w; x += 12) c.lineTo(x, p.y - 2 - (((x / 12) | 0) % 2) * 3); c.lineTo(p.x + p.w + 1, p.y + 6); c.closePath(); c.fill(); c.lineWidth = 1.6; c.strokeStyle = OUT; c.stroke();
-        c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(255,120,30,.85)'; c.lineWidth = 1.6; c.shadowColor = '#ff6a10'; c.shadowBlur = 6; const th2 = solid ? 60 : 22; for (let x = p.x + 12; x < p.x + p.w - 8; x += 26 + r2() * 40) { c.beginPath(); c.moveTo(x, p.y + 4); let y = p.y + 4; for (let k = 0; k < 3; k++) { y += 5 + r2() * 7; c.lineTo(x + (r2() - 0.5) * 12, Math.min(p.y + th2, y)); } c.stroke(); } c.restore();
-        if (!solid) { c.save(); c.globalCompositeOperation = 'lighter'; for (let x = p.x + 14; x < p.x + p.w - 10; x += 30 + r2() * 40) { c.fillStyle = 'rgba(255,110,20,.9)'; c.beginPath(); c.ellipse(x, p.y + 24 + r2() * 6, 2.4, 4.4, 0, 0, TAU); c.fill(); } c.restore(); }
+        // 차분한 현무암 바위: 윗면 가장자리에만 은은한 붉은 빛, 균열은 아주 드물게
+        c.fillStyle = '#34262a'; c.beginPath(); c.moveTo(p.x - 1, p.y + 6); c.lineTo(p.x - 1, p.y - 1); for (let x = p.x; x <= p.x + p.w; x += 14) c.lineTo(x, p.y - 2 - (((x / 14) | 0) % 2) * 2); c.lineTo(p.x + p.w + 1, p.y + 6); c.closePath(); c.fill(); c.lineWidth = 1.6; c.strokeStyle = OUT; c.stroke();
+        c.fillStyle = 'rgba(255,150,90,.16)'; c.fillRect(p.x, p.y - 1, p.w, 2);
+        c.save(); c.strokeStyle = 'rgba(255,130,60,.5)'; c.lineWidth = 1.1; const th2 = solid ? 60 : 22; for (let x = p.x + 40; x < p.x + p.w - 30; x += 130 + r2() * 160) { c.beginPath(); c.moveTo(x, p.y + 5); let y = p.y + 5; for (let k = 0; k < 2; k++) { y += 6 + r2() * 6; c.lineTo(x + (r2() - 0.5) * 10, Math.min(p.y + th2, y)); } c.stroke(); } c.restore();
       } else if (id === 'sea' && solid) {
         // 갑판: 널빤지 이음매와 못
         c.save(); c.beginPath(); c.rect(p.x, p.y - 1, p.w, 400); c.clip();
@@ -52,7 +79,6 @@
   function lamp(c, x, gy, glow) { c.strokeStyle = OUT; c.lineWidth = 5; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 64); c.stroke(); c.strokeStyle = '#c8d0e0'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 64); c.stroke(); c.beginPath(); c.arc(x, gy - 68, 7, 0, TAU); fs(c, glow || '#fff4c0', 1.8); const g = c.createRadialGradient(x, gy - 68, 2, x, gy - 68, 30); g.addColorStop(0, 'rgba(255,240,170,.55)'); g.addColorStop(1, 'rgba(255,240,170,0)'); c.fillStyle = g; c.fillRect(x - 30, gy - 98, 60, 60); }
   function planter(c, x, gy, cols) { c.beginPath(); rrect(c, x - 16, gy - 14, 32, 14, 3); fs(c, '#a0703c', 1.8); for (let i = 0; i < 5; i++) { c.strokeStyle = '#3a8a2a'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x - 12 + i * 6, gy - 14); c.lineTo(x - 12 + i * 6, gy - 22); c.stroke(); c.fillStyle = cols[i % cols.length]; c.beginPath(); c.arc(x - 12 + i * 6, gy - 24, 3.4, 0, TAU); c.fill(); } }
   function banner(c, x, gy, col) { c.strokeStyle = OUT; c.lineWidth = 5; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 96); c.stroke(); c.strokeStyle = '#d8dce8'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(x, gy); c.lineTo(x, gy - 96); c.stroke(); c.beginPath(); c.moveTo(x, gy - 92); c.lineTo(x + 34, gy - 86); c.lineTo(x + 28, gy - 72); c.lineTo(x + 34, gy - 58); c.lineTo(x, gy - 62); c.closePath(); fs(c, col, 1.8); }
-  function crate(c, x, gy, w) { c.beginPath(); rrect(c, x, gy - w, w, w, 3); fs(c, '#b8844a', 2); c.strokeStyle = OUT; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, gy - w); c.lineTo(x + w, gy); c.moveTo(x + w, gy - w); c.lineTo(x, gy); c.stroke(); }
   A.extraDecor = function (c, map, rnd) {
     const gy = map.plats[0].y;
     if (map.id === 'orbis') {
