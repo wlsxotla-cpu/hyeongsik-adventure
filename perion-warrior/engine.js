@@ -553,7 +553,8 @@
       if (!d.onG) { d.vy += GRAV * 0.8 * dt; const py = d.y; d.x += d.vx * dt; d.y += d.vy * dt; d.vx *= 0.99;
         if (d.vy > 0) for (const pl of map.plats) if (py <= pl.y + 1 && d.y >= pl.y && d.x > pl.x && d.x < pl.x + pl.w) { d.y = pl.y; d.onG = true; d.vx = 0; d.vy = 0; break; }
         if (d.y > map.h + 100) d.life = 0; }
-      if (!p.dead && d.t > 0.45 && Math.abs(p.x - d.x) < 30 && p.y > d.y - 6 && p.y - PH - 10 < d.y) {
+      const near = p.pet ? (Math.abs(p.x - d.x) < 150 && Math.abs(p.y - d.y) < 80) : (Math.abs(p.x - d.x) < 34 && p.y > d.y - 6 && p.y - PH - 10 < d.y); // 펫이 있으면 근처 아이템을 대신 주워요
+      if (!p.dead && d.t > 0.45 && near) {
         if (d.meso) { p.meso += d.meso; ev(G, { t: 'pickup', meso: d.meso, x: d.x, y: d.y }); }
         else { E.addItem(G, d.id, d.n); ev(G, { t: 'pickup', id: d.id, n: d.n, x: d.x, y: d.y }); }
         ev(G, { t: 'sfx', n: 'pickup' }); G.drops.splice(i, 1); continue;
