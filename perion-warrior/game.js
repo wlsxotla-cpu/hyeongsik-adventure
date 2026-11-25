@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzs';
+  const BUILD = '20261125zzu';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -127,6 +127,7 @@
         case 'heal': dmgText(e.x, e.y, '+' + fmt(e.amt), { col: e.mp ? '#9fd0ff' : '#9fffb0', stroke: e.mp ? '#0a2a6a' : '#0a4a1a', size: 17 }); sparks(e.x, e.y + 20, 6, e.mp ? '#7ab4ff' : '#7aff9a', 70, 0.5, 2.4); break;
         case 'levelup': levelUpFx(e.lv); break;
         case 'map': onMap(); break;
+        case 'bgm': Snd.play(e.n); break;
         case 'fade': doFade(); break;
         case 'dust': puffs(e.x, e.y - 1, e.land ? 5 : 3, 'rgba(230,210,180,1)', e.land ? 40 : 24, 4, 0.35); break;
         case 'msg': logLine(e.text, 'q'); toastBanner(e.text); break;
@@ -350,8 +351,8 @@
   }
   function tabSkill() {
     const p = G.p; let s = `<div class="card row2"><span style="flex:1">남은 스킬 포인트 <b style="font-size:17px">${p.sp}</b> <small style="color:#cdbbe8">(총량이 스킬에 딱 맞아요)</small></span></div>`;
-    if (!p.job) s += `<div class="card" style="font-size:12px">⚔️ <b>2차 전직</b>: Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후 마을의 교관 발도에게 가면 <b>파이터 / 페이지 / 스피어맨</b> 중 하나로 전직해요.</div>`; else s += `<div class="card" style="font-size:12px">${D.JOBS[p.job].icon} 현재 직업 <b style="color:${D.JOBS[p.job].col}">${D.JOBS[p.job].n}</b></div>`;
-    for (const sid of D.SKILL_ORDER) { const k = D.SKILLS[sid], l = p.skills[sid] || 0, lock = p.lv < k.reqLv; if (k.job && k.job !== p.job) continue; s += `<div class="sk ${lock ? 'lock' : ''}"><div class="ic">${k.icon}</div><div class="t"><b>${k.n}</b> <span style="color:#ffe08a">Lv ${l}/${k.maxLv}</span>${k.kind === 'passive' ? ' <span style="color:#9fe">[패시브]</span>' : k.kind === 'buff' ? ' <span style="color:#9fe">[버프]</span>' : ''}<br>${lock ? `<span style="color:#ff8a8a">Lv ${k.reqLv} 이상부터 배울 수 있어요</span>` : esc(k.desc(Math.max(1, l)))}</div>${!lock && l < k.maxLv ? (l >= E.skillCap(G, k) ? `<small style="color:#ff8a8a">Lv ${k.reqLv + Math.ceil((l + 1 - 3) / 0.8)}<br>필요</small>` : `<button class="btn sm green" data-a="learn:${sid}" ${p.sp < 1 ? 'disabled' : ''}>＋</button>`) : ''}</div>`; }
+    if (!p.job) s += `<div class="card" style="font-size:12px">⚔️ <b>2차 전직</b>: Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후 마을의 교관 발도에게 가면 <b>파이터 / 페이지 / 스피어맨</b> 중 하나로 전직해요.</div>`; else s += `<div class="card" style="font-size:12px">${D.JOBS[p.job].icon} 현재 직업 <b style="color:${D.JOBS[p.job].col}">${E.jobName(p)}</b>${p.tier3 ? '' : ` <small style="color:#cdbbe8">· Lv ${D.JOB3_LV} + 오르비스 시험 후 3차 전직</small>`}</div>`;
+    for (const sid of D.SKILL_ORDER) { const k = D.SKILLS[sid], l = p.skills[sid] || 0, lock = p.lv < k.reqLv; if (k.job && k.job !== p.job) continue; if (k.tier === 3 && !p.tier3) continue; s += `<div class="sk ${lock ? 'lock' : ''}"><div class="ic">${k.icon}</div><div class="t"><b>${k.n}</b> <span style="color:#ffe08a">Lv ${l}/${k.maxLv}</span>${k.kind === 'passive' ? ' <span style="color:#9fe">[패시브]</span>' : k.kind === 'buff' ? ' <span style="color:#9fe">[버프]</span>' : ''}<br>${lock ? `<span style="color:#ff8a8a">Lv ${k.reqLv} 이상부터 배울 수 있어요</span>` : esc(k.desc(Math.max(1, l)))}</div>${!lock && l < k.maxLv ? (l >= E.skillCap(G, k) ? `<small style="color:#ff8a8a">Lv ${k.reqLv + Math.ceil((l + 1 - 3) / 0.8)}<br>필요</small>` : `<button class="btn sm green" data-a="learn:${sid}" ${p.sp < 1 ? 'disabled' : ''}>＋</button>`) : ''}</div>`; }
     s += `<div class="row2"><button class="btn sm gray" data-a="sreset">스킬 초기화(무료)</button></div><div class="card" style="font-size:11px">💡 스킬 레벨은 캐릭터 레벨이 오를수록 더 올릴 수 있어요.</div>`;
     return s;
   }
@@ -360,7 +361,7 @@
     const row = (k, n, d) => `<div class="st"><span><b style="color:#fff">${n}</b> <small style="color:#cdbbe8">${d}</small></span><b>${p[k]}${st[k] !== undefined && st[k] !== p[k] ? `<small style="color:#7aff9a">(+${st[k] - p[k]})</small>` : ''}</b><button class="btn sm" data-a="stat:${k}:1" ${p.ap < 1 ? 'disabled' : ''}>＋</button><button class="btn sm" data-a="stat:${k}:5" ${p.ap < 5 ? 'disabled' : ''}>＋5</button></div>`;
     s += row('str', 'STR 힘', '공격력') + row('dex', 'DEX 민첩', '공격력(조금)·방어') + row('int', 'INT 지력', '최대 MP') + row('luk', 'LUK 행운', '치명타·드랍');
     const w = D.ITEMS[p.equip.weapon] || D.ITEMS.sw0; const WT = { sword: '한손검', axe: '도끼', great: '대검', mace: '둔기', spear: '창' };
-    s += `<div class="card" style="margin-top:8px;line-height:1.7"><b style="color:#ffd24a">📊 ${esc(p.name)} · Lv.${p.lv} ${p.job ? D.JOBS[p.job].n : '전사'}</b><br>⚔️ 공격력 <b>${fmt(Math.round(st.minDmg))} ~ ${fmt(Math.round(st.maxDmg))}</b> <small style="color:#cdbbe8">(무기 공격력 ${Math.round(st.wAtk)})</small><br>🛡️ 방어력 <b>${st.def}</b> · 치명타 <b>${(st.crit * 100).toFixed(1)}%</b><br>❤️ 최대 HP <b>${fmt(st.maxHp)}</b> · 💧 최대 MP <b>${fmt(st.maxMp)}</b><br>🗡️ 무기 <b>${esc(w.n)}</b> (${WT[w.wt] || '검'}) · 공격 속도 <b>${(1 / st.spd).toFixed(1)}</b>회/초 · 사거리 <b>${st.rng}</b><br>👟 이동 속도 <b>${st.speed}</b> · 장비 보너스 STR <b>+${st.bonus.str}</b> DEX <b>+${st.bonus.dex}</b> 공격 <b>+${st.bonus.atk}</b> 방어 <b>+${st.bonus.def}</b> HP <b>+${st.bonus.hp}</b></div>`;
+    s += `<div class="card" style="margin-top:8px;line-height:1.7"><b style="color:#ffd24a">📊 ${esc(p.name)} · Lv.${p.lv} ${E.jobName(p)}</b><br>⚔️ 공격력 <b>${fmt(Math.round(st.minDmg))} ~ ${fmt(Math.round(st.maxDmg))}</b> <small style="color:#cdbbe8">(무기 공격력 ${Math.round(st.wAtk)})</small><br>🛡️ 방어력 <b>${st.def}</b> · 치명타 <b>${(st.crit * 100).toFixed(1)}%</b><br>❤️ 최대 HP <b>${fmt(st.maxHp)}</b> · 💧 최대 MP <b>${fmt(st.maxMp)}</b><br>🗡️ 무기 <b>${esc(w.n)}</b> (${WT[w.wt] || '검'}) · 공격 속도 <b>${(1 / st.spd).toFixed(1)}</b>회/초 · 사거리 <b>${st.rng}</b><br>👟 이동 속도 <b>${st.speed}</b> · 장비 보너스 STR <b>+${st.bonus.str}</b> DEX <b>+${st.bonus.dex}</b> 공격 <b>+${st.bonus.atk}</b> 방어 <b>+${st.bonus.def}</b> HP <b>+${st.bonus.hp}</b></div>`;
     if (st.inactive.length) s += '<div class="card" style="color:#ff8a8a">⚠ 능력치가 모자라 비활성인 장비가 있어요. STR/DEX를 올리면 다시 켜져요.</div>';
     s += `<div class="card" style="font-size:11px;line-height:1.6"><b>🎽 장비 요구 능력치</b> <small style="color:#cdbbe8">(기본 STR/DEX 기준)</small><br>${['weapon', 'helmet', 'armor', 'gloves', 'shoes'].map((sl) => { const id = p.equip[sl], it = id && D.ITEMS[id]; if (!it) return `${SLOTN[sl]}: -`; const rq = E.req(it), off = !E.canWear(G, it).ok; return `${off ? '<span style="color:#ff8a8a">' : ''}${SLOTN[sl]}: ${esc(it.n)} (STR ${rq.str}${rq.dex ? ' / DEX ' + rq.dex : ''})${off ? ' — 비활성</span>' : ''}`; }).join('<br>')}</div>`;
     s += `<div class="row2"><button class="btn sm green" data-a="auto" ${p.ap < 1 ? 'disabled' : ''}>남은 포인트 전부 STR에</button><button class="btn sm gray" data-a="reset">능력치 초기화(무료)</button></div>`;
@@ -450,7 +451,7 @@
         const cost = Math.round(G.p.lv * 4); text = `어서 오세요, 여관 '바위 베개'예요!\n푹 쉬면 HP·MP가 가득 차요.\n이용료는 **${cost} 메소**랍니다.\n\n🤫 *손님들 사이에 이런 소문이 돌아요… 개미굴 깊은 곳 **맨 위 발판 끝**, 그리고 불꽃 협곡 **맨 위 오른쪽 발판**에 지도에도 없는 비밀 길이 있대요.*`;
         opts.push({ label: `🛏️ 쉬기 (${cost} 메소)`, cls: 'green', fn: () => { const r = E.innHeal(G); Snd.sfx(r.ok ? 'levelup' : 'deny'); if (r.ok) { fx({ type: 'ring', x: G.p.x, y: G.p.y - 20, r: 40, col: '#9fffb0', size: 5, life: 0.7 }); dlg(npc, '푹 쉬셨나요? 몸이 가벼워졌을 거예요! 😊', [{ label: '고마워요', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } });
       } else if (npc.role === 'shop') {
-        text = npc.shop === 'potion' ? '어서 와요! 물약과 귀환 주문서를 팔아요.\n사냥 전엔 물약 챙기는 거 잊지 마세요!' : npc.shop === 'scroll' ? '어서 오세요, 주문서 가게예요 ✨\n여기선 **100% 주문서**만 팔아요.\n**60%**와 **10%** 주문서는 몬스터가 떨어뜨리니 사냥하며 모아 보세요!' : '크하하, 불꽃 튀는 대장간에 어서 와라!\n무기와 방어구가 있다. 레벨에 맞는 걸 골라!';
+        text = (npc.shop === 'potion' || npc.shop === 'potion2') ? '어서 와요! 물약과 귀환 주문서를 팔아요.\n사냥 전엔 물약 챙기는 거 잊지 마세요!' : npc.shop === 'scroll' ? '어서 오세요, 주문서 가게예요 ✨\n여기선 **100% 주문서**만 팔아요.\n**60%**와 **10%** 주문서는 몬스터가 떨어뜨리니 사냥하며 모아 보세요!' : '크하하, 불꽃 튀는 대장간에 어서 와라!\n무기와 방어구가 있다. 레벨에 맞는 걸 골라!';
         opts.push({ label: '🛒 물건 보기 (사기·팔기)', cls: 'green', fn: () => shop(npc) });
       } else if (npc.role === 'master') {
         const cadv = E.canAdvance(G);
@@ -466,6 +467,15 @@
           for (const j of Object.keys(D.JOBS)) opts.push({ label: `${D.JOBS[j].icon} ${D.JOBS[j].n} 되기`, cls: 'green', fn: () => dlg(npc, `정말 **${D.JOBS[j].n}**(으)로 전직하겠나?\n선택하면 바꿀 수 없다.`, [{ label: '✅ 전직한다', cls: 'green', fn: () => { const r = E.advance(G, j); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`2차 전직! ${D.JOBS[j].n}`); dlg(npc, `좋다! 오늘부터 너는 **${D.JOBS[j].n}**이다.\n스킬 탭에서 새 스킬을 배워라. (SP +3, 능력치 +5)`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }, { label: '← 다시 생각', cls: 'gray', fn: home }]) });
         } else text = `나는 전사 교관 발도다.\n\n⚔️ **2차 전직**(파이터·페이지·스피어맨)은 Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후에 가능하다. (${cadv.msg})\n\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.`;
         if (false) text = `나는 전사 교관 발도다.\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.\n· Lv 1 파워 스트라이크 · Lv 6 슬래시 블러스트\n· Lv 10 아이언 바디 · Lv 14 분노의 함성 · Lv 20 대지 가르기\n\n⚔️ 2차 전직(파이터·페이지·스피어맨)은 Lv 30 이후 준비 중이다. 기대해라!`;
+      } else if (npc.role === 'dock') {
+        const fee = 3000, to = D.MAPS[npc.dest];
+        text = `나는 ${npc.n}. ${to.n}행 배를 운항한다네.\n\n🚢 승선료 **${fmt(fee)} 메소**, 항해는 약 75초.\n⚠️ 가끔 **크림슨 발록**이 배를 습격한다네. 물약을 챙기게!`;
+        opts.push({ label: `🚢 ${to.n}행 배 타기 (${fmt(fee)} 메소)`, cls: 'green', fn: () => { const r = E.boardShip(G, npc.dest, fee); if (!r.ok) { dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); return; } handleEvents(); closeModal(); save(); toastBanner('🚢 출항! ' + to.n + '(으)로 갑니다'); } });
+      } else if (npc.role === 'master3') {
+        const c3 = E.canAdvance3(G), pp = G.p;
+        if (pp.tier3) text = `⚜️ **${E.jobName(pp)}**이로군. 하늘의 기사단은 너를 자랑스럽게 여긴다!`;
+        else if (c3.ok) { text = `시험을 통과했군. **3차 전직**을 하겠나?\n\n${D.JOBS[pp.job].icon} ${D.JOBS[pp.job].n} → **${D.JOBS[pp.job].n3}**\n새 스킬 3개와 능력 보너스가 주어진다. (SP +3, 능력치 +5)`; opts.push({ label: `⚜️ ${D.JOBS[pp.job].n3}(으)로 3차 전직`, cls: 'green', fn: () => { const r = E.advance3(G); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`3차 전직! ${E.jobName(pp)}`); dlg(npc, `좋다! 오늘부터 너는 **${E.jobName(pp)}**이다.\n스킬 탭에서 새 스킬을 배워라!`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }); }
+        else text = `나는 천공 기사단장 헬마다. 3차 전직은 **Lv ${D.JOB3_LV} 이상**, 2차 전직을 마친 자에게 시험을 내린다.\n(${c3.msg})`;
       }
       if (npc.role === 'chest') {
         const can = E.qState(G, 'q9') === 'active' && !(G.p.inv.relic > 0);
@@ -584,8 +594,8 @@
     const m = G.map, u = Math.min(1, z.t / z.dur), surfaces = z.full === 'g' ? [m.plats[0]] : m.plats.slice(1);
     for (const pl of surfaces) {
       c.save();
-      if (!z.fired) { c.globalAlpha = (0.25 + 0.3 * Math.sin(time * 18)) * (0.5 + u * 0.5) + 0.1; c.fillStyle = '#ff4a2a'; c.fillRect(pl.x, pl.y - 7, pl.w, 9); c.globalAlpha = 0.7; c.strokeStyle = '#fff'; c.lineWidth = 2; c.setLineDash([8, 6]); c.strokeRect(pl.x, pl.y - 7, pl.w, 9); }
-      else { const k = Math.min(1, (z.t - z.dur) / 0.35); c.globalAlpha = 1 - k; c.fillStyle = '#ffb040'; for (let x = pl.x + 6; x < pl.x + pl.w - 6; x += 20) { const h = (46 + 20 * Math.sin(x * 0.7)) * (1 - k * 0.4); c.beginPath(); c.moveTo(x - 9, pl.y); c.lineTo(x, pl.y - h); c.lineTo(x + 9, pl.y); c.closePath(); c.fill(); } c.fillStyle = '#fff2a0'; c.globalAlpha = (1 - k) * 0.8; c.fillRect(pl.x, pl.y - 10, pl.w, 10); }
+      if (!z.fired) { c.globalAlpha = (0.25 + 0.3 * Math.sin(time * 18)) * (0.5 + u * 0.5) + 0.1; c.fillStyle = z.ice ? '#3ab0ff' : '#ff4a2a'; c.fillRect(pl.x, pl.y - 7, pl.w, 9); c.globalAlpha = 0.7; c.strokeStyle = '#fff'; c.lineWidth = 2; c.setLineDash([8, 6]); c.strokeRect(pl.x, pl.y - 7, pl.w, 9); }
+      else { const k = Math.min(1, (z.t - z.dur) / 0.35); c.globalAlpha = 1 - k; c.fillStyle = z.ice ? '#9ae0ff' : '#ffb040'; for (let x = pl.x + 6; x < pl.x + pl.w - 6; x += 20) { const h = (46 + 20 * Math.sin(x * 0.7)) * (1 - k * 0.4); c.beginPath(); c.moveTo(x - 9, pl.y); c.lineTo(x, pl.y - h); c.lineTo(x + 9, pl.y); c.closePath(); c.fill(); } c.fillStyle = '#fff2a0'; c.globalAlpha = (1 - k) * 0.8; c.fillRect(pl.x, pl.y - 10, pl.w, 10); }
       c.restore();
     }
   }
@@ -625,8 +635,8 @@
     else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
   }
   // 업데이트 소식: 새 소식 번호가 바뀌면 한 번만 보여 준다 (소식을 고칠 땐 NEWS_ID 도 올릴 것)
-  const NEWS_ID = 'n5';
-  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.', '🔄 교관 발도에게서 <b>직업을 바꿀</b> 수 있어요 (스킬 초기화, 포인트 환급). 다른 직업도 체험해 보세요!', '🔱 스피어맨 <b>드래곤 크러셔</b>가 3연속 찌르기로 바뀌었어요.', '🕳️ <b>히든 스트리트</b> 2곳! 개미굴 깊은 곳 맨 위 발판 끝 / 불꽃 협곡 맨 위 오른쪽 발판에 숨은 포탈이 있어요 (경험치·드랍 보너스).', '🔊 주문서 붙는/터지는 소리! 모든 사냥터·보스가 <b>메이플 원곡 BGM</b>으로 바뀌었어요 (설정에서 끌 수 있어요).', '🧾 상점에서 장비를 팔 때 <b>한 개씩 강화 상태</b>를 보고 팔 수 있어요 (강화된 건 값을 더 쳐 줘요).', '⚙️ 스탯 초기화해도 장비가 벗겨지지 않고 <b>비활성</b>으로 표시돼요. 스탯을 올리면 다시 켜져요.', '👹 <b>보스 패턴 개편</b> — 발판 위에서도 맞아요! 붉은 <b>바닥!/발판!</b> 표시가 뜨면 안전한 곳으로 이동하세요.'];
+  const NEWS_ID = 'n6';
+  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.', '🔄 교관 발도에게서 <b>직업을 바꿀</b> 수 있어요 (스킬 초기화, 포인트 환급). 다른 직업도 체험해 보세요!', '🔱 스피어맨 <b>드래곤 크러셔</b>가 3연속 찌르기로 바뀌었어요.', '🚢 <b>오르비스 대확장!</b> 마을 오른쪽 <b>페리온 항구</b>에서 배를 타고(3,000 메소) 하늘의 도시 <b>오르비스</b>로! 항해 중 <b>크림슨 발록</b>이 무작위로 습격해요 (손톱·투구 드랍).', '☁️ 새 사냥터 4곳 (구름 정원·천상의 정원·얼음 협곡·눈보라 고원), 보스 <b>얼음 군주</b>, 히든 스트리트 2곳 추가, 새 장비 20종, 퀘스트 15개. 최대 레벨 70!', '⚜️ <b>3차 전직</b> (크루세이더·나이트·드래곤나이트): Lv50 + 오르비스 시험 후 천공 기사단장 헬마에게.', '🕳️ <b>히든 스트리트</b> 2곳! 개미굴 깊은 곳 맨 위 발판 끝 / 불꽃 협곡 맨 위 오른쪽 발판에 숨은 포탈이 있어요 (경험치·드랍 보너스).', '🔊 주문서 붙는/터지는 소리! 모든 사냥터·보스가 <b>메이플 원곡 BGM</b>으로 바뀌었어요 (설정에서 끌 수 있어요).', '🧾 상점에서 장비를 팔 때 <b>한 개씩 강화 상태</b>를 보고 팔 수 있어요 (강화된 건 값을 더 쳐 줘요).', '⚙️ 스탯 초기화해도 장비가 벗겨지지 않고 <b>비활성</b>으로 표시돼요. 스탯을 올리면 다시 켜져요.', '👹 <b>보스 패턴 개편</b> — 발판 위에서도 맞아요! 붉은 <b>바닥!/발판!</b> 표시가 뜨면 안전한 곳으로 이동하세요.'];
   function showNews() {
     let seen = null; try { seen = localStorage.getItem('pw.news'); } catch (e) {} if (seen === NEWS_ID) return;
     try { localStorage.setItem('pw.news', NEWS_ID); } catch (e) {}

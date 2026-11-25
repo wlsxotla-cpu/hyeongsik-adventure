@@ -12,7 +12,7 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3'];
   E.newPlayer = function (name) {
     return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
@@ -29,7 +29,7 @@
     const st = E.stats(G); base.hp = clamp(base.hp, 1, st.maxHp); base.mp = clamp(base.mp, 0, st.maxMp);
     return G;
   };
-  E.serialize = function (G) { const o = {}; for (const k of PERSIST) o[k] = G.p[k]; o.mapId = G.map.boss ? 'perion' : G.mapId; o.v = 1; return o; };
+  E.serialize = function (G) { const o = {}; for (const k of PERSIST) o[k] = G.p[k]; o.mapId = G.mapId === 'ship' ? ((G.ship && G.ship.from) || 'port') : (G.map.boss ? 'perion' : G.mapId); o.v = 1; return o; };
 
   /* ───────── 능력치 ───────── */
   E.sk = (G, sid) => G.p.skills[sid] || 0;
@@ -41,14 +41,16 @@
     const str = p.str + b.str, dex = p.dex + b.dex;
     const tough = p.skills.toughness || 0, mast = p.skills.mastery || 0;
     const job = p.job, fm = job === 'fighter' ? (p.skills.fmastery || 0) : 0, pm = job === 'page' ? (p.skills.pmastery || 0) : 0, sm = job === 'spearman' ? (p.skills.smastery || 0) : 0;
-    const rageMul = (p.buffs.atk ? 1 + p.buffs.atk.val : 1) * (p.buffs.atk2 ? 1 + p.buffs.atk2.val : 1) * (job === 'fighter' ? 1.08 + fm * 0.02 : 1);
+    const t3 = !!p.tier3, fm3 = t3 && job === 'fighter' ? (p.skills.fmaster3 || 0) : 0, pm3 = t3 && job === 'page' ? (p.skills.pmaster3 || 0) : 0, sm3 = t3 && job === 'spearman' ? (p.skills.smaster3 || 0) : 0;
+    let rageMul = 1, defBuff = 0; for (const k in p.buffs) { if (/^atk/.test(k)) rageMul *= 1 + p.buffs[k].val; else if (/^def/.test(k)) defBuff += p.buffs[k].val; }
+    rageMul *= (job === 'fighter' ? 1.08 + fm * 0.02 : 1) * (1 + fm3 * 0.015) * (t3 ? 1.06 : 1);
     const wAtk = (w.atk || 10) + (w.slot === 'weapon' ? b.atk - (w.atk || 0) : 0);
     const maxDmg = Math.max(1, (str * 4 + dex) * wAtk / 100 * rageMul);
-    const minRatio = clamp(0.2 + mast * 0.05 + fm * 0.01 + sm * 0.02, 0.2, 0.85);
-    const def = b.def + (p.buffs.def ? p.buffs.def.val : 0) + (p.buffs.def2 ? p.buffs.def2.val : 0) + Math.floor(dex / 6) + (job === 'page' ? 8 + pm * 3 : 0);
-    const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough + (job === 'page' ? 0.08 + pm * 0.02 : 0) + (job === 'spearman' ? 0.1 : 0)) * (1 + (p.buffs.hp2 ? p.buffs.hp2.val : 0)));
+    const minRatio = clamp(0.2 + mast * 0.05 + fm * 0.01 + sm * 0.02 + sm3 * 0.02, 0.2, 0.88);
+    const def = b.def + defBuff + Math.floor(dex / 6) + (job === 'page' ? 8 + pm * 3 : 0) + pm3 * 4 + (t3 ? 10 : 0);
+    const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough + (job === 'page' ? 0.08 + pm * 0.02 : 0) + (job === 'spearman' ? 0.1 : 0) + pm3 * 0.02 + (t3 ? 0.08 : 0)) * (1 + (p.buffs.hp2 ? p.buffs.hp2.val : 0)));
     const maxMp = Math.round(p.baseMp + p.int * 2);
-    return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004 + (job === 'spearman' ? 0.03 + sm * 0.015 : 0), speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b, inactive };
+    return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004 + (job === 'spearman' ? 0.03 + sm * 0.015 : 0) + fm3 * 0.01 + sm3 * 0.012, speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b, inactive };
   };
   E.calcMon = (id) => D.MON[id];
 
@@ -212,6 +214,10 @@
     if (out.length) ev(G, { t: 'msg', text: `능력치가 모자라 장비를 벗었어요: ${out.join(', ')}` });
     const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); return out;
   };
+  // 3차 전직: Lv50 + 오르비스 시험 퀘스트(qt3) 완료. 직업을 바꾸면 3차는 다시 해야 한다(무료)
+  E.canAdvance3 = (G) => { const p = G.p; if (!p.job) return { ok: false, msg: '먼저 2차 전직을 해야 해요' }; if (p.tier3) return { ok: false, msg: '이미 3차 전직을 했어요' }; if (p.lv < D.JOB3_LV) return { ok: false, msg: `Lv ${D.JOB3_LV} 이상부터 3차 전직을 할 수 있어요` }; if (E.qState(G, 'qt3') !== 'done') return { ok: false, msg: '「3차 전직의 시험」을 먼저 완료해야 해요' }; return { ok: true }; };
+  E.advance3 = function (G) { const p = G.p, c = E.canAdvance3(G); if (!c.ok) return c; p.tier3 = true; p.sp += 3; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `3차 전직! ${D.JOBS[p.job].n3}이(가) 되었어요` }); return { ok: true }; };
+  E.jobName = (p) => (p.job ? (p.tier3 ? D.JOBS[p.job].n3 : D.JOBS[p.job].n) : '전사');
   E.canAdvance = (G) => { const p = G.p; if (p.job) return { ok: false, msg: '이미 전직했어요' }; if (p.lv < D.JOB_LV) return { ok: false, msg: `Lv ${D.JOB_LV} 이상부터 전직할 수 있어요` }; if (E.qState(G, 'q9') !== 'done') return { ok: false, msg: '「고대 골렘의 시련」을 먼저 완료해야 해요' }; return { ok: true }; };
   E.advance = function (G, jid) {
     const p = G.p, j = D.JOBS[jid]; const c = E.canAdvance(G); if (!j || !c.ok) return c.ok ? { ok: false, msg: '없는 직업이에요' } : c;
@@ -220,19 +226,19 @@
   // 스킬 레벨 상한: 캐릭터 레벨이 오를수록 천천히 열린다 (스킬 요구 레벨 +12~13 에서 만렙)
   E.skillCap = (G, s) => Math.min(s.maxLv, 3 + Math.floor(Math.max(0, G.p.lv - s.reqLv) * 0.8));
   // 스킬 포인트 총량을 스킬 필요량에 딱 맞춤: Lv2~30 합계 69(1차 스킬 7종 만렙, 파워 스트라이크 1레벨은 기본) + 전직 3 + Lv31~39 레벨당 3 = 직업 스킬 30
-  E.spEarned = (lv) => (lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69 + 3 * Math.min(lv - 30, 9));
+  E.spEarned = (lv) => (lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69 + 3 * Math.min(lv - 30, 9)) + (lv > 50 ? 3 * Math.min(lv - 50, 9) : 0); // Lv51~59 레벨당 3 = 3차 직업 스킬 30
   E.spSpent = (p) => { let n = 0; for (const sid in p.skills) n += Math.max(0, (p.skills[sid] || 0) - (sid === 'power' ? 1 : 0)); return n; };
   // 옛 저장 보정: 받은 포인트 총량이 새 기준보다 많으면 스킬을 초기화하고 기준량만 돌려준다
-  E.fixSp = function (G) { const p = G.p, earned = E.spEarned(p.lv) + (p.job ? 3 : 0), spent = E.spSpent(p); if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
+  E.fixSp = function (G) { const p = G.p, earned = E.spEarned(p.lv) + (p.job ? 3 : 0) + (p.tier3 ? 3 : 0), spent = E.spSpent(p); if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
   E.resetSkills = function (G) { const p = G.p; let back = 0; for (const sid in p.skills) { const l = p.skills[sid] || 0; const keep = sid === 'power' ? 1 : 0; back += Math.max(0, l - keep); if (keep) p.skills[sid] = keep; else delete p.skills[sid]; } p.sp += back; p.buffs = {}; return back; };
   // 직업 변경: 다른 직업을 체험해 볼 수 있게 언제든 가능. 스킬은 전부 초기화(포인트는 그대로 돌려받음), 못 쓰는 무기는 직업 기본 무기로 교체
   E.changeJob = function (G, jid) {
     const p = G.p; if (!p.job) return { ok: false, msg: '아직 2차 전직 전이에요' }; if (!D.JOBS[jid] || jid === p.job) return { ok: false, msg: '지금과 다른 직업을 골라 주세요' };
-    E.resetSkills(G); p.job = jid; p.skCd = {}; E.checkGear(G); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `${D.JOBS[jid].n}(으)로 직업을 바꿨어요. 스킬 포인트를 다시 찍어 주세요!` }); return { ok: true };
+    E.resetSkills(G); p.job = jid; p.tier3 = false; p.skCd = {}; E.checkGear(G); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `${D.JOBS[jid].n}(으)로 직업을 바꿨어요. 스킬 포인트를 다시 찍어 주세요!` }); return { ok: true };
   };
   E.learn = function (G, sid) {
     const p = G.p, s = D.SKILLS[sid]; const l = p.skills[sid] || 0;
-    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job) || l >= E.skillCap(G, s)) return false;
+    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job) || (s.tier === 3 && !p.tier3) || l >= E.skillCap(G, s)) return false;
     p.skills[sid] = l + 1; p.sp -= 1; ev(G, { t: 'sfx', n: 'equip' }); return true;
   };
 
@@ -282,7 +288,8 @@
     for (const [id, pr] of def.eq) if (rand(G) < pr * dm * (1 + p.luk * 0.002)) dropLoot(G, m.x, m.y - 14, { id, n: 1 });
     p.kills[m.id] = (p.kills[m.id] || 0) + 1;
     for (const qid in p.quests) { const q = p.quests[qid]; if (q.st !== 'active') continue; D.QUESTS[qid].goals.forEach((g, i) => { if (g.kill === m.id && q.prog[i] < g.n) { q.prog[i]++; ev(G, { t: 'qprog', q: qid }); } }); }
-    m.slot.respT = def.boss ? 90 : rr(G, 7, 12);
+    m.slot.respT = m.slot.once ? 1e9 : (def.boss ? 90 : rr(G, 7, 12));
+    if (def.ai === 'bossbalrog') ev(G, { t: 'bgm', n: 'ship' });
     if (def.boss) { G.shake = 18; ev(G, { t: 'msg', text: `${def.n}을(를) 쓰러뜨렸어요!` }); for (const mm of G.mons) if (mm !== m && !mm.dead && mm.minion) { mm.dead = true; mm.hp = 0; } G.proj.length = 0; G.zones.length = 0; }
   }
   function dropLoot(G, x, y, o) { G.drops.push(Object.assign({ x: x + rr(G, -16, 16), y, vx: rr(G, -50, 50), vy: -rr(G, 200, 300), t: 0, life: 70, onG: false, ph: rand(G) * 6 }, o)); }
@@ -350,7 +357,7 @@
   // 플레이어 위치로 조준해서 쏘는 투사체 (발판 높이와 상관없이 닿는다)
   function aimShot(G, m, kind, off, speed, dmg, w) { const p = G.p, x0 = m.x + m.face * 20, y0 = m.y - m.def.h * 0.6; const base = Math.atan2(p.y - 24 - y0, p.x - x0) + off; addProj(G, { kind, x: x0, y: y0, vx: Math.cos(base) * speed, vy: Math.sin(base) * speed, w, h: w, dmg, lv: m.def.lv, life: 3.6 }); }
   function bossAI(G, m, dt) {
-    const p = G.p, def = m.def, tree = def.ai === 'bosstree', zak = def.ai === 'bosszakum';
+    const p = G.p, def = m.def, tree = def.ai === 'bosstree', bal = def.ai === 'bossbalrog', frost = def.ai === 'bossfrost', zak = def.ai === 'bosszakum' || bal || frost; const shot = frost ? 'ice' : 'fire';
     const phase2 = m.hp < m.maxhp * (tree ? 0.5 : 0.45);
     if (phase2 && !m.p2) { m.p2 = true; ev(G, { t: 'msg', text: `${def.n}이(가) 분노했다!` }); G.shake = 12; ev(G, { t: 'sfx', n: 'roar' }); }
     const sp = def.speed * (phase2 ? 1.5 : 1);
@@ -365,10 +372,12 @@
         // 보스마다 패턴이 다르다. 바닥 공격(slam)만 있으면 발판에 올라가서 때리면 끝이라, 높이와 상관없이 닿는 공격과 바닥/발판을 번갈아 노리는 공격을 섞는다.
         const minions = G.mons.filter((x) => x.minion && !x.dead).length;
         if (tree) m.atkn = r < 0.22 ? 'slam' : r < 0.5 ? 'roots' : r < 0.78 ? 'seed' : (minions < 2 ? 'summon' : 'roots');
+        else if (bal) m.atkn = (phase2 && r < 0.18 && minions < 2) ? 'summon' : r < 0.22 ? 'slam' : r < 0.52 ? 'fireball' : r < 0.7 ? 'flame' : r < 0.82 ? 'burng' : r < 0.92 ? 'burnp' : 'stomp';
+        else if (frost) m.atkn = (phase2 && r < 0.15 && minions < 2) ? 'summon' : r < 0.12 ? 'slam' : r < 0.3 ? 'rocks' : r < 0.5 ? 'fireball' : r < 0.78 ? (rand(G) < 0.5 ? 'burng' : 'burnp') : r < 0.9 ? 'flame' : 'stomp';
         else if (zak) m.atkn = (phase2 && r < 0.2 && minions < 2) ? 'summon' : r < 0.12 ? 'slam' : r < 0.28 ? 'rocks' : r < 0.44 ? 'flame' : r < 0.6 ? 'fireball' : r < 0.82 ? (rand(G) < 0.5 ? 'burng' : 'burnp') : 'stomp';
         else m.atkn = r < 0.16 ? 'slam' : r < 0.36 ? 'rocks' : r < 0.52 ? 'stomp' : r < 0.76 ? 'quake' : 'throw';
         const FLOOR = { quake: 'g', burng: 'g', burnp: 'p' }; // 바닥 전체 / 발판 전체 공격: 예고 후 한꺼번에 터진다
-        if (FLOOR[m.atkn]) addZone(G, { kind: 'floor', full: FLOOR[m.atkn], x: p.x, y: G.map.plats[0].y, r: 0, dur: 1.3, dmg: def.atk * 1.5, lv: def.lv });
+        if (FLOOR[m.atkn]) addZone(G, { kind: 'floor', full: FLOOR[m.atkn], x: p.x, y: G.map.plats[0].y, r: 0, dur: 1.3, dmg: def.atk * 1.5, lv: def.lv, ice: frost });
         m.t = m.atkn === 'summon' ? 1.0 : m.atkn === 'stomp' ? 0.7 : FLOOR[m.atkn] ? 1.35 : 0.95; m.wind = m.t; ev(G, { t: 'bossWind', id: m.id, atk: m.atkn, x: m.x });
       }
     } else if (m.st === 'wind') {
@@ -386,7 +395,7 @@
           for (let k = 0; k < n; k++) addZone(G, { kind: 'root', x: clamp(p.x + (k - (n - 1) / 2) * 90 + rr(G, -20, 20), 60, G.map.w - 60), y: (k % 2 === 0 || n === 3 && k === 1) ? ty : m.py, r: 36, dur: 0.9 + k * 0.15, dmg: def.atk * 1.4, lv: def.lv });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.0;
         } else if (a === 'summon') {
-          for (const d of [-1, 1]) { const x = clamp(m.x + d * 120, 80, G.map.w - 80); const sl = { m: zak ? 'lavamask' : 'stump', p: 0, x, mon: null, respT: 0, minion: true }; spawnMon(G, sl); const mm = sl.mon; mm.minion = true; mm.hp = mm.maxhp = zak ? 700 : 120; mm.x0 = 60; mm.x1 = G.map.w - 60; mm.prov = 99; mm.stunT = 0; ev(G, { t: 'hit', x, y: mm.y - 20, fx: 'spawn' }); }
+          for (const d of [-1, 1]) { const x = clamp(m.x + d * 120, 80, G.map.w - 80); const sl = { m: frost ? 'icemask' : bal ? 'skymask' : zak ? 'lavamask' : 'stump', p: 0, x, mon: null, respT: 0, minion: true }; spawnMon(G, sl); const mm = sl.mon; mm.minion = true; mm.hp = mm.maxhp = frost ? 2500 : bal ? 1500 : zak ? 700 : 120; mm.x0 = 60; mm.x1 = G.map.w - 60; mm.prov = 99; mm.stunT = 0; ev(G, { t: 'hit', x, y: mm.y - 20, fx: 'spawn' }); }
           m.st = 'rest'; m.t = 0.8;
         } else if (a === 'rocks') {
           const n = phase2 ? 7 : 5;
@@ -397,7 +406,7 @@
           const n = phase2 ? 5 : 3; for (let k = 0; k < n; k++) aimShot(G, m, 'seed', (k - (n - 1) / 2) * 0.28, 250, def.atk * 1.0, 18);
           ev(G, { t: 'sfx', n: 'swing' }); m.st = 'rest'; m.t = 1.0;
         } else if (a === 'fireball') {
-          const n = phase2 ? 5 : 3; for (let k = 0; k < n; k++) aimShot(G, m, 'fire', (k - (n - 1) / 2) * 0.24, 290, def.atk * 1.0, 20);
+          const n = phase2 ? 5 : 3; for (let k = 0; k < n; k++) aimShot(G, m, shot, (k - (n - 1) / 2) * 0.24, 290, def.atk * 1.0, 20);
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.0;
         } else if (a === 'throw') {
           const n = phase2 ? 2 : 1; for (let k = 0; k < n; k++) { const x0 = m.x, y0 = m.y - def.h * 0.7, T = 0.95 + k * 0.25, tx = k === 0 ? p.x : p.x + rr(G, -160, 160), ty = p.y - 24; addProj(G, { kind: 'boulder', x: x0, y: y0, vx: (tx - x0) / T, vy: (ty - y0) / T - 0.5 * 900 * T, grav: 900, w: 28, h: 28, dmg: def.atk * 1.3, lv: def.lv, life: 4 }); }
@@ -405,7 +414,7 @@
         } else if (a === 'quake' || a === 'burng' || a === 'burnp') {
           G.shake = Math.max(G.shake, 6); m.st = 'rest'; m.t = 0.9;
         } else if (a === 'flame') {
-          const n = phase2 ? 9 : 6; for (let k = 0; k < n; k++) addProj(G, { kind: 'fire', x: clamp(k === 0 ? p.x : p.x + rr(G, -340, 340), 60, G.map.w - 60), y: m.py - 420, vx: 0, vy: 60, grav: 900, w: 22, h: 22, dmg: def.atk * 1.1, lv: def.lv, life: 4, delay: k * 0.2, warn: true, gy: m.py });
+          const n = phase2 ? 9 : 6; for (let k = 0; k < n; k++) addProj(G, { kind: shot, x: clamp(k === 0 ? p.x : p.x + rr(G, -340, 340), 60, G.map.w - 60), y: m.py - 420, vx: 0, vy: 60, grav: 900, w: 22, h: 22, dmg: def.atk * 1.1, lv: def.lv, life: 4, delay: k * 0.2, warn: true, gy: m.py });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.1;
         } else if (a === 'stomp') {
           m.vy = -620; m.vx = clamp((p.x - m.x) / 0.9, -330, 330); m.st = 'air'; m.stomp = true; ev(G, { t: 'sfx', n: 'swing' });
@@ -462,6 +471,18 @@
     for (const pt of G.map.portals) if (Math.abs(p.x - pt.x) < 38 && p.onGround && (pt.y === undefined || Math.abs(p.y - pt.y) < 10)) return { type: 'portal', portal: pt };
     return null;
   };
+  // 배: 승선료를 내면 75초 항해. 항해 중 일정 확률(40%)로 크림슨 발록이 습격한다.
+  E.boardShip = function (G, dest, fee) {
+    const p = G.p; fee = fee == null ? 3000 : fee; if (!D.MAPS[dest]) return { ok: false, msg: '갈 수 없는 곳이에요' };
+    if (p.meso < fee) return { ok: false, msg: `승선료 ${fee} 메소가 부족해요` };
+    p.meso -= fee; const T = 75; G.ship = { dest, from: G.mapId, t: T, bal: rand(G) < 0.4, balAt: T - rr(G, 14, 45), rolled: false };
+    ev(G, { t: 'sfx', n: 'portal' }); ev(G, { t: 'fade' }); E.loadMap(G, 'ship', null); return { ok: true };
+  };
+  function shipTick(G, dt) {
+    const p = G.p, sh = G.ship; if (!sh) return; if (p.dead) return; sh.t -= dt;
+    if (!sh.rolled && sh.t <= sh.balAt) { sh.rolled = true; if (sh.bal) { const sl = { m: 'balrog', p: 0, x: 1150, mon: null, respT: 0, boss: true, once: true }; G.slots.push(sl); spawnMon(G, sl); ev(G, { t: 'msg', text: '⚠️ 크림슨 발록이 배를 습격했다!' }); ev(G, { t: 'bgm', n: 'boss' }); ev(G, { t: 'sfx', n: 'roar' }); G.shake = 14; } }
+    if (sh.t <= 0) { const dest = sh.dest, flee = G.boss && !G.boss.dead; G.ship = null; ev(G, { t: 'fade' }); ev(G, { t: 'sfx', n: 'portal' }); E.loadMap(G, dest, { x: dest === 'orbis' ? 450 : 500 }); ev(G, { t: 'msg', text: flee ? `${D.MAPS[dest].n}에 도착했어요! (발록은 도망쳤어요)` : `${D.MAPS[dest].n}에 도착했어요!` }); ev(G, { t: 'bgm', n: D.MAPS[dest].bgm }); }
+  }
   E.usePortal = function (G, pt) { ev(G, { t: 'sfx', n: 'portal' }); ev(G, { t: 'fade' }); E.loadMap(G, pt.to, pt.tx); };
 
   function tick(G, dt) {
@@ -469,6 +490,7 @@
     G.shake = Math.max(0, G.shake - dt * 22); G.potCd -= dt; p.play += dt;
     if (inp.jump > 0) inp.jump -= dt; if (inp.up_e > 0) inp.up_e -= dt;
     const st = E.stats(G);
+    if (G.mapId === 'ship') shipTick(G, dt); else if (G.ship) G.ship = null;
     // 타이머
     p.inv_t -= dt; p.atkCd -= dt; p.dropT -= dt; p.ladderCd -= dt; p.knock -= dt; p.comboT -= dt; p.hitFlash -= dt;
     for (const k in p.skCd) if (p.skCd[k] > 0) p.skCd[k] -= dt;
@@ -567,7 +589,7 @@
       const q = G.proj[i];
       if (q.delay > 0) { q.delay -= dt; continue; }
       q.t += dt; q.life -= dt; q.vy += q.grav * dt; q.x += q.vx * dt; q.y += q.vy * dt;
-      if ((q.kind === 'fire' || q.kind === 'seed' || q.kind === 'boulder') && q.y > G.map.plats[0].y + 20) q.life = 0;
+      if ((q.kind === 'fire' || q.kind === 'ice' || q.kind === 'seed' || q.kind === 'boulder') && q.y > G.map.plats[0].y + 20) q.life = 0;
       if (!q.hit && !p.dead && p.inv_t <= 0 && Math.abs(p.x - q.x) < q.w * 0.5 + HW && p.y > q.y - q.h * 0.5 && p.y - PH < q.y + q.h * 0.5 + (q.ground ? q.h * 0.5 : 0)) { if (playerHurt(G, q.dmg, q.x, q.lv, 1)) q.hit = true; }
       if (q.life <= 0 || q.hit || q.x < -40 || q.x > G.map.w + 40) G.proj.splice(i, 1);
     }
@@ -625,6 +647,7 @@
   };
   E.where = function (kind, id) {
     if (id === 'relic') return { map: '시련의 탑 (점프맵)', mon: '고대 상자' };
+    if (id === 'balrogclaw') return { map: '오르비스행 배 (무작위 출현)', mon: '크림슨 발록' };
     let mon = id;
     if (kind === 'item') { mon = Object.keys(D.MON).find((k) => D.MON[k].drops.some((d) => d[0] === id) && !D.MON[k].boss) || Object.keys(D.MON).find((k) => D.MON[k].drops.some((d) => d[0] === id)); }
     for (const mid in D.MAPS) { const mp = D.MAPS[mid]; if (mp.boss === mon || mp.spawns.some((s) => s.m === mon)) return { map: mp.n, mon: D.MON[mon].n }; }
@@ -632,16 +655,18 @@
   };
   E.objective = function (G) {
     const p = G.p;
+    if (G.mapId === 'ship' && G.ship) { const s = Math.max(0, Math.ceil(G.ship.t)); return { txt: `🚢 ${D.MAPS[G.ship.dest].n} 도착까지 ${s}초`, sub: G.boss && !G.boss.dead ? '⚠️ 크림슨 발록 출현!' : '파도가 높으니 조심하세요' }; }
     for (const qid of D.QUEST_ORDER) {
       const s = E.qState(G, qid), q = D.QUESTS[qid];
       if (s === 'ready') return { txt: `[${q.n}] 완료! ${npcName(q.npc)}에게 돌아가세요`, q: qid, ready: true };
       if (s === 'active') { const pr = E.qProg(G, qid).filter((g) => g.cur < g.n)[0]; const g = q.goals.find((x, i) => (x.kill ? D.MON[x.kill].n + ' 처치' : D.ITEMS[x.item].n + ' 모으기') === pr.txt); const w = E.where(g.kill ? 'kill' : 'item', g.kill || g.item); return { txt: `[${q.n}] ${pr.txt} ${pr.cur}/${pr.n}`, sub: `${w.map}`, q: qid }; }
     }
-    for (const qid of D.QUEST_ORDER) { const s = E.qState(G, qid), q = D.QUESTS[qid]; if (s === 'avail') return { txt: `${npcName(q.npc)}에게 말을 걸어 퀘스트를 받으세요`, sub: '페리온 마을', q: qid }; if (s === 'lowlv') return { txt: `Lv ${q.lv}이 되면 새 퀘스트! 사냥하며 레벨을 올리세요`, sub: '' }; }
+    for (const qid of D.QUEST_ORDER) { const s = E.qState(G, qid), q = D.QUESTS[qid]; if (s === 'avail') return { txt: `${npcName(q.npc)}에게 말을 걸어 퀘스트를 받으세요`, sub: npcMap(q.npc), q: qid }; if (s === 'lowlv') return { txt: `Lv ${q.lv}이 되면 새 퀘스트! 사냥하며 레벨을 올리세요`, sub: '' }; }
     return { txt: '모든 퀘스트 완료! 자유롭게 사냥하세요', sub: '' };
   };
-  function npcName(id) { const t = D.MAPS.perion.npcs.find((n) => n.id === id); return t ? t.n : id; }
+  function npcName(id) { for (const mid in D.MAPS) { const t = D.MAPS[mid].npcs.find((n) => n.id === id); if (t) return t.n; } return id; }
   E.npcName = npcName;
+  function npcMap(id) { for (const mid in D.MAPS) if (D.MAPS[mid].npcs.some((n) => n.id === id)) return D.MAPS[mid].n; return ''; }
 
   E.takeRelic = function (G) {
     if (E.qState(G, 'q9') !== 'active' || (G.p.inv.relic || 0) > 0) return false;

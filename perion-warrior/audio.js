@@ -18,7 +18,11 @@
   // 원곡 BGM(유튜브 임베드): 음원 파일은 게임에 넣지 않고 유튜브 플레이어로만 재생한다. 실패하면 합성 BGM으로 되돌아감.
   // 구역별 원곡: 마을=Perion(Nightmare) / 바위산 사냥터=Highland Star / 개미굴·채석장=Ancient Remains
   // 고목의 숲=Ellinia: Missing You / 보스(고목 대장·바위왕)=Horntail / 불꽃 협곡=El Nath: Abandoned Mine(Dead Mine) / 자쿰=Zakum: Final Fight / 히든 스트리트=Sleepywood: Ancient Move(Ant Tunnel) / 시련의 탑=Ellinia: Moonlight Shadow(수련의 숲)
-  S.ytMap = { town: '9lwOsX763N0', field: 'kOhEqf0wPnE', cave: 'fdoT7nTWMO8', quarry: 'fdoT7nTWMO8', forest: '2NoF8PHQJqQ', boss: 'WnLrTMmnyBc', lava: 'WmHOENuKkmk', zakum: 'rEtDrkAYs68', hidden: 'w9HagZ099c0', trial: 'XYtHWyrVm30' };
+  S.ytMap = { town: '9lwOsX763N0', field: 'kOhEqf0wPnE', cave: 'fdoT7nTWMO8', quarry: 'fdoT7nTWMO8', forest: '2NoF8PHQJqQ', boss: 'WnLrTMmnyBc', lava: 'WmHOENuKkmk', zakum: 'rEtDrkAYs68', hidden: 'w9HagZ099c0', trial: 'XYtHWyrVm30',
+    // 오르비스 확장: 오르비스=Upon the Sky / 항구=Shinin' Harbor / 배=Aqua Road: Shining Sea / 구름 정원=Orbis: Come with Me / 천상의 정원=Ellinia: When the Morning Comes / 얼음 협곡=El Nath: Snowy Village / 눈보라 고원=El Nath: Mine Quest / 서리 왕좌=El Nath: Hell Gate
+    orbis: 'fTYJEdEcTbA', port: 'DThWMbPZXy8', ship: '3jdRxzy3K9s', cloud: 'sNCwJu5Buz0', garden: 'gfgBDs8z6WE', ice1: 'X6X7U5V9Obk', ice2: '8LaAGZ5kxvk', frost: '923LpjaA9Ps' };
+  // 유튜브 재생이 막혔을 때 쓸 합성 BGM (새 구역은 비슷한 분위기의 곡으로)
+  S.alias = { orbis: 'town', port: 'town', ship: 'field', cloud: 'field', garden: 'forest', ice1: 'cave', ice2: 'quarry', frost: 'boss' };
   S.ytId = null; S.ytReady = false; S.ytCur = null; S.ytOn = false; S.ytWant = false; S.ytFail = false; S.yt = null;
   function ytFallback() { S.ytFail = true; S.ytWant = false; const t = S.track; S.track = null; if (t) S.play(t); }
   function ytLoad(cb) {
@@ -103,7 +107,7 @@
   };
   S.play = function (name) {
     if (S.track === name) return; S.track = name; if (!S.ctx) return;
-    if (S.timer) clearInterval(S.timer); S.timer = null; const T = TR[name]; if (!T) return;
+    if (S.timer) clearInterval(S.timer); S.timer = null; const T = TR[name] || TR[S.alias[name]]; if (!T) return;
     if (S.ytMap[name] && S.ytOn && !S.ytFail) { S.ytPlay(S.ytMap[name]); return; }
     S.ytPause();
     S.step = 0; S.next = S.ctx.currentTime + 0.1;

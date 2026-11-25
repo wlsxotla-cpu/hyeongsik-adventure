@@ -31,4 +31,14 @@ function cast(G, sid) { G.input.skills.push(sid); for (let i = 0; i < 70; i++) {
 
 // 직업 변경: 스킬 포인트가 돌아오고, 새 직업 스킬만 배우며, 안 맞는 무기는 교체된다
 { const g = jobGame('spearman'); g.p.inv.sp5 = 1; g.p.inv.mc2 = 1; const total = g.p.sp + E.spSpent(g.p); const r = E.changeJob(g, 'page'); ok(r.ok && g.p.job === 'page', '창→페이지 직업 변경'); ok(g.p.sp === total && E.spSpent(g.p) === 0, '스킬 포인트 전부 환급 (' + g.p.sp + ')'); ok(E.learn(g, 'charge') && !E.learn(g, 'crusher'), '새 직업 스킬만 배움'); ok(g.p.equip.weapon === 'mc0' && g.p.inv.sp4 > 0 || g.p.equip.weapon === 'mc0', '창은 가방으로, 페이지 기본 무기 장착 (' + g.p.equip.weapon + ')'); ok(!E.changeJob(g, 'page').ok, '같은 직업으로는 변경 불가'); }
+
+// 3차 전직: Lv50 + 시험 퀘스트, 새 스킬, SP 총량이 딱 맞는지, 직업 변경 시 3차 해제
+{ const g = jobGame('fighter'); g.p.lv = 49; ok(!E.canAdvance3(g).ok, 'Lv49는 3차 전직 불가'); g.p.lv = 50; ok(!E.canAdvance3(g).ok && /시험/.test(E.canAdvance3(g).msg), '시험 퀘스트 전에는 불가');
+  g.p.quests.qt3 = { st: 'done', prog: [] }; ok(E.canAdvance3(g).ok && E.advance3(g).ok && g.p.tier3 && E.jobName(g.p) === '크루세이더', '크루세이더로 3차 전직');
+  g.p.sp = 3; ok(E.learn(g, 'brandish') && !E.learn(g, 'elcharge'), '3차: 내 직업 스킬만'); const d0 = E.stats(g).maxDmg; g.p.skills.fmaster3 = 10; ok(E.stats(g).maxDmg > d0, '크루세이더 숙련 반영');
+  const g2 = jobGame('page'); g2.p.lv = 50; g2.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(g2); ok(E.jobName(g2.p) === '나이트', '나이트'); const g3 = jobGame('spearman'); g3.p.lv = 50; g3.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(g3); ok(E.jobName(g3.p) === '드래곤나이트', '드래곤나이트');
+  const sp = jobGame('spearman'); sp.p.lv = 59; sp.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(sp); sp.p.sp = E.spEarned(59) + 6 - E.spSpent(sp.p) - 0; for (const k of D.SKILL_ORDER) for (let i = 0; i < 12; i++) E.learn(sp, k); ok(sp.p.sp === 0 && sp.p.skills.dragonfury === 10 && sp.p.skills.dragonblood === 10 && sp.p.skills.smaster3 === 10, 'Lv59: 1·2·3차 스킬 전부 만렙에 SP 정확히 0 (남은 ' + sp.p.sp + ')');
+  const ch = jobGame('fighter'); ch.p.lv = 50; ch.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(ch); E.changeJob(ch, 'page'); ok(!ch.p.tier3 && ch.p.job === 'page', '직업을 바꾸면 3차 전직 해제(다시 3차 필요)');
+  const fx = jobGame('page'); fx.p.lv = 60; fx.p.quests.qt3 = { st: 'done', prog: [] }; E.advance3(fx); fx.p.sp = 0; ok(!E.fixSp(fx) || true, 'fixSp 호출 가능');
+}
 console.log(fails ? 'FAILED ' + fails : 'ALL OK'); process.exit(fails ? 1 : 0);

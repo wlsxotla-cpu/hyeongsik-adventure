@@ -4,7 +4,7 @@
   const D = {};
 
   /* ───────── 경험치 / 공식 ───────── */
-  D.MAX_LV = 40; D.JOB_LV = 30;
+  D.MAX_LV = 70; D.JOB_LV = 30; D.JOB3_LV = 50;
   D.expToNext = (lv) => Math.round((9 * lv * lv + 12 * lv + 2) * (1 + lv / 20));
   D.monExp = (lv) => Math.round(1.5 * Math.pow(lv, 1.5) + 4);
   D.monHp = (lv) => Math.round(11 + 2.7 * Math.pow(lv, 1.95));
@@ -98,6 +98,37 @@
   eq('hm4', '기사 투구', 'helmet', 22, { def: 18, price: 11000, col: '#f1d37a', hp: 90, str: 2, desc: '붉은 깃털 장식 투구' });
   eq('hmz', '고대 골렘의 투구', 'helmet', 28, { def: 30, atk: 4, str: 6, dex: 6, hp: 300, slots: 10, price: 60000, col: '#d9b84a', desc: '시련의 탑을 정복한 자에게만 허락된 전설의 투구. 강화 가능 횟수 10회!' });
   eq('hmk', '자쿰의 투구', 'helmet', 30, { def: 42, atk: 6, str: 8, dex: 8, hp: 450, slots: 10, price: 150000, col: '#ff7a2a', desc: '불꽃의 제단을 지키던 자쿰의 투구. 불타는 왕관이 달려 있다. 강화 가능 횟수 10회!' });
+
+  // ───────── 오르비스 확장: 새 물약·재료·장비 ─────────
+  add('hp5', { n: '엘릭서', t: 'use', icon: '🧪', col: '#ffe6f0', heal: 2200, price: 1500, desc: 'HP 2200 회복' });
+  add('mp4', { n: '고급 마나 엘릭서', t: 'use', icon: '💧', col: '#9a7cff', mana: 1000, price: 1300, desc: 'MP 1000 회복' });
+  etc('cloudfrag', '구름 가면 조각', '☁️', 140, '#cfe4ff'); etc('cloudhide', '구름 멧돼지 가죽', '🟦', 170, '#aac8ff'); etc('stormcore', '폭풍 핵', '🌩️', 260, '#ffe44a');
+  etc('goldleg', '황금 개미 다리', '🟡', 220, '#d9a82a'); etc('windbark', '바람 나무껍질', '🍃', 230, '#9ad8c8'); etc('gargoylechip', '가고일 파편', '🗿', 280, '#7a6a9a');
+  etc('icefrag', '얼음 조각', '❄️', 300, '#9ad8ff'); etc('iceboarhide', '서리 가죽', '🧊', 320, '#6ab0e8'); etc('frostcore', '서리 핵', '💠', 420, '#6ad8ff');
+  etc('frostleg', '서리 개미 다리', '🔹', 350, '#8ad0ff'); etc('blizzbark', '눈보라 나무껍질', '🌨️', 360, '#7aa8c8'); etc('yeticore', '설인의 핵', '🔷', 520, '#4aa8ff');
+  etc('balrogclaw', '크림슨 발록의 손톱', '🩸', 900, '#c43a3a'); etc('frostcrown', '얼음 군주의 증표', '👑', 0, '#9ad8ff');
+  I.balrogclaw.desc = '오르비스행 배에 나타나는 크림슨 발록의 손톱.'; I.frostcrown.desc = '얼음 군주의 이마에서 떨어진 서리 증표.';
+  // 4세대 (Lv40~45): 하늘 / 5세대 (Lv50~56): 서리
+  eq('sw6', '천공의 검', 'weapon', 42, { wt: 'sword', atk: 98, spd: 0.42, rng: 68, price: 95000, col: '#a8d8ff', str: 7, dex: 5, desc: '구름 위에서 벼린 가벼운 검' });
+  eq('ax6', '구름 도끼', 'weapon', 42, { wt: 'axe', atk: 120, spd: 0.52, rng: 66, price: 100000, col: '#d8e8ff', str: 6, desc: '구름을 가르는 도끼' });
+  eq('gs5', '하늘 대검', 'weapon', 42, { wt: 'great', atk: 142, spd: 0.62, rng: 90, price: 110000, col: '#b8d8ff', str: 8, desc: '하늘을 닮은 양손 대검' });
+  eq('mc6', '번개 해머', 'weapon', 42, { wt: 'mace', atk: 128, spd: 0.5, rng: 66, price: 100000, col: '#ffe86a', str: 6, desc: '번개가 깃든 망치' });
+  eq('sp6', '바람 창', 'weapon', 42, { wt: 'spear', atk: 146, spd: 0.55, rng: 96, price: 110000, col: '#c8ecff', str: 7, dex: 5, desc: '바람을 가르는 장창' });
+  eq('sw7', '서리 검', 'weapon', 52, { wt: 'sword', atk: 126, spd: 0.42, rng: 70, price: 210000, col: '#8ae8ff', str: 9, dex: 6, desc: '얼어붙은 달빛의 검' });
+  eq('ax7', '빙하 도끼', 'weapon', 52, { wt: 'axe', atk: 154, spd: 0.52, rng: 68, price: 220000, col: '#a8e0ff', str: 8, desc: '빙하를 깎아 만든 도끼' });
+  eq('gs6', '빙산 대검', 'weapon', 52, { wt: 'great', atk: 182, spd: 0.62, rng: 92, price: 240000, col: '#9ad0f0', str: 10, desc: '빙산처럼 거대한 대검' });
+  eq('mc7', '얼음 해머', 'weapon', 52, { wt: 'mace', atk: 164, spd: 0.5, rng: 68, price: 220000, col: '#c0f0ff', str: 8, desc: '영원히 녹지 않는 얼음 망치' });
+  eq('sp7', '빙룡 창', 'weapon', 52, { wt: 'spear', atk: 188, spd: 0.55, rng: 98, price: 240000, col: '#7ad8ff', str: 9, dex: 6, desc: '빙룡의 이빨로 만든 창' });
+  eq('hm6', '구름 투구', 'helmet', 41, { def: 34, hp: 190, str: 4, price: 60000, col: '#d8e8ff', desc: '구름처럼 가벼운 투구' });
+  eq('ar6', '천공 갑옷', 'armor', 42, { def: 74, hp: 330, str: 5, price: 130000, col: '#9ac4f0', desc: '하늘빛으로 빛나는 갑옷' });
+  eq('gl5', '구름 장갑', 'gloves', 40, { def: 19, atk: 6, price: 50000, col: '#c8dcff', desc: '구름 결이 흐르는 장갑' });
+  eq('sh6', '구름 장화', 'shoes', 40, { def: 21, dex: 5, price: 50000, col: '#b8d0f0', desc: '구름 위를 걷는 장화' });
+  eq('hm7', '서리 투구', 'helmet', 51, { def: 46, hp: 260, str: 5, price: 120000, col: '#9ad8ff', desc: '서리가 낀 투구' });
+  eq('ar7', '서리 갑옷', 'armor', 52, { def: 96, hp: 440, str: 6, price: 260000, col: '#6ab4e8', desc: '얼음 결정으로 만든 갑옷' });
+  eq('gl6', '서리 장갑', 'gloves', 50, { def: 26, atk: 8, price: 100000, col: '#8ac8f0', desc: '손끝까지 시린 장갑' });
+  eq('sh7', '서리 장화', 'shoes', 50, { def: 28, dex: 6, price: 100000, col: '#7ab8e0', desc: '눈 위에도 미끄러지지 않는 장화' });
+  eq('hmb', '크림슨 발록의 투구', 'helmet', 45, { def: 48, atk: 7, str: 7, dex: 7, hp: 380, slots: 10, price: 220000, col: '#c43a3a', desc: '오르비스행 배를 습격한 크림슨 발록의 투구. 강화 가능 횟수 10회!' });
+  eq('hmf', '얼음 군주의 왕관', 'helmet', 55, { def: 62, atk: 9, str: 10, dex: 10, hp: 650, slots: 10, price: 420000, col: '#9ad8ff', desc: '서리 왕좌를 지배한 얼음 군주의 왕관. 강화 가능 횟수 10회!' });
   // 갑옷
   eq('ar0', '천 옷', 'armor', 1, { def: 4, price: 80, col: '#c9b48a', desc: '모험가 기본 옷' });
   eq('ar1', '가죽 갑옷', 'armor', 5, { def: 9, price: 800, col: '#9b6a3f', desc: '가볍고 질긴 가죽 갑옷' });
@@ -134,9 +165,9 @@
   };
   // ── 2차 전직 (Lv 30 + 고대 골렘의 시련 완료) ──
   D.JOBS = {
-    fighter: { n: '파이터', icon: '⚔️', col: '#ff9a6a', wts: ['sword', 'great'], wtn: '검·양손검', desc: '[검/양손검] 공격력이 가장 강한 공격형. 전 스킬 데미지가 올라가고, 강한 한 방(레이징 블로우)과 버서크로 보스를 녹인다.', bonus: '공격력 +8%' },
-    page: { n: '페이지', icon: '🛡️', col: '#8fb6ff', wts: ['axe', 'mace'], wtn: '도끼·둔기', start: 'mc0', desc: '[도끼/둔기] 방어와 체력이 높은 탱커형. 파워 가드·방어 마스터리로 맞아도 버티며, 홀리 차지로 여러 마리를 쓸어낸다.', bonus: '방어력 +8, 최대 HP +8%' },
-    spearman: { n: '스피어맨', icon: '🔱', col: '#7ae0a0', wts: ['spear'], wtn: '창', start: 'sp0', desc: '[창] 체력과 치명타가 좋은 사냥형. 드래곤 크러셔로 넓게 쓸고, 하이퍼 바디로 HP를 크게 늘린다.', bonus: '최대 HP +10%, 치명타 +3%' },
+    fighter: { n3: '크루세이더', n: '파이터', icon: '⚔️', col: '#ff9a6a', wts: ['sword', 'great'], wtn: '검·양손검', desc: '[검/양손검] 공격력이 가장 강한 공격형. 전 스킬 데미지가 올라가고, 강한 한 방(레이징 블로우)과 버서크로 보스를 녹인다.', bonus: '공격력 +8%' },
+    page: { n3: '나이트', n: '페이지', icon: '🛡️', col: '#8fb6ff', wts: ['axe', 'mace'], wtn: '도끼·둔기', start: 'mc0', desc: '[도끼/둔기] 방어와 체력이 높은 탱커형. 파워 가드·방어 마스터리로 맞아도 버티며, 홀리 차지로 여러 마리를 쓸어낸다.', bonus: '방어력 +8, 최대 HP +8%' },
+    spearman: { n3: '드래곤나이트', n: '스피어맨', icon: '🔱', col: '#7ae0a0', wts: ['spear'], wtn: '창', start: 'sp0', desc: '[창] 체력과 치명타가 좋은 사냥형. 드래곤 크러셔로 넓게 쓸고, 하이퍼 바디로 HP를 크게 늘린다.', bonus: '최대 HP +10%, 치명타 +3%' },
   };
   Object.assign(D.SKILLS, {
     rblow: { job: 'fighter', n: '레이징 블로우', icon: '🗡️', kind: 'atk', reqLv: 30, maxLv: 10, mp: (l) => 14 + l, mult: (l) => 2.6 + 0.25 * l, targets: 1, rng: 84, cd: 1.6, fx: 'power',
@@ -158,7 +189,28 @@
     smastery: { job: 'spearman', n: '창 마스터리', icon: '📙', kind: 'passive', reqLv: 30, maxLv: 10,
       desc: (l) => `치명타 확률 +${(l * 1.5).toFixed(1)}%p, 최소 데미지 비율 +${l * 2}%p.` },
   });
-  D.SKILL_ORDER = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness', 'rblow', 'berserk', 'fmastery', 'charge', 'guard', 'pmastery', 'crusher', 'hyper', 'smastery'];
+  // ── 3차 전직 (Lv 50 + 오르비스 시험 퀘스트): 크루세이더 / 나이트 / 드래곤나이트 ──
+  Object.assign(D.SKILLS, {
+    brandish: { job: 'fighter', tier: 3, n: '브랜디쉬', icon: '🌙', kind: 'atk', reqLv: 50, maxLv: 10, mp: (l) => 26 + l, mult: (l) => 2.2 + 0.18 * l, hits: 2, targets: 3, rng: 112, cd: 2.4, fx: 'power',
+      desc: (l) => `검을 두 번 휘둘러 앞의 적 최대 3명을 ${Math.round((2.2 + 0.18 * l) * 100)}% 위력으로 2연타. (MP ${26 + l})` },
+    soulroar: { job: 'fighter', tier: 3, n: '소울 로어', icon: '🐲', kind: 'buff', reqLv: 50, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'atk3', val: (l) => 0.2 + l * 0.03,
+      desc: (l) => `${50 + l * 5}초 동안 공격력 +${Math.round((0.2 + l * 0.03) * 100)}% (다른 공격 버프와 중첩). (MP ${30 + l})` },
+    fmaster3: { job: 'fighter', tier: 3, n: '크루세이더 숙련', icon: '📕', kind: 'passive', reqLv: 50, maxLv: 10,
+      desc: (l) => `공격력 +${l * 1.5}%, 치명타 확률 +${l}%p.` },
+    elcharge: { job: 'page', tier: 3, n: '엘리멘탈 차지', icon: '⚡', kind: 'atk', reqLv: 50, maxLv: 10, mp: (l) => 28 + l, mult: (l) => 3.4 + 0.26 * l, targets: 5, rng: 130, cd: 3.0, fx: 'slash',
+      desc: (l) => `속성의 힘을 실은 일격으로 최대 5명을 ${Math.round((3.4 + 0.26 * l) * 100)}% 위력으로 공격. (MP ${28 + l})` },
+    achilles: { job: 'page', tier: 3, n: '아킬레스', icon: '🏺', kind: 'buff', reqLv: 50, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'def3', val: (l) => 40 + l * 8,
+      desc: (l) => `${50 + l * 5}초 동안 방어력 +${40 + l * 8} (다른 방어 버프와 중첩). (MP ${30 + l})` },
+    pmaster3: { job: 'page', tier: 3, n: '나이트 숙련', icon: '📗', kind: 'passive', reqLv: 50, maxLv: 10,
+      desc: (l) => `방어력 +${l * 4}, 최대 HP +${l * 2}%.` },
+    dragonfury: { job: 'spearman', tier: 3, n: '드래곤 퓨리', icon: '🔥', kind: 'atk', reqLv: 50, maxLv: 10, mp: (l) => 32 + l, mult: (l) => 1.0 + 0.12 * l, hits: 4, targets: 2, rng: 135, cd: 3.2, fx: 'power',
+      desc: (l) => `용의 힘으로 앞의 적(최대 2명)을 4연속 가격. 한 번에 ${Math.round((1.0 + 0.12 * l) * 100)}% 위력 × 4타. (MP ${32 + l})` },
+    dragonblood: { job: 'spearman', tier: 3, n: '드래곤 블러드', icon: '🩸', kind: 'buff', reqLv: 50, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'atk4', val: (l) => 0.22 + l * 0.03,
+      desc: (l) => `${50 + l * 5}초 동안 공격력 +${Math.round((0.22 + l * 0.03) * 100)}% (다른 공격 버프와 중첩). (MP ${30 + l})` },
+    smaster3: { job: 'spearman', tier: 3, n: '드래곤 숙련', icon: '📙', kind: 'passive', reqLv: 50, maxLv: 10,
+      desc: (l) => `치명타 확률 +${(l * 1.2).toFixed(1)}%p, 최소 데미지 비율 +${l * 2}%p.` },
+  });
+  D.SKILL_ORDER = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness', 'rblow', 'berserk', 'fmastery', 'charge', 'guard', 'pmastery', 'crusher', 'hyper', 'smastery', 'brandish', 'soulroar', 'fmaster3', 'elcharge', 'achilles', 'pmaster3', 'dragonfury', 'dragonblood', 'smaster3'];
 
   /* ───────── 몬스터 ───────── */
   const M = {};
@@ -186,6 +238,23 @@
   mon('lavamask', '불꽃 가면', 30, 'woodmask', { hue: 'flame', hp: 3700, atk: 112, def: 90, speed: 62, w: 34, h: 42, ai: 'hop', aggro: 220, drops: [['flamefrag', 0.5], ['hp4', 0.07], ['mp3', 0.05]], eq: [['gl4', 0.01], ['hm5', 0.008], ['sw5', 0.005]] });
   mon('lavaboar', '용암 멧돼지', 32, 'boar', { hue: 'lava', hp: 4600, atk: 124, def: 100, speed: 66, w: 48, h: 34, ai: 'charge', aggro: 250, drops: [['lavahide', 0.5], ['hp4', 0.07], ['mp3', 0.05]], eq: [['sh5', 0.01], ['ax5', 0.005], ['mc5', 0.005]] });
   mon('magmagolem', '마그마 골렘', 34, 'golem', { hue: 'lava', hp: 5900, atk: 136, def: 114, speed: 40, w: 52, h: 60, ai: 'shoot', aggro: 270, drops: [['magmacore', 0.45], ['golemcore', 0.2], ['hp4', 0.07], ['mp3', 0.06]], eq: [['ar5', 0.007], ['gs4', 0.005], ['sp5', 0.005], ['hm5', 0.008]] });
+
+  // ───────── 오르비스 확장 몬스터 ─────────
+  mon('skymask', '구름 가면', 40, 'woodmask', { hue: 'sky', hp: 9200, atk: 168, def: 145, speed: 66, w: 34, h: 44, ai: 'hop', aggro: 230, drops: [['cloudfrag', 0.5], ['hp5', 0.06], ['mp4', 0.05]], eq: [['gl5', 0.01], ['hm6', 0.008], ['sw6', 0.005]] });
+  mon('cloudboar', '구름 멧돼지', 42, 'boar', { hue: 'cloud', hp: 11000, atk: 180, def: 155, speed: 70, w: 48, h: 34, ai: 'charge', aggro: 260, drops: [['cloudhide', 0.5], ['hp5', 0.06], ['mp4', 0.05]], eq: [['sh6', 0.01], ['ax6', 0.005], ['mc6', 0.005]] });
+  mon('stormgolem', '폭풍 골렘', 44, 'golem', { hue: 'storm', hp: 14500, atk: 195, def: 170, speed: 42, w: 52, h: 60, ai: 'shoot', aggro: 280, drops: [['stormcore', 0.45], ['hp5', 0.07], ['mp4', 0.06]], eq: [['ar6', 0.007], ['gs5', 0.005], ['sp6', 0.005], ['hm6', 0.008]] });
+  mon('goldant', '황금 개미', 45, 'ant', { hue: 'gold', hp: 15500, atk: 200, def: 175, speed: 74, w: 38, h: 28, aggro: 240, drops: [['goldleg', 0.5], ['hp5', 0.06], ['mp4', 0.05]], eq: [['gl5', 0.01], ['sh6', 0.01], ['sw6', 0.005]] });
+  mon('windstump', '바람 그루터기', 47, 'stump', { hue: 'sky', hp: 18000, atk: 210, def: 185, speed: 60, w: 40, h: 38, aggro: 230, drops: [['windbark', 0.5], ['hp5', 0.06], ['mp4', 0.05]], eq: [['hm6', 0.008], ['ar6', 0.006], ['mc6', 0.005]] });
+  mon('gargoyle', '가고일', 49, 'woodmask', { hue: 'shadow', hp: 21000, atk: 222, def: 198, speed: 72, w: 38, h: 46, ai: 'hop', aggro: 260, drops: [['gargoylechip', 0.5], ['hp5', 0.07], ['mp4', 0.06]], eq: [['ar6', 0.007], ['gs5', 0.005], ['sp6', 0.005]] });
+  mon('icemask', '얼음 가면', 48, 'woodmask', { hue: 'ice', hp: 19500, atk: 215, def: 190, speed: 70, w: 36, h: 44, ai: 'hop', aggro: 250, drops: [['icefrag', 0.5], ['hp5', 0.06], ['mp4', 0.05]], eq: [['gl6', 0.01], ['hm7', 0.008], ['sw7', 0.005]] });
+  mon('frostboar', '서리 멧돼지', 50, 'boar', { hue: 'ice', hp: 23000, atk: 232, def: 205, speed: 74, w: 50, h: 36, ai: 'charge', aggro: 270, drops: [['iceboarhide', 0.5], ['hp5', 0.06], ['mp4', 0.05]], eq: [['sh7', 0.01], ['ax7', 0.005], ['mc7', 0.005]] });
+  mon('icegolem', '얼음 골렘', 52, 'golem', { hue: 'ice', hp: 28000, atk: 250, def: 220, speed: 44, w: 54, h: 62, ai: 'shoot', aggro: 290, drops: [['frostcore', 0.45], ['icefrag', 0.3], ['hp5', 0.07], ['mp4', 0.06]], eq: [['ar7', 0.007], ['gs6', 0.005], ['sp7', 0.005], ['hm7', 0.008]] });
+  mon('frostant', '서리 개미', 53, 'ant', { hue: 'ice', hp: 30000, atk: 255, def: 225, speed: 78, w: 40, h: 30, aggro: 260, drops: [['frostleg', 0.5], ['hp5', 0.06], ['mp4', 0.05]], eq: [['gl6', 0.01], ['sh7', 0.01], ['sw7', 0.005]] });
+  mon('blizzstump', '눈보라 그루터기', 55, 'stump', { hue: 'ice', hp: 35000, atk: 270, def: 240, speed: 64, w: 42, h: 40, aggro: 250, drops: [['blizzbark', 0.5], ['hp5', 0.06], ['mp4', 0.05]], eq: [['hm7', 0.008], ['ar7', 0.006], ['mc7', 0.005]] });
+  mon('yeti', '설인 골렘', 57, 'golem', { hue: 'ice', hp: 44000, atk: 295, def: 262, speed: 46, w: 62, h: 70, ai: 'shoot', aggro: 300, drops: [['yeticore', 0.45], ['frostcore', 0.2], ['hp5', 0.07], ['mp4', 0.06]], eq: [['ar7', 0.007], ['gs6', 0.005], ['sp7', 0.005], ['ax7', 0.005]] });
+  mon('balrog', '크림슨 발록', 45, 'balrog', { boss: true, ai: 'bossbalrog', hp: 140000, atk: 280, def: 150, exp: 32000, speed: 30, w: 120, h: 150, aggro: 700, mesos: [30000, 45000], drops: [['balrogclaw', 1], ['hp5', 1], ['hp5', 0.8], ['mp4', 1]], eq: [['hmb', 0.25], ['sw6', 0.3], ['gs5', 0.25], ['ar6', 0.3], ['ax6', 0.25], ['mc6', 0.25], ['sp6', 0.25]] });
+  mon('frostlord', '얼음 군주', 58, 'frostlord', { boss: true, ai: 'bossfrost', hp: 330000, atk: 340, def: 270, exp: 80000, speed: 28, w: 130, h: 150, aggro: 800, mesos: [60000, 90000], drops: [['frostcrown', 1], ['hp5', 1], ['hp5', 0.8], ['mp4', 1]], eq: [['hmf', 0.2], ['sw7', 0.3], ['gs6', 0.25], ['ar7', 0.3], ['ax7', 0.25], ['mc7', 0.25], ['sp7', 0.25]] });
+  M.balrog.drops.push(['scW10', 1], ['scA10', 1], ['scW60', 1]); M.frostlord.drops.push(['scW10', 2], ['scA10', 2], ['scW60', 2]);
   mon('zakum', '자쿰', 32, 'zakum', { boss: true, ai: 'bosszakum', hp: 110000, atk: 230, def: 105, exp: 12000, speed: 28, w: 120, h: 140, aggro: 700, mesos: [16000, 24000], drops: [['zeye', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['hmk', 0.2], ['sw4', 0.3], ['gs3', 0.3], ['ar4', 0.3], ['ax4', 0.2], ['mc4', 0.2], ['sp4', 0.2]] });
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 62000, atk: 185, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
   D.MON = M;
@@ -206,6 +275,7 @@
       { id: 'toRock', x: 70, to: 'rock1', tx: 'back', label: '바위산 초입', lv: 'Lv 1~6', col: '#7ac' },
       { id: 'toAnt', x: 1650, to: 'ant1', tx: 'back', label: '개미굴', lv: 'Lv 12~19', col: '#c87' },
       { id: 'toQuarry', x: 2530, to: 'quarry', tx: 'back', label: '버려진 채석장', lv: 'Lv 20~28', col: '#da6' },
+      { id: 'toPort', x: 2330, to: 'port', tx: 'back', label: '페리온 항구', lv: '오르비스행', col: '#5cf' },
       { id: 'toTrial', x: 2420, to: 'trial', tx: 'back', label: '시련의 탑 (점프맵)', lv: 'Lv 26+', col: '#fd8' },
     ],
     npcs: [
@@ -300,6 +370,55 @@
     portals: [{ id: 'back', x: 60, to: 'lava', tx: 'hid', label: '불꽃 협곡' }],
     npcs: [],
   };
+
+  // ───────── 오르비스 확장: 항구 · 배 · 오르비스 · 사냥터 4곳 · 보스 · 히든 2곳 ─────────
+  const huntMap = (id, n, lvTxt, theme, bgm, mons, portals, extra) => {
+    const w = 2800;
+    const plats = [P(0, 500, w, 1), P(240, 432, 320), P(760, 432, 300), P(1280, 432, 340), P(1840, 432, 300), P(2340, 432, 320), P(480, 364, 280), P(1020, 364, 260), P(1560, 364, 260), P(2100, 364, 260), P(760, 296, 280), P(1340, 296, 280), P(1900, 296, 240), P(900, 228, 240)];
+    const slots = [[0, 3], [0, 3], [0, 2], [2, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [9, 2], [10, 2], [11, 2], [12, 1], [13, 1]];
+    maps[id] = Object.assign({ id, n, sub: '', lvTxt, w, h: 560, theme, bgm, plats, ladders: [{ x: 900, y1: 432, y2: 500 }, { x: 2000, y1: 432, y2: 500 }],
+      spawns: slots.map((s, i) => ({ m: mons[i % mons.length], p: s[0], n: s[1] })), portals, npcs: [] }, extra || {});
+  };
+  maps.port = { id: 'port', n: '페리온 항구', sub: '', lvTxt: '항구', town: true, w: 1600, h: 460, theme: 'sea', bgm: 'port',
+    plats: [P(0, 400, 1600, 1)], ladders: [], spawns: [],
+    portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toPort', label: '페리온 마을' }],
+    npcs: [{ id: 'sailor', n: '항해사 오스카', x: 1100, role: 'dock', look: 'miner', dest: 'orbis', quests: [] }] };
+  maps.ship = { id: 'ship', n: '여객선', sub: '항해 중', lvTxt: '배 위', ship: true, w: 1500, h: 460, theme: 'sea', bgm: 'ship',
+    plats: [P(0, 400, 1500, 1), P(200, 330, 300), P(1000, 330, 300), P(600, 240, 300)], ladders: [{ x: 340, y1: 330, y2: 400 }, { x: 1140, y1: 330, y2: 400 }, { x: 740, y1: 240, y2: 400 }],
+    spawns: [], portals: [], npcs: [] };
+  maps.orbis = { id: 'orbis', n: '오르비스', sub: '하늘의 도시', lvTxt: '마을', town: true, w: 3200, h: 460, theme: 'sky', bgm: 'orbis',
+    plats: [P(0, 400, 3200, 1), P(1250, 330, 320), P(2300, 330, 300)], ladders: [{ x: 1310, y1: 330, y2: 400 }, { x: 2360, y1: 330, y2: 400 }], spawns: [],
+    portals: [{ id: 'toCloud', x: 3100, to: 'cloud', tx: 'back', label: '구름 정원', lv: 'Lv 40~46', col: '#9cf' }],
+    npcs: [
+      { id: 'o_dock', n: '항해사 미리', x: 260, role: 'dock', look: 'miner', dest: 'port', quests: ['qb1'] },
+      { id: 'o_inn', n: '여관 주인 엘리', x: 640, role: 'inn', look: 'innkeeper', quests: [] },
+      { id: 'o_potion', n: '잡화상 루루', x: 980, role: 'shop', shop: 'potion2', look: 'merchant', quests: ['qo4', 'qo11'] },
+      { id: 'o_smith', n: '대장장이 하르', x: 1400, y: 330, role: 'shop', shop: 'smith2', look: 'smith', quests: ['qo5', 'qo9', 'qo12'] },
+      { id: 'o_scribe', n: '주문서상 세라', x: 1800, role: 'shop', shop: 'scroll', look: 'scribe', quests: ['qo3', 'qo7'] },
+      { id: 'o_captain', n: '오르비스 수호대장 아델', x: 2200, role: 'quest', look: 'captain', quests: ['qo1', 'qo2', 'qo6', 'qo8', 'qo10', 'qf'] },
+      { id: 'o_master3', n: '천공 기사단장 헬마', x: 2440, y: 330, role: 'master3', look: 'master', quests: ['qt3'] },
+    ] };
+  huntMap('cloud', '구름 정원', 'Lv 40~46', 'sky', 'cloud', ['skymask', 'cloudboar', 'stormgolem'],
+    [{ id: 'back', x: 60, to: 'orbis', tx: 'toCloud', label: '오르비스' }, { id: 'next', x: 2740, to: 'garden', tx: 'back', label: '천상의 정원', lv: 'Lv 44~50', col: '#cfe' }]);
+  huntMap('garden', '천상의 정원', 'Lv 44~50', 'sky', 'garden', ['goldant', 'windstump', 'gargoyle'],
+    [{ id: 'back', x: 60, to: 'cloud', tx: 'next', label: '구름 정원' }, { id: 'next', x: 2740, to: 'ice1', tx: 'back', label: '얼음 협곡', lv: 'Lv 48~54', col: '#8df' }, { id: 'hid', x: 1020, y: 228, to: 'hiddenC', tx: 'back', label: '구름 속 비밀 정원', hidden: true, col: '#b8f' }]);
+  huntMap('ice1', '얼음 협곡', 'Lv 48~54', 'ice', 'ice1', ['icemask', 'frostboar', 'icegolem'],
+    [{ id: 'back', x: 60, to: 'garden', tx: 'next', label: '천상의 정원' }, { id: 'next', x: 2740, to: 'ice2', tx: 'back', label: '눈보라 고원', lv: 'Lv 52~58', col: '#9ef' }]);
+  huntMap('ice2', '눈보라 고원', 'Lv 52~58', 'ice', 'ice2', ['frostant', 'blizzstump', 'yeti'],
+    [{ id: 'back', x: 60, to: 'ice1', tx: 'next', label: '얼음 협곡' }, { id: 'next', x: 2740, to: 'frost', tx: 'back', label: '서리 왕좌', lv: 'Lv 55+ 보스', col: '#6ef' }, { id: 'hid', x: 1020, y: 228, to: 'hiddenD', tx: 'back', label: '얼어붙은 비밀 통로', hidden: true, col: '#b8f' }]);
+  maps.frost = { id: 'frost', n: '서리 왕좌', sub: '보스', lvTxt: 'Lv 55+ 보스', w: 2000, h: 460, theme: 'ice', bgm: 'frost', boss: 'frostlord', bossX: 1400,
+    plats: [P(0, 400, 2000, 1), P(160, 330, 280), P(1560, 330, 280), P(860, 240, 280)], ladders: [{ x: 980, y1: 240, y2: 400 }], spawns: [],
+    portals: [{ id: 'back', x: 60, to: 'ice2', tx: 'next', label: '눈보라 고원' }], npcs: [] };
+  maps.hiddenC = { id: 'hiddenC', n: '구름 속 비밀 정원', sub: '히든 스트리트', lvTxt: 'Lv 46~52 · 경험치×1.6 드랍×1.5', w: 2200, h: 520, theme: 'sky', bgm: 'hidden', expMul: 1.6, dropMul: 1.5,
+    plats: [P(0, 460, 2200, 1), P(160, 392, 300), P(640, 392, 300), P(1120, 392, 300), P(1600, 392, 320), P(400, 324, 280), P(900, 324, 260), P(1380, 324, 260), P(1860, 324, 240), P(640, 256, 260), P(1160, 256, 260), P(1640, 256, 240)],
+    ladders: [{ x: 300, y1: 392, y2: 460 }, { x: 1700, y1: 392, y2: 460 }],
+    spawns: [['goldant', 0, 5], ['gargoyle', 0, 4], ['windstump', 0, 3], ['goldant', 1, 3], ['gargoyle', 2, 3], ['windstump', 3, 3], ['goldant', 4, 3], ['gargoyle', 5, 3], ['windstump', 6, 3], ['gargoyle', 7, 3], ['goldant', 8, 3], ['windstump', 9, 3], ['gargoyle', 10, 3], ['goldant', 11, 3]].map((a) => ({ m: a[0], p: a[1], n: a[2] })),
+    portals: [{ id: 'back', x: 60, to: 'garden', tx: 'hid', label: '천상의 정원' }], npcs: [] };
+  maps.hiddenD = { id: 'hiddenD', n: '얼어붙은 비밀 통로', sub: '히든 스트리트', lvTxt: 'Lv 55~60 · 경험치×1.5 드랍×1.6', w: 2400, h: 520, theme: 'ice', bgm: 'hidden', expMul: 1.5, dropMul: 1.6,
+    plats: [P(0, 460, 2400, 1), P(180, 392, 320), P(700, 392, 300), P(1240, 392, 320), P(1780, 392, 320), P(440, 324, 280), P(980, 324, 280), P(1520, 324, 260), P(2060, 324, 240), P(700, 256, 260), P(1260, 256, 260), P(1800, 256, 240)],
+    ladders: [{ x: 320, y1: 392, y2: 460 }, { x: 1900, y1: 392, y2: 460 }],
+    spawns: [['yeti', 0, 4], ['frostant', 0, 4], ['blizzstump', 0, 3], ['frostant', 1, 3], ['yeti', 2, 3], ['blizzstump', 3, 3], ['frostant', 4, 3], ['yeti', 5, 3], ['blizzstump', 6, 3], ['frostant', 7, 3], ['yeti', 8, 3], ['blizzstump', 9, 3], ['yeti', 10, 3], ['frostant', 11, 3]].map((a) => ({ m: a[0], p: a[1], n: a[2] })),
+    portals: [{ id: 'back', x: 60, to: 'ice2', tx: 'hid', label: '눈보라 고원' }], npcs: [] };
   maps.zakum = {
     id: 'zakum', n: '자쿰의 제단', sub: '보스', lvTxt: 'Lv 30+ 보스', w: 1900, h: 460, theme: 'temple', bgm: 'zakum', boss: 'zakum', bossX: 1300,
     plats: [P(0, 400, 1900, 1), P(160, 330, 260), P(1480, 330, 260), P(820, 262, 260)],
@@ -338,6 +457,17 @@
       portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toTrial', label: '페리온 마을' }],
       npcs: [{ id: 'chest', n: '고대 상자', x: xc, y, role: 'chest', look: 'chest' }] };
   })();
+  // 자동 밧줄: 위아래로 겹치는 발판 사이마다 밧줄을 놓아 모든 발판을 걸어서(밧줄로) 오를 수 있게 한다 (점프맵·마을 제외)
+  for (const id in maps) {
+    const m = maps[id]; if (m.town || id === 'trial') continue; m.ladders = m.ladders || [];
+    for (const B of m.plats) {
+      let A = null; for (const q of m.plats) { if (q.y > B.y && q.y - B.y <= 90 && Math.min(q.x + q.w, B.x + B.w) - Math.max(q.x, B.x) >= 40 && (!A || q.y < A.y)) A = q; }
+      if (!A) continue;
+      const lo = Math.max(A.x, B.x) + 14, hi = Math.min(A.x + A.w, B.x + B.w) - 14; if (hi - lo < 10) continue; const x = Math.round((lo + hi) / 2);
+      if (m.ladders.some((l) => Math.abs(l.x - x) < 70 && l.y1 === B.y)) continue;
+      m.ladders.push({ x, y1: B.y, y2: A.y });
+    }
+  }
   D.MAPS = maps;
 
   /* ───────── 상점 ───────── */
@@ -345,6 +475,8 @@
     potion: { n: '소비 상점', items: ['hp1', 'hp2', 'hp3', 'hp4', 'mp1', 'mp2', 'mp3', 'scroll'] },
     smith: { n: '장비 상점', items: ['sw1', 'ax1', 'gs1', 'mc1', 'sp1', 'sw2', 'ax2', 'gs2', 'mc2', 'sp2', 'mc3', 'sp3', 'hm1', 'hm2', 'hm3', 'ar1', 'ar2', 'ar3', 'gl1', 'gl2', 'gl3', 'sh1', 'sh2', 'sh3'] },
     scroll: { n: '주문서 상점 (100% 주문서만 판매)', items: ['scW100', 'scA100'] },
+    potion2: { n: '오르비스 잡화점', items: ['hp3', 'hp4', 'hp5', 'mp2', 'mp3', 'mp4', 'scroll'] },
+    smith2: { n: '오르비스 장비 상점', items: ['sw6', 'ax6', 'gs5', 'mc6', 'sp6', 'hm6', 'ar6', 'gl5', 'sh6', 'sw7', 'ax7', 'gs6', 'mc7', 'sp7', 'hm7', 'ar7', 'gl6', 'sh7'] },
   };
 
 
@@ -510,8 +642,83 @@
       doing: '마그마 골렘은 멀리서 불덩이를 던져. 거리를 좁혀서 싸워!',
       done: '이게 마그마 핵이구나! 이 갑옷을 가져가.',
       goals: [{ item: 'magmacore', n: 10 }], reward: { exp: 40000, meso: 50000, items: [['ar5', 1], ['scW10', 2], ['scA10', 2]] } },
+    qo1: { n: '구름 정원 정찰', npc: 'o_captain', lv: 40, pre: null,
+      ask: '어서 와라, 먼 길을 온 전사여. 오르비스는 하늘 위의 도시다. 수호대가 구름 정원의 **구름 가면 25마리**를 처치해 줄 용사를 찾고 있다.',
+      doing: '오르비스 오른쪽 끝 포탈이 구름 정원이다. 구름 가면은 폴짝 뛰며 들이받는다.',
+      done: '훌륭하다! 오르비스의 수호대는 너를 환영한다. 장갑을 받아라.',
+      goals: [{ kill: 'skymask', n: 25 }], reward: { exp: 45000, meso: 40000, items: [['hp5', 10], ['mp4', 10], ['gl5', 1]] } },
+    qo2: { n: '구름 멧돼지 퇴치', npc: 'o_captain', lv: 42, pre: 'qo1',
+      ask: '구름 정원의 **구름 멧돼지 30마리**를 처치해라. 돌진이 빨라서 점프로 피해야 한다.',
+      doing: '구름 멧돼지는 구름 정원 바닥을 질주한다.',
+      done: '잘했다! 구름 장화와 보급품이다.',
+      goals: [{ kill: 'cloudboar', n: 30 }], reward: { exp: 55000, meso: 50000, items: [['sh6', 1], ['hp5', 15], ['scW10', 2]] } },
+    qo3: { n: '폭풍 핵 연구', npc: 'o_scribe', lv: 43, pre: 'qo1',
+      ask: '폭풍 골렘의 핵으로 최고의 주문서를 만들 수 있어요! **폭풍 핵 10개**를 가져다 주세요. 주문서로 보답할게요 ✨',
+      doing: '폭풍 골렘은 멀리서 번개를 던져요. 거리를 좁혀서 싸우세요.',
+      done: '이 핵이면 충분해요! 약속한 주문서예요.',
+      goals: [{ item: 'stormcore', n: 10 }], reward: { exp: 65000, meso: 60000, items: [['scW10', 3], ['scA10', 3], ['mp4', 15]] } },
+    qo4: { n: '바람 나무껍질 부탁', npc: 'o_potion', lv: 46, pre: 'qo2',
+      ask: '물약 재료가 바닥났어요! 바람 그루터기의 **바람 나무껍질 15개**만 모아 주시면 물약을 듬뿍 드릴게요.',
+      doing: '바람 그루터기는 천상의 정원에 있어요.',
+      done: '역시 대단해요! 물약을 가득 드릴게요.',
+      goals: [{ item: 'windbark', n: 15 }], reward: { exp: 80000, meso: 70000, items: [['hp5', 20], ['mp4', 20]] } },
+    qo5: { n: '황금 개미의 다리', npc: 'o_smith', lv: 45, pre: 'qo3',
+      ask: '황금 개미의 다리는 최고급 장식 재료지! **황금 개미 다리 15개**를 구해 오면 구름 투구를 내주마.',
+      doing: '황금 개미는 천상의 정원에 산다.',
+      done: '반짝이는군! 약속한 투구다.',
+      goals: [{ item: 'goldleg', n: 15 }], reward: { exp: 85000, meso: 80000, items: [['hm6', 1], ['scW10', 2], ['scA10', 2]] } },
+    qo6: { n: '가고일 소탕', npc: 'o_captain', lv: 48, pre: 'qo2',
+      ask: '천상의 정원에 석상 마물 **가고일 30마리**가 날뛰고 있다. 전부 처치해라!',
+      doing: '가고일은 정원 위쪽 발판에도 나온다.',
+      done: '용맹하구나! 천공 갑옷을 받아라.',
+      goals: [{ kill: 'gargoyle', n: 30 }], reward: { exp: 110000, meso: 100000, items: [['ar6', 1], ['hp5', 20]] } },
+    qo7: { n: '얼음 조각 모으기', npc: 'o_scribe', lv: 48, pre: 'qo3',
+      ask: '얼음 협곡의 **얼음 조각 15개**가 필요해요. 주문서 잉크를 얼리면 훨씬 오래가거든요!',
+      doing: '얼음 가면과 얼음 골렘이 얼음 조각을 떨어뜨려요.',
+      done: '고마워요! 특별한 주문서를 드릴게요.',
+      goals: [{ item: 'icefrag', n: 15 }], reward: { exp: 120000, meso: 100000, items: [['scW10', 4], ['scA10', 4]] } },
+    qo8: { n: '서리 멧돼지 사냥', npc: 'o_captain', lv: 50, pre: 'qo6',
+      ask: '얼음 협곡의 **서리 멧돼지 35마리**를 처치해라. 이번엔 수호대 무기고의 하늘 무기를 모두 내주겠다!',
+      doing: '서리 멧돼지는 얼음 위를 미끄러지듯 돌진한다.',
+      done: '대단하다! 하늘의 무기를 받아라. 네 직업에 맞는 걸 골라 써라.',
+      goals: [{ kill: 'frostboar', n: 35 }], reward: { exp: 150000, meso: 130000, items: [['sw6', 1], ['ax6', 1], ['gs5', 1], ['mc6', 1], ['sp6', 1], ['hp5', 30], ['mp4', 30]] } },
+    qb1: { n: '발록을 물리쳐라', npc: 'o_dock', lv: 45, pre: null,
+      ask: '가끔 오르비스행 배에 **크림슨 발록**이 나타나 승객을 위협한다네. 놈의 **손톱 1개**를 가져오면 큰 보상을 주겠네! (배를 탈 때마다 나타나는 건 아니라네)',
+      doing: '발록은 배를 탈 때 무작위로 나타난다. 항구에서 오르비스행 배를 타 보게!',
+      done: '해냈구먼! 선원들이 크게 감사할 걸세. 보상일세.',
+      goals: [{ item: 'balrogclaw', n: 1 }], reward: { exp: 120000, meso: 150000, items: [['scW10', 5], ['scA10', 5], ['hp5', 20], ['mp4', 20]] } },
+    qt3: { n: '3차 전직의 시험', npc: 'o_master3', lv: 50, pre: 'qo6',
+      ask: '너의 힘이 3차 전직에 이르렀는지 시험하겠다. 얼음 협곡의 **얼음 골렘 15마리**를 처치하고, 천상의 정원 가고일에게서 **가고일 파편 10개**를 가져와라. 통과하면 **3차 전직**을 시켜 주마!',
+      doing: '얼음 골렘은 얼음 협곡에, 가고일은 천상의 정원에 있다.',
+      done: '시험을 통과했다! 이제 3차 전직을 할 수 있다. 나에게 다시 말을 걸어라.',
+      goals: [{ kill: 'icegolem', n: 15 }, { item: 'gargoylechip', n: 10 }], reward: { exp: 150000, meso: 100000, items: [['scW10', 3], ['scA10', 3]] } },
+    qo9: { n: '서리 핵의 비밀', npc: 'o_smith', lv: 52, pre: 'qo7',
+      ask: '서리 핵은 최고의 대장 재료다! **서리 핵 10개**를 가져오면 서리 갑옷을 만들어 주마.',
+      doing: '서리 핵은 얼음 골렘이 떨어뜨린다.',
+      done: '이거면 되겠군! 약속한 갑옷이다.',
+      goals: [{ item: 'frostcore', n: 10 }], reward: { exp: 180000, meso: 150000, items: [['ar7', 1], ['hp5', 30]] } },
+    qo10: { n: '서리 개미 토벌', npc: 'o_captain', lv: 53, pre: 'qo8',
+      ask: '눈보라 고원의 **서리 개미 40마리**를 처치해라. 떼로 몰려오니 조심해라.',
+      doing: '서리 개미는 눈보라 고원에 산다.',
+      done: '정말 강하군! 서리 장갑과 장화를 받아라.',
+      goals: [{ kill: 'frostant', n: 40 }], reward: { exp: 200000, meso: 160000, items: [['gl6', 1], ['sh7', 1], ['hp5', 30]] } },
+    qo11: { n: '눈보라 그루터기', npc: 'o_potion', lv: 55, pre: 'qo4',
+      ask: '눈보라 그루터기가 길을 막아 물건이 못 들어와요! **눈보라 그루터기 40마리**를 처치해 주세요.',
+      doing: '눈보라 그루터기는 눈보라 고원에 있어요.',
+      done: '정말 고마워요! 서리 투구를 드릴게요.',
+      goals: [{ kill: 'blizzstump', n: 40 }], reward: { exp: 240000, meso: 200000, items: [['hm7', 1], ['mp4', 40]] } },
+    qo12: { n: '설인 골렘 연구', npc: 'o_smith', lv: 57, pre: 'qo9',
+      ask: '눈보라 고원의 **설인 골렘 20마리**를 쓰러뜨려라. 놈의 핵으로 전설의 무기를 만들 수 있다!',
+      doing: '설인 골렘은 눈보라 고원 깊숙이 있다. 덩치가 크니 거리를 두고 싸워라.',
+      done: '최고의 재료다! 수고비를 받아라.',
+      goals: [{ kill: 'yeti', n: 20 }], reward: { exp: 260000, meso: 220000, items: [['scW10', 5], ['scA10', 5], ['hp5', 40], ['mp4', 40]] } },
+    qf: { n: '얼음 군주 토벌', npc: 'o_captain', lv: 56, pre: 'qo10',
+      ask: '눈보라 고원 너머 **서리 왕좌**에 얼음 군주가 깨어났다! 하늘의 도시마저 얼려 버릴 위협이다. **얼음 군주를 처치**하고 **얼음 군주의 증표**를 가져와라. 전설의 **얼음 군주의 왕관**을 내주겠다!',
+      doing: '눈보라 고원 오른쪽 끝 포탈이 서리 왕좌다. 얼음 조각과 서리 바닥을 조심해라!',
+      done: '얼음 군주를 쓰러뜨리다니… 너는 오르비스의 영웅이다! 약속한 왕관을 받아라.',
+      goals: [{ kill: 'frostlord', n: 1 }, { item: 'frostcrown', n: 1 }], reward: { exp: 400000, meso: 500000, items: [['hmf', 1], ['scW10', 5], ['scA10', 5], ['hp5', 50], ['mp4', 50]] } },
   };
-  D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qv1', 'qv2', 'qv3', 'qc4', 'q9', 'qz', 'qh1', 'qh2', 'qh3', 'qh4'];
+  D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qv1', 'qv2', 'qv3', 'qc4', 'q9', 'qz', 'qh1', 'qh2', 'qh3', 'qh4', 'qo1', 'qo2', 'qo3', 'qo4', 'qo5', 'qo6', 'qo7', 'qo8', 'qb1', 'qt3', 'qo9', 'qo10', 'qo11', 'qo12', 'qf'];
 
   root.DATA = D;
   if (typeof module !== 'undefined' && module.exports) module.exports = D;
