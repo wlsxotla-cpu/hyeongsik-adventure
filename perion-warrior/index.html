@@ -89,9 +89,9 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 #bCtx{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);min-width:130px;height:52px;border-radius:26px;padding:0 20px;font-size:16px;font-weight:900;color:#3a1d08;background:linear-gradient(#fff2a8,#f0a52a);border:3px solid #5a2d0a;box-shadow:0 4px 12px #0009;pointer-events:auto;display:none;animation:pulse 1s ease-in-out infinite;text-shadow:0 1px 0 #fff8}
 @keyframes pulse{50%{transform:translateX(-50%) scale(1.07)}}
 /* ───── 패널 ───── */
-#modal{position:absolute;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:none}
+#modal{position:absolute;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:50;pointer-events:auto;touch-action:pan-y}
 #modal.on{display:flex}
-.panel{background:linear-gradient(#352a44,#201829);border:3px solid var(--line);border-radius:16px;box-shadow:0 10px 40px #000c,inset 0 0 0 2px #00000055;position:relative;max-height:94%;display:flex;flex-direction:column}
+.panel{background:linear-gradient(#352a44,#201829);border:3px solid var(--line);border-radius:16px;box-shadow:0 4px 14px #000b;position:relative;max-height:94%;display:flex;flex-direction:column}
 .panel h3{margin:0;padding:8px 14px;font-size:15px;background:linear-gradient(#f0b94a,#c07a1a);color:#3a1d08;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between}
 .x{background:#00000033;border:2px solid #3a1d08;border-radius:8px;width:30px;height:30px;font-size:15px;color:#3a1d08;font-weight:900;padding:0}
 .btn{border:2.5px solid #5a2d0a;background:linear-gradient(#ffe48a,#f0a52a);color:#3a1d08;font-weight:900;border-radius:11px;padding:0 14px;min-height:44px;font-size:14px;font-family:inherit}
@@ -107,7 +107,7 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 #tabs button{border:2px solid #4a3a5c;background:#2a2034;color:#d8c8f0;border-radius:10px;font-size:12px;font-weight:800;padding:8px 2px;min-height:44px;position:relative;font-family:inherit}
 #tabs button.on{background:linear-gradient(#ffe48a,#f0a52a);color:#3a1d08;border-color:#5a2d0a}
 #tabs .badge{position:absolute;right:2px;top:2px;background:#ff4d5e;color:#fff;border-radius:8px;font-size:9px;min-width:15px;height:15px;line-height:15px}
-#tcont{flex:1;overflow:auto;padding:10px 12px;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#tcont{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:7px}
 .slot{aspect-ratio:1;border-radius:11px;background:linear-gradient(#4a3c5c,#2a2036);border:2px solid #6a5a80;position:relative;display:flex;align-items:center;justify-content:center;font-size:26px;min-height:54px;padding:0;color:#fff}
 .slot.eq{border-color:#ffd24a;box-shadow:inset 0 0 8px #ffd24a66}
@@ -148,7 +148,7 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 #shop{width:min(96%,760px);height:min(96%,350px)}
 #shop .body{display:flex;flex-direction:column;flex:1;min-height:0}
 #shop .tabs2{display:flex;gap:6px;padding:8px 10px 0}
-#shop .list{flex:1;overflow:auto;padding:8px 10px;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#shop .list{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 10px;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;min-height:0}
 .it{display:flex;align-items:center;gap:9px;background:#150f1c;border:2px solid #4a3a5c;border-radius:12px;padding:6px 9px;margin-bottom:6px}
 .it .slot{width:46px;height:46px;min-height:46px;flex:none;font-size:22px}
 .it .t{flex:1;font-size:12px;line-height:1.35}.it .t b{font-size:13px}
@@ -242,10 +242,10 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
     <div class="ver">가로 화면 권장 · 세로로 들고 있어도 자동으로 돌려 드려요 · v1</div>
   </div>
 </div>
-<script src="data.js?v=20261125i"></script>
-<script src="engine.js?v=20261125i"></script>
-<script src="art.js?v=20261125i"></script>
-<script src="audio.js?v=20261125i"></script>
-<script src="game.js?v=20261125i"></script>
+<script src="data.js?v=20261125j"></script>
+<script src="engine.js?v=20261125j"></script>
+<script src="art.js?v=20261125j"></script>
+<script src="audio.js?v=20261125j"></script>
+<script src="game.js?v=20261125j"></script>
 </body>
 </html>

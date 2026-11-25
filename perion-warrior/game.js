@@ -12,6 +12,7 @@
   let G = null, started = false, paused = false, modalClick = null, time = 0, last = 0, hudT = 0, miniT = 0, saveT = 0, deathT = 0, shownDeath = false;
   const view = { w: 800, h: 360, s: 1, vw: 700, k: 1, dpr: 1 };
   const cam = { x: 0, y: 0 };
+  let dirty = true;
   let bg = null, fore = null; let fxs = [];
   const KEYS = { left: 0, right: 0, up: 0, down: 0 };
   const petState = { x: 0, y: 0, face: 1, moving: false, cheer: 0 };
@@ -29,7 +30,7 @@
     app.style.width = w + 'px'; app.style.height = h + 'px';
     app.style.transform = portrait ? `translateX(${iw}px) rotate(90deg)` : 'none';
     view.s = h / VH; view.vw = w / view.s; view.dpr = Math.min(window.devicePixelRatio || 1, 2); view.k = view.dpr * view.s;
-    cv.width = Math.round(w * view.dpr); cv.height = Math.round(h * view.dpr); view.w = w; view.h = h;
+    cv.width = Math.round(w * view.dpr); cv.height = Math.round(h * view.dpr); view.w = w; view.h = h; dirty = true;
   }
   window.addEventListener('resize', layout); window.addEventListener('orientationchange', () => setTimeout(layout, 120));
 
@@ -287,9 +288,9 @@
       const tabs = [['inv', '🎒', '소지품'], ['skill', '📘', '스킬', p.sp], ['stat', '💪', '능력치', p.ap], ['quest', '📜', '퀘스트'], ['set', '⚙️', '설정']];
       const tb = tabs.map((t) => `<button data-a="tab:${t[0]}" class="${menuTab === t[0] ? 'on' : ''}">${t[1]}<br>${t[2]}${t[3] ? `<span class="badge">${t[3]}</span>` : ''}</button>`).join('');
       let c = ''; if (menuTab === 'inv') c = tabInv(); else if (menuTab === 'skill') c = tabSkill(); else if (menuTab === 'stat') c = tabStat(); else if (menuTab === 'quest') c = tabQuest(); else c = tabSet();
-      const sc = document.getElementById('tcont') ? document.getElementById('tcont').scrollTop : 0;
-      modal.innerHTML = `<div class="panel" id="menu"><h3><span>${esc(p.name)} · Lv.${p.lv}   💰 ${fmt(p.meso)}</span><button class="x" data-a="close">✕</button></h3><div class="body"><div id="tabs">${tb}</div><div id="tcont">${c}</div></div></div>`;
-      const nc = document.getElementById('tcont'); if (nc) nc.scrollTop = sc;
+      const ex = document.getElementById('menu');
+      if (ex) { ex.querySelector('h3 span').textContent = `${p.name} · Lv.${p.lv}   💰 ${fmt(p.meso)}`; document.getElementById('tabs').innerHTML = tb; document.getElementById('tcont').innerHTML = c; }
+      else modal.innerHTML = `<div class="panel" id="menu"><h3><span>${esc(p.name)} · Lv.${p.lv}   💰 ${fmt(p.meso)}</span><button class="x" data-a="close">✕</button></h3><div class="body"><div id="tabs">${tb}</div><div id="tcont">${c}</div></div></div>`;
     };
     const handler = (a, el) => {
       const p = G.p; const [k, v, w] = a.split(':');
@@ -417,7 +418,7 @@
         const cost = Math.round(G.p.lv * 4); text = `어서 오세요, 여관 '바위 베개'예요!\n푹 쉬면 HP·MP가 가득 차요.\n이용료는 **${cost} 메소**랍니다.`;
         opts.push({ label: `🛏️ 쉬기 (${cost} 메소)`, cls: 'green', fn: () => { const r = E.innHeal(G); Snd.sfx(r.ok ? 'levelup' : 'deny'); if (r.ok) { fx({ type: 'ring', x: G.p.x, y: G.p.y - 20, r: 40, col: '#9fffb0', size: 5, life: 0.7 }); dlg(npc, '푹 쉬셨나요? 몸이 가벼워졌을 거예요! 😊', [{ label: '고마워요', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } });
       } else if (npc.role === 'shop') {
-        text = npc.shop === 'potion' ? '어서 와요! 물약부터 귀환 주문서까지 다 있어요.\n사냥 전엔 물약 챙기는 거 잊지 마세요!' : '크하하, 불꽃 튀는 대장간에 어서 와라!\n좋은 무기와 방어구가 있다. 레벨에 맞는 걸 골라!';
+        text = npc.shop === 'potion' ? '어서 와요! 물약과 귀환 주문서를 팔아요.\n사냥 전엔 물약 챙기는 거 잊지 마세요!' : npc.shop === 'scroll' ? '어서 오세요, 주문서 가게예요 ✨\n여기선 **100% 주문서**만 팔아요.\n**60%**와 **10%** 주문서는 몬스터가 떨어뜨리니 사냥하며 모아 보세요!' : '크하하, 불꽃 튀는 대장간에 어서 와라!\n무기와 방어구가 있다. 레벨에 맞는 걸 골라!';
         opts.push({ label: '🛒 물건 보기 (사기·팔기)', cls: 'green', fn: () => shop(npc) });
       } else if (npc.role === 'master') {
         text = `나는 전사 교관 발도다.\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.\n· Lv 1 파워 스트라이크 · Lv 6 슬래시 블러스트\n· Lv 10 아이언 바디 · Lv 14 분노의 함성 · Lv 20 대지 가르기\n\n⚔️ 2차 전직(파이터·페이지·스피어맨)은 Lv 30 이후 준비 중이다. 기대해라!`;
@@ -448,7 +449,7 @@
     home();
   }
   function shop(npc) {
-    const S = D.SHOPS[npc.shop]; let tab = 'buy';
+    const S = D.SHOPS[npc.shop]; let tab = 'buy', shopTab = null;
     const draw = () => {
       const p = G.p; const sc = modal.querySelector('.list') ? modal.querySelector('.list').scrollTop : 0; let list = '';
       if (tab === 'buy') {
@@ -458,8 +459,10 @@
         const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]).sort((a, b) => ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[a].t] - ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[b].t]);
         list = `<div class="row2" style="margin-bottom:7px"><button class="btn sm green" data-a="sellall">🧺 기타 아이템 전부 팔기</button></div>` + (ids.length ? '' : '<div class="card" style="text-align:center">팔 물건이 없어요</div>') + ids.map((id) => { const it = D.ITEMS[id], n = p.inv[id]; return `<div class="it"><div class="slot">${ico(id)}${enhBadge(id)}</div><div class="t"><b>${esc(gname(id))}</b> <small style="color:#cdbbe8">x${n}</small>${it.q ? ' <small style="color:#ffb86a">퀘스트</small>' : ''}<br><span class="price">개당 💰 ${fmt(E.sellPrice(it))}</span></div><div>${it.q ? '' : `<button class="btn sm" data-a="sell:${id}:1">1개</button>${n > 1 ? `<button class="btn sm" data-a="sell:${id}:${n}">전부</button>` : ''}`}</div></div>`; }).join('');
       }
-      modal.innerHTML = `<div class="panel" id="shop"><h3><span>🛒 ${esc(S.n)}</span><span>💰 ${fmt(p.meso)} 메소</span><button class="x" data-a="close">✕</button></h3><div class="body"><div class="tabs2"><button class="btn sm ${tab === 'buy' ? '' : 'gray'}" data-a="t:buy">구매</button><button class="btn sm ${tab === 'sell' ? '' : 'gray'}" data-a="t:sell">판매</button></div><div class="list">${list}</div></div></div>`;
-      const l = modal.querySelector('.list'); if (l) l.scrollTop = sc;
+      const ex = modal.querySelector('#shop');
+      if (ex) { ex.querySelector('.mesoH').textContent = `💰 ${fmt(p.meso)} 메소`; ex.querySelectorAll('.tabs2 button').forEach((b) => { b.className = 'btn sm ' + (b.dataset.a === 't:' + tab ? '' : 'gray'); }); const l2 = ex.querySelector('.list'); l2.innerHTML = list; if (shopTab !== tab) l2.scrollTop = 0; }
+      else modal.innerHTML = `<div class="panel" id="shop"><h3><span>🛒 ${esc(S.n)}</span><span class="mesoH">💰 ${fmt(p.meso)} 메소</span><button class="x" data-a="close">✕</button></h3><div class="body"><div class="tabs2"><button class="btn sm ${tab === 'buy' ? '' : 'gray'}" data-a="t:buy">구매</button><button class="btn sm ${tab === 'sell' ? '' : 'gray'}" data-a="t:sell">판매</button></div><div class="list">${list}</div></div></div>`;
+      shopTab = tab;
     };
     modalClick = (a) => {
       const [k, v, n] = a.split(':');
@@ -540,7 +543,7 @@
       updateFx(dt); if (started) updatePet(dt);
       if (G.p.buffs.atk && Math.random() < dt * 14) fx({ type: 'spark', x: G.p.x + (Math.random() - 0.5) * 16, y: G.p.y - 10, vx: 0, vy: -50, life: 0.5, col: '#ff8a4a', size: 2.4 });
     }
-    render(dt);
+    if (!(started && paused) || dirty) { render(dt); dirty = false; }
   }
   let rafOk = false, lastRaf = 0;
   function loop(now) { rafOk = true; lastRaf = performance.now(); frame(now); requestAnimationFrame(loop); }

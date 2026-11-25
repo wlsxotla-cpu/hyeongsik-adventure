@@ -201,6 +201,7 @@
     smith: { armor: '#7a6a5a', pants: '#3a2f28', hair: '#2a1d14', band: '#8a8a8a', belt: '#4a3524', tier: 3, hammer: true },
     miner: { armor: '#c98a3a', pants: '#4a3a2a', hair: '#5a3a22', helmet: 'hm2', helmetCol: '#e0b83a', belt: '#6b3e22', tier: 1, pick: true },
     captain: { armor: '#4a78b8', pants: '#33415a', hair: '#2a2f45', helmet: 'hm4', helmetCol: '#d9c07a', belt: '#e0b83a', tier: 4, spear: true },
+    scribe: { armor: '#7a4ac8', pants: '#3a2a5a', hair: '#e8d0f0', hat: '#5a34a8', belt: '#ffd24a', tier: 1, skin: '#f6dcc0' },
     master: { armor: '#b83a2e', pants: '#3a2a26', hair: '#1c1c20', band: '#f4d84a', belt: '#e0b83a', tier: 4, skin: '#e8bf98', weapon: { wt: 'great', col: '#e8eef8', len: 28 } },
   };
   A.drawNpc = function (c, n, t, nearby, noTag) {

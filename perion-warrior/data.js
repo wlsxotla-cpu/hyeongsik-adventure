@@ -136,7 +136,7 @@
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 62000, atk: 185, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
   D.MON = M;
   // 주문서 드랍
-  for (const id in M) { const m = M[id]; if (m.boss) continue; if (m.lv >= 3) m.drops.push(['scW100', 0.02], ['scA100', 0.02]); if (m.lv >= 8) m.drops.push(['scW60', 0.012], ['scA60', 0.012]); if (m.lv >= 14) m.drops.push(['scW10', 0.004], ['scA10', 0.004], ['scRe', 0.003]); }
+  for (const id in M) { const m = M[id]; if (m.boss) continue; if (m.lv >= 3) m.drops.push(['scW100', 0.02], ['scA100', 0.02]); if (m.lv >= 8) m.drops.push(['scW60', 0.035], ['scA60', 0.035]); if (m.lv >= 14) m.drops.push(['scW10', 0.01], ['scA10', 0.01], ['scRe', 0.006]); }
   M.bosstree.drops.push(['scW10', 1], ['scA10', 0.6]); M.bossgolem.drops.push(['scW10', 1], ['scA10', 1], ['scRe', 1]);
 
   /* ───────── 맵 ───────── */
@@ -158,6 +158,7 @@
       { id: 'elder', n: '촌장 도란', x: 430, role: 'quest', look: 'elder', quests: ['q1', 'q2', 'qp'] },
       { id: 'inn', n: '여관 주인 미라', x: 720, role: 'inn', look: 'innkeeper' },
       { id: 'potion', n: '잡화상 포포', x: 1010, role: 'shop', shop: 'potion', look: 'merchant' },
+      { id: 'scribe', n: '주문서상 루나', x: 865, role: 'shop', shop: 'scroll', look: 'scribe' },
       { id: 'smith', n: '대장장이 바르크', x: 1250, y: 330, role: 'shop', shop: 'smith', look: 'smith' },
       { id: 'miner', n: '광부 반장 곡', x: 1480, role: 'quest', look: 'miner', quests: ['q3', 'q6'] },
       { id: 'captain', n: '경비대장 레온', x: 1900, role: 'quest', look: 'captain', quests: ['q4', 'q5', 'q7', 'q8'] },
@@ -241,9 +242,11 @@
 
   /* ───────── 상점 ───────── */
   D.SHOPS = {
-    potion: { n: '포포 잡화점', items: ['hp1', 'hp2', 'hp3', 'hp4', 'mp1', 'mp2', 'mp3', 'scroll'] },
-    smith: { n: '바르크 대장간', items: ['sw1', 'ax1', 'gs1', 'sw2', 'ax2', 'gs2', 'hm1', 'hm2', 'hm3', 'ar1', 'ar2', 'ar3', 'gl1', 'gl2', 'gl3', 'sh1', 'sh2', 'sh3', 'scW100', 'scA100', 'scW60', 'scA60', 'scRe'] },
+    potion: { n: '소비 상점', items: ['hp1', 'hp2', 'hp3', 'hp4', 'mp1', 'mp2', 'mp3', 'scroll'] },
+    smith: { n: '장비 상점', items: ['sw1', 'ax1', 'gs1', 'sw2', 'ax2', 'gs2', 'hm1', 'hm2', 'hm3', 'ar1', 'ar2', 'ar3', 'gl1', 'gl2', 'gl3', 'sh1', 'sh2', 'sh3'] },
+    scroll: { n: '주문서 상점 (100% 주문서만 판매)', items: ['scW100', 'scA100'] },
   };
+
 
   /* ───────── 퀘스트 ───────── */
   D.QUESTS = {
