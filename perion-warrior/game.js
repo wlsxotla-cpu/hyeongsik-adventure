@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzl';
+  const BUILD = '20261125zzm';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -595,7 +595,15 @@
     if (!sv) { G.p.name = name; }
     onMap(); buildSkillBtns(); updateHud(true); hc.sk = null;
     if (isNew) { showModal(`<div class="panel" id="dlg"><h3><span>📖 프롤로그</span></h3><div class="body"><div class="txt"><div>바위와 용기의 마을 <b>페리온</b>.\n이곳은 수많은 전사가 첫걸음을 내딛은 곳이에요.\n\n오늘, 새로운 전사 <b>${esc(name)}</b>의 모험이 시작됩니다!\n\n⚔️ 사냥하고, 레벨을 올리고, 장비를 갖춰\n페리온의 위협 <b>고목 대장</b>과 <b>바위왕 골렘</b>을 쓰러뜨리세요.</div><div class="opts"><button class="btn green" data-a="go" style="min-height:52px;font-size:16px">모험 시작!</button></div></div></div></div>`, (a) => { if (a === 'go') closeModal(); }, true); }
-    else logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i');
+    else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
+  }
+  // 업데이트 소식: 새 소식 번호가 바뀌면 한 번만 보여 준다 (소식을 고칠 땐 NEWS_ID 도 올릴 것)
+  const NEWS_ID = 'n2';
+  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.'];
+  function showNews() {
+    let seen = null; try { seen = localStorage.getItem('pw.news'); } catch (e) {} if (seen === NEWS_ID) return;
+    try { localStorage.setItem('pw.news', NEWS_ID); } catch (e) {}
+    showModal(`<div class="panel" id="dlg"><h3><span>🆕 업데이트 소식</span><button class="x" data-a="close">✕</button></h3><div class="body"><div class="txt">${NEWS.map((t) => '<div style="margin-bottom:6px">' + t + '</div>').join('')}</div><div class="opts"><button class="btn green" data-a="close">확인</button></div></div></div>`, (a) => { if (a === 'close') closeModal(); });
   }
   function init() {
     layout(); initControls(); setTimeout(layout, 400); setTimeout(layout, 1500);
