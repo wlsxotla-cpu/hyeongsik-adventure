@@ -12,17 +12,17 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet'];
   E.newPlayer = function (name) {
     return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
-      settings: { auto: true, sound: true, music: true, shake: true }, hp: 55, mp: 14, play: 0, tut: {} };
+      settings: { auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: true }, pet: null, hp: 55, mp: 14, play: 0, tut: {} };
   };
   E.newGame = function (name, seed, save) {
     const G = { rng: mulberry32(seed || (Date.now() & 0xffffffff)), t: 0, acc: 0, events: [], mons: [], drops: [], proj: [], zones: [], slots: [], map: null, mapId: null,
       input: { left: false, right: false, up: false, down: false, attack: false, jump: 0, up_e: 0, skills: [], pot: null }, p: null, boss: null, shake: 0, potCd: 0, inTown: false, bgTime: 0 };
     const base = E.newPlayer(name);
-    if (save) { for (const k of PERSIST) if (save[k] !== undefined) base[k] = JSON.parse(JSON.stringify(save[k])); base.settings = Object.assign({ auto: true, sound: true, music: true, shake: true }, base.settings); }
+    if (save) { for (const k of PERSIST) if (save[k] !== undefined) base[k] = JSON.parse(JSON.stringify(save[k])); base.settings = Object.assign({ auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: true }, base.settings); }
     Object.assign(base, { x: 100, y: 400, vx: 0, vy: 0, face: 1, onGround: true, plat: null, climb: null, ladderCd: 0, coyote: 0, jumpBuf: 0, dropT: 0, dropPlat: null, inv_t: 0, atkCd: 0, atk: null, knock: 0, dead: false, buffs: {}, skCd: {}, combo: 0, comboT: 0, regenT: 0, walkT: 0, hitFlash: 0 });
     G.p = base;
     E.loadMap(G, (save && save.mapId) || 'perion', save ? { x: 520 } : { x: 330 });
@@ -350,8 +350,11 @@
     for (const k in p.buffs) { p.buffs[k].t -= dt; if (p.buffs[k].t <= 0) { delete p.buffs[k]; ev(G, { t: 'buffEnd', k }); } }
     // 포션
     if (inp.pot) { E.autoPotion(G, inp.pot); inp.pot = null; }
-    if (p.settings.auto && !p.dead && G.potCd <= 0) {
-      if (p.hp < st.maxHp * 0.35) E.autoPotion(G, 'hp'); else if (p.mp < st.maxMp * 0.12 && (Object.keys(p.inv).some((i) => D.ITEMS[i].mana))) { /* MP 자동은 수동만 */ }
+    if (p.pet && p.settings.auto && !p.dead && G.potCd <= 0) {
+      let did = false;
+      if (p.hp < st.maxHp * (p.settings.autoT || 0.35)) did = E.autoPotion(G, 'hp');
+      else if (p.settings.autoMp && p.mp < st.maxMp * (p.settings.autoMpT || 0.2)) did = E.autoPotion(G, 'mp');
+      if (did) ev(G, { t: 'petDrink' });
     }
     // 스킬 큐
     while (inp.skills.length) { const s = inp.skills.shift(); if (!p.dead) startAttack(G, s); }
@@ -400,7 +403,7 @@
       }
       // 회복
       p.regenT += dt;
-      if (p.regenT >= 1) { p.regenT -= 1; const m = G.inTown ? 3 : 1; const tough = 1 + (p.skills.toughness || 0) * 0.1; p.hp = Math.min(st.maxHp, p.hp + Math.max(1, st.maxHp * 0.006 * m * tough)); p.mp = Math.min(st.maxMp, p.mp + Math.max(1, st.maxMp * 0.014 * m)); }
+      if (p.regenT >= 1) { p.regenT -= 1; const m = G.inTown ? 6 : 1; const tough = 1 + (p.skills.toughness || 0) * 0.08; p.hp = Math.min(st.maxHp, p.hp + Math.max(1, st.maxHp * 0.002 * m * tough)); p.mp = Math.min(st.maxMp, p.mp + Math.max(1, st.maxMp * 0.008 * m)); }
     } else { p.vx *= 0.9; }
     // 몬스터
     for (let i = G.mons.length - 1; i >= 0; i--) {
@@ -469,6 +472,7 @@
     const q = D.QUESTS[qid], p = G.p;
     for (const g of q.goals) if (g.item) E.addItem(G, g.item, -g.n);
     p.quests[qid].st = 'done';
+    if (q.reward.pet && !p.pet) { p.pet = { n: q.reward.pet }; ev(G, { t: 'petGot', n: q.reward.pet }); }
     if (q.reward.meso) p.meso += q.reward.meso;
     for (const [id, n] of q.reward.items) E.addItem(G, id, n);
     if (q.reward.exp) gainExp(G, q.reward.exp, p.x, p.y - 50);

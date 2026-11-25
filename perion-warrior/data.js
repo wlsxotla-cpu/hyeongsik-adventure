@@ -104,22 +104,22 @@
   // mon(id, 이름, 레벨, 외형, 옵션)
   const mon = (id, n, lv, art, o) => {
     const base = Object.assign({ id, n, lv, art, hp: D.monHp(lv), atk: Math.round(3 + lv * 3.7), def: Math.round(lv * 1.6), exp: D.monExp(lv), speed: 40, w: 30, h: 30, aggro: 150, drops: [], eq: [], boss: false, ai: 'walk' }, o);
-    if (!base.mesos) base.mesos = [Math.round(lv * lv * 0.1 + lv * 1.8 + 3), Math.round(lv * lv * 0.16 + lv * 2.8 + 6)];
+    if (!base.mesos) { const k = lv >= 18 ? 1.5 : 1; base.mesos = [Math.round((lv * lv * 0.1 + lv * 1.8 + 3) * k), Math.round((lv * lv * 0.16 + lv * 2.8 + 6) * k)]; }
     M[id] = base;
   };
   mon('snail', '달팽이', 1, 'snail', { hp: 14, atk: 5, def: 0, exp: 5, speed: 18, w: 28, h: 20, aggro: 0, drops: [['shell', 0.55], ['hp1', 0.05]], eq: [['hm1', 0.012], ['sh1', 0.01]] });
-  mon('bluesnail', '파란 달팽이', 3, 'snail', { hue: 'blue', hp: 36, atk: 9, def: 2, speed: 22, w: 30, h: 22, aggro: 0, exp: 11, drops: [['bshell', 0.5], ['hp1', 0.07], ['mp1', 0.03]], eq: [['ar1', 0.008], ['hm1', 0.01]] });
-  mon('stump', '그루터기', 5, 'stump', { hp: 80, atk: 17, def: 5, speed: 34, w: 32, h: 30, aggro: 130, drops: [['wood', 0.5], ['hp1', 0.07], ['mp1', 0.05]], eq: [['ar1', 0.012], ['gl1', 0.012], ['ax1', 0.008]] });
-  mon('axestump', '도끼 그루터기', 8, 'stump', { hue: 'axe', hp: 190, atk: 28, def: 12, speed: 42, w: 36, h: 34, aggro: 170, drops: [['axefrag', 0.5], ['wood', 0.35], ['hp2', 0.05], ['mp1', 0.05]], eq: [['sw1', 0.01], ['hm2', 0.012], ['sh2', 0.008]] });
-  mon('woodmask', '나무 가면', 10, 'woodmask', { hp: 290, atk: 36, def: 16, speed: 52, w: 30, h: 40, aggro: 190, ai: 'hop', drops: [['maskpiece', 0.5], ['hp2', 0.06], ['mp1', 0.06]], eq: [['gs1', 0.008], ['ar2', 0.008], ['gl2', 0.008]] });
-  mon('darkstump', '어두운 그루터기', 12, 'stump', { hue: 'dark', hp: 450, atk: 46, def: 22, speed: 56, w: 38, h: 36, aggro: 190, drops: [['darkbark', 0.5], ['hp2', 0.07], ['mp2', 0.03]], eq: [['ax2', 0.008], ['hm3', 0.008], ['sw2', 0.006]] });
-  mon('ant', '개미', 13, 'ant', { hp: 540, atk: 47, def: 26, speed: 62, w: 34, h: 22, aggro: 170, drops: [['antleg', 0.5], ['hp2', 0.07], ['mp2', 0.04]], eq: [['sh2', 0.01], ['gl2', 0.008], ['ar2', 0.008]] });
-  mon('soldierant', '병정 개미', 16, 'ant', { hue: 'soldier', hp: 820, atk: 58, def: 34, speed: 68, w: 36, h: 28, aggro: 200, drops: [['antjaw', 0.5], ['hp3', 0.05], ['mp2', 0.05]], eq: [['sw2', 0.008], ['hm3', 0.01], ['sh3', 0.008]] });
-  mon('zombieant', '좀비 개미', 19, 'ant', { hue: 'zombie', hp: 1150, atk: 70, def: 44, speed: 50, w: 36, h: 28, aggro: 190, drops: [['zfang', 0.5], ['hp3', 0.06], ['mp2', 0.05]], eq: [['gs2', 0.008], ['ar3', 0.007], ['gl3', 0.007]] });
-  mon('stonemask', '돌 가면', 20, 'woodmask', { hue: 'stone', hp: 1350, atk: 78, def: 52, speed: 60, w: 34, h: 42, ai: 'hop', aggro: 210, drops: [['stonefrag', 0.5], ['hp3', 0.07], ['mp3', 0.03]], eq: [['sw3', 0.007], ['ax3', 0.007], ['hm4', 0.006]] });
-  mon('fireboar', '불 멧돼지', 23, 'boar', { hp: 1750, atk: 90, def: 60, speed: 62, w: 46, h: 32, ai: 'charge', aggro: 240, drops: [['ember', 0.5], ['hp3', 0.07], ['mp3', 0.04]], eq: [['sh3', 0.008], ['ar3', 0.007], ['sh4', 0.005]] });
-  mon('stonegolem', '돌 골렘', 25, 'golem', { hp: 2400, atk: 102, def: 72, speed: 36, w: 48, h: 56, aggro: 200, drops: [['golemcore', 0.4], ['stonefrag', 0.35], ['hp4', 0.05], ['mp3', 0.05]], eq: [['ar4', 0.006], ['sw4', 0.005], ['gs3', 0.004]] });
-  mon('firegolem', '불 골렘', 28, 'golem', { hue: 'fire', hp: 3100, atk: 120, def: 84, speed: 40, w: 50, h: 58, ai: 'shoot', aggro: 260, drops: [['golemcore', 0.45], ['ember', 0.4], ['hp4', 0.06], ['mp3', 0.05]], eq: [['ax4', 0.005], ['ar4', 0.006], ['hm4', 0.006]] });
+  mon('bluesnail', '파란 달팽이', 3, 'snail', { hue: 'blue', hp: 36, atk: 12, def: 2, speed: 22, w: 30, h: 22, aggro: 0, exp: 11, drops: [['bshell', 0.5], ['hp1', 0.07], ['mp1', 0.03]], eq: [['ar1', 0.008], ['hm1', 0.01]] });
+  mon('stump', '그루터기', 5, 'stump', { hp: 80, atk: 25, def: 5, speed: 34, w: 32, h: 30, aggro: 130, drops: [['wood', 0.5], ['hp1', 0.07], ['mp1', 0.05]], eq: [['ar1', 0.012], ['gl1', 0.012], ['ax1', 0.008]] });
+  mon('axestump', '도끼 그루터기', 8, 'stump', { hue: 'axe', hp: 190, atk: 42, def: 12, speed: 42, w: 36, h: 34, aggro: 170, drops: [['axefrag', 0.5], ['wood', 0.35], ['hp2', 0.05], ['mp1', 0.05]], eq: [['sw1', 0.01], ['hm2', 0.012], ['sh2', 0.008]] });
+  mon('woodmask', '나무 가면', 10, 'woodmask', { hp: 290, atk: 54, def: 16, speed: 52, w: 30, h: 40, aggro: 190, ai: 'hop', drops: [['maskpiece', 0.5], ['hp2', 0.06], ['mp1', 0.06]], eq: [['gs1', 0.008], ['ar2', 0.008], ['gl2', 0.008]] });
+  mon('darkstump', '어두운 그루터기', 12, 'stump', { hue: 'dark', hp: 450, atk: 66, def: 22, speed: 56, w: 38, h: 36, aggro: 190, drops: [['darkbark', 0.5], ['hp2', 0.07], ['mp2', 0.03]], eq: [['ax2', 0.008], ['hm3', 0.008], ['sw2', 0.006]] });
+  mon('ant', '개미', 13, 'ant', { hp: 540, atk: 66, def: 26, speed: 62, w: 34, h: 22, aggro: 170, drops: [['antleg', 0.5], ['hp2', 0.07], ['mp2', 0.04]], eq: [['sh2', 0.01], ['gl2', 0.008], ['ar2', 0.008]] });
+  mon('soldierant', '병정 개미', 16, 'ant', { hue: 'soldier', hp: 820, atk: 78, def: 34, speed: 68, w: 36, h: 28, aggro: 200, drops: [['antjaw', 0.5], ['hp3', 0.05], ['mp2', 0.05]], eq: [['sw2', 0.008], ['hm3', 0.01], ['sh3', 0.008]] });
+  mon('zombieant', '좀비 개미', 19, 'ant', { hue: 'zombie', hp: 1150, atk: 84, def: 44, speed: 50, w: 36, h: 28, aggro: 190, drops: [['zfang', 0.5], ['hp3', 0.06], ['mp2', 0.05]], eq: [['gs2', 0.008], ['ar3', 0.007], ['gl3', 0.007]] });
+  mon('stonemask', '돌 가면', 20, 'woodmask', { hue: 'stone', hp: 1350, atk: 84, def: 52, speed: 60, w: 34, h: 42, ai: 'hop', aggro: 210, drops: [['stonefrag', 0.5], ['hp3', 0.07], ['mp3', 0.03]], eq: [['sw3', 0.007], ['ax3', 0.007], ['hm4', 0.006]] });
+  mon('fireboar', '불 멧돼지', 23, 'boar', { hp: 1750, atk: 88, def: 60, speed: 62, w: 46, h: 32, ai: 'charge', aggro: 240, drops: [['ember', 0.5], ['hp3', 0.07], ['mp3', 0.04]], eq: [['sh3', 0.008], ['ar3', 0.007], ['sh4', 0.005]] });
+  mon('stonegolem', '돌 골렘', 25, 'golem', { hp: 2400, atk: 92, def: 72, speed: 36, w: 48, h: 56, aggro: 200, drops: [['golemcore', 0.4], ['stonefrag', 0.35], ['hp4', 0.05], ['mp3', 0.05]], eq: [['ar4', 0.006], ['sw4', 0.005], ['gs3', 0.004]] });
+  mon('firegolem', '불 골렘', 28, 'golem', { hue: 'fire', hp: 3100, atk: 108, def: 84, speed: 40, w: 50, h: 58, ai: 'shoot', aggro: 260, drops: [['golemcore', 0.45], ['ember', 0.4], ['hp4', 0.06], ['mp3', 0.05]], eq: [['ax4', 0.005], ['ar4', 0.006], ['hm4', 0.006]] });
   // 보스
   mon('bosstree', '고목 대장', 14, 'bosstree', { boss: true, ai: 'bosstree', hp: 14000, atk: 92, def: 30, exp: 700, speed: 30, w: 86, h: 110, aggro: 520, mesos: [900, 1500], drops: [['treeheart', 1], ['hp3', 1], ['hp3', 0.7], ['wood', 1]], eq: [['sw2', 0.35], ['ax2', 0.3], ['hm3', 0.3]] });
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 62000, atk: 185, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
@@ -140,7 +140,7 @@
       { id: 'toQuarry', x: 2530, to: 'quarry', tx: 'back', label: '버려진 채석장', lv: 'Lv 20~28', col: '#da6' },
     ],
     npcs: [
-      { id: 'elder', n: '촌장 도란', x: 430, role: 'quest', look: 'elder', quests: ['q1', 'q2'] },
+      { id: 'elder', n: '촌장 도란', x: 430, role: 'quest', look: 'elder', quests: ['q1', 'q2', 'qp'] },
       { id: 'inn', n: '여관 주인 미라', x: 720, role: 'inn', look: 'innkeeper' },
       { id: 'potion', n: '잡화상 포포', x: 1010, role: 'shop', shop: 'potion', look: 'merchant' },
       { id: 'smith', n: '대장장이 바르크', x: 1250, y: 330, role: 'shop', shop: 'smith', look: 'smith' },
@@ -233,7 +233,12 @@
       doing: '그루터기는 바위산 초입 위쪽 바위에 많이 있다네.',
       done: '정말 고맙네! 이 가죽 갑옷을 받게. 이제 바위산 중턱까지 가도 괜찮겠어.',
       goals: [{ kill: 'stump', n: 10 }], reward: { exp: 180, meso: 400, items: [['ar1', 1], ['hp1', 10]] } },
-    q3: { n: '광부의 부탁', npc: 'miner', lv: 8, pre: 'q2',
+    qp: { n: '길 잃은 새끼 멧돼지', npc: 'elder', lv: 5, pre: 'q2',
+      ask: '바위산에서 어미를 잃은 새끼 멧돼지가 마을 근처를 맴돌고 있네. 배가 고픈가 봐.\n그루터기가 떨어뜨리는 **나무 조각 8개**를 모아 먹이로 주면 자네를 따를지도 모르지!\n\n🐾 **펫**이 생기면 메뉴 설정에서 **자동 물약**을 쓸 수 있다네.',
+      doing: '나무 조각은 바위산의 그루터기가 가끔 떨어뜨리네. 8개를 모아 오게!',
+      done: '오오, 먹이를 잘 먹는구먼! 녀석이 자네가 마음에 들었나 봐. **펫 멧돌이가 함께하네!**\n🐾 메뉴 ⚙️ 설정에서 자동 물약을 켜 보게.',
+      goals: [{ item: 'wood', n: 8 }], reward: { exp: 260, meso: 500, items: [['hp1', 10], ['mp1', 5]], pet: '멧돌이' } },
+    q3: { n: '광부의 부탁', npc: 'miner', lv: 8, pre: 'qp',
       ask: '어이, 전사 양반! 중턱 도끼 그루터기들 때문에 곡괭이가 계속 부러져.\n놈들이 떨어뜨리는 **도끼 파편 8개**를 모아다 줄 수 있나? 대신 튼튼한 투구를 주지.',
       doing: '도끼 그루터기는 바위산 중턱에 있어. 파편은 가끔 떨어지니 끈기있게!',
       done: '오오, 이 정도면 충분해! 약속한 철 투구다. 써 보라고!',
@@ -264,7 +269,7 @@
       done: '…믿기지 않는군. 페리온의 영웅이 탄생했다! 2차 전직 소식은 발도 교관에게 들어봐라.',
       goals: [{ kill: 'bossgolem', n: 1 }, { item: 'goldcore', n: 1 }], reward: { exp: 20000, meso: 30000, items: [['ar4', 1], ['hp4', 20], ['mp3', 20]] } },
   };
-  D.QUEST_ORDER = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'];
+  D.QUEST_ORDER = ['q1', 'q2', 'qp', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'];
 
   root.DATA = D;
   if (typeof module !== 'undefined' && module.exports) module.exports = D;

@@ -406,6 +406,19 @@
     else { const k = Math.min(1, (z.t - z.dur) / 0.2); if (z.kind === 'root') { c.beginPath(); c.moveTo(-14, 4); c.quadraticCurveTo(-4, -70 * (1 - k * 0.3), 0, -78 * (1 - k * 0.3)); c.quadraticCurveTo(4, -50, 14, 4); c.closePath(); fillStroke(c, '#6a4528', 2.4); } else { c.fillStyle = 'rgba(120,110,100,.8)'; for (let i = 0; i < 6; i++) { c.beginPath(); c.arc((i - 2.5) * 11, -k * (12 + (i % 3) * 8), 4 + i % 2 * 2, 0, TAU); c.fill(); } } }
     c.restore();
   };
+  A.drawPet = function (c, t, face, moving, cheer) {
+    const bob = Math.abs(Math.sin(t * (moving ? 12 : 3))) * (moving ? 3 : 1) + (cheer ? Math.abs(Math.sin(t * 20)) * 4 : 0);
+    c.save(); c.scale(face < 0 ? -0.8 : 0.8, 0.8); ell(c, 0, 0, 12, 3); c.fillStyle = 'rgba(0,0,0,.25)'; c.fill();
+    c.translate(0, -bob);
+    const lg = moving ? Math.sin(t * 16) * 3 : 0; c.beginPath(); rrect(c, -8, -8, 4.4, 8 + lg * 0.3, 2); fillStroke(c, '#c4607a', 1.6); c.beginPath(); rrect(c, 5, -8, 4.4, 8 - lg * 0.3, 2); fillStroke(c, '#c4607a', 1.6);
+    c.beginPath(); ell(c, 0, -12, 12, 9.5); fillStroke(c, '#f0a0b4', 2);
+    c.beginPath(); c.moveTo(-10, -18); c.lineTo(-13, -22); c.lineTo(-6, -20); c.closePath(); fillStroke(c, '#e07a96', 1.2);
+    c.beginPath(); ell(c, 11, -13, 7, 6.5); fillStroke(c, '#f6b4c4', 2); c.beginPath(); ell(c, 15.5, -11.5, 3.4, 3); fillStroke(c, '#f09ab0', 1.4); c.fillStyle = OUT; c.beginPath(); c.arc(14.6, -11.6, 0.7, 0, TAU); c.arc(16.6, -11.6, 0.7, 0, TAU); c.fill();
+    c.beginPath(); c.moveTo(8, -18); c.lineTo(6, -23); c.lineTo(12, -19); c.closePath(); fillStroke(c, '#e07a96', 1.2);
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(11, -15, 2.2, 0, TAU); c.fill(); c.fillStyle = OUT; c.beginPath(); c.arc(11.7, -15, 1.2, 0, TAU); c.fill();
+    c.beginPath(); c.moveTo(14, -8); c.quadraticCurveTo(18, -8, 17, -14); c.quadraticCurveTo(15, -9, 13, -8); c.closePath(); fillStroke(c, '#fff6dc', 1);
+    c.restore();
+  };
   A.drawGrave = function (c, x, y, t) { c.save(); c.translate(x, y); c.beginPath(); c.moveTo(-12, 0); c.lineTo(-12, -22); c.arc(0, -22, 12, Math.PI, 0); c.lineTo(12, 0); c.closePath(); fillStroke(c, '#9aa0aa', 2.4); c.strokeStyle = '#5a6068'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(0, -30); c.lineTo(0, -12); c.moveTo(-6, -24); c.lineTo(6, -24); c.stroke(); c.globalAlpha = 0.6 + Math.sin(t * 3) * 0.2; c.font = '16px sans-serif'; c.fillText('👻', -8, -44 - Math.sin(t * 3) * 4); c.restore(); };
   root.Art = A;
 })(window);

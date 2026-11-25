@@ -14,6 +14,13 @@
   const cam = { x: 0, y: 0 };
   let bg = null, fore = null; let fxs = [];
   const KEYS = { left: 0, right: 0, up: 0, down: 0 };
+  const petState = { x: 0, y: 0, face: 1, moving: false, cheer: 0 };
+  function updatePet(dt) {
+    const p = G.p; if (!p.pet) return; const tx = p.x - p.face * 30, ty = p.y; const dx = tx - petState.x; petState.cheer = Math.max(0, petState.cheer - dt);
+    if (Math.abs(dx) > 400 || Math.abs(ty - petState.y) > 160) { petState.x = tx; petState.y = ty; }
+    petState.moving = Math.abs(dx) > 10; if (petState.moving) { petState.x += Math.sign(dx) * Math.min(Math.abs(dx), (Math.abs(dx) > 60 ? 200 : 120) * dt); petState.face = dx > 0 ? 1 : -1; } else petState.face = p.face;
+    const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
+  }
 
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
@@ -121,6 +128,8 @@
         case 'qprog': { updateHud(true); break; }
         case 'questdone': { const q = D.QUESTS[e.q]; toastBanner(`퀘스트 완료!  ${q.n}`); logLine(`✅ 퀘스트 완료: ${q.n}`, 'q'); save(); break; }
         case 'death': deathT = 0.9; break;
+        case 'petDrink': petState.cheer = 0.8; logLine('🐾 ' + p.pet.n + '이(가) 자동으로 물약을 먹여 줬어요!', 'i'); break;
+        case 'petGot': petState.x = p.x - 30; petState.y = p.y; petState.cheer = 1.2; toastBanner('🐾 펫 ' + e.n + ' 획득!'); logLine('🐾 펫 ' + e.n + '이(가) 함께해요! 설정에서 자동 물약을 켤 수 있어요', 'q'); break;
       }
     }
   }
@@ -290,6 +299,7 @@
       else if (k === 'auto') { E.autoStat(G); }
       else if (k === 'reset') { E.resetStats(G); }
       else if (k === 'tog') { p.settings[v] = !p.settings[v]; if (v === 'sound') Snd.setSound(p.settings.sound); if (v === 'music') Snd.setMusic(p.settings.music); }
+      else if (k === 'thr') { p.settings[v] = +w; }
       else if (k === 'save') { save(); logLine('💾 저장했어요', 'i'); }
       else if (k === 'wipe') { if (el.dataset.c !== '1') { el.dataset.c = '1'; el.textContent = '정말 지울까요? 한 번 더 누르면 삭제'; return; } store.del(SAVE_KEY); started = false; location.reload(); return; }
       draw(); updateHud(true);
@@ -332,8 +342,12 @@
     return s;
   }
   function tabSet() {
-    const st = G.p.settings; const tg = (k, n, d) => `<div class="tog" data-a="tog:${k}"><span><b>${n}</b><br><small style="color:#cdbbe8">${d}</small></span><div class="sw ${st[k] ? 'on' : ''}"></div></div>`;
-    return tg('auto', '자동 물약', 'HP가 35% 아래면 빨간 물약 등을 자동으로 마셔요') + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요') +
+    const p = G.p, st = p.settings; const tg = (k, n, d) => `<div class="tog" data-a="tog:${k}"><span><b>${n}</b><br><small style="color:#cdbbe8">${d}</small></span><div class="sw ${st[k] ? 'on' : ''}"></div></div>`;
+    const pct = (k, lab) => `<div class="tog"><span><b>${lab}</b></span><span>${[0.3, 0.5, 0.7].map((v) => `<button class="btn sm ${Math.abs((st[k] || 0) - v) < 0.01 ? '' : 'gray'}" data-a="thr:${k}:${v}">${Math.round(v * 100)}%</button>`).join(' ')}</span></div>`;
+    let pet;
+    if (!p.pet) pet = `<div class="card">🐾 <b>펫이 없어요</b><br>퀘스트 <b>'길 잃은 새끼 멧돼지'</b>(촌장 도란, Lv 5~)를 완료하면 펫이 생겨요.<br><small style="color:#cdbbe8">펫이 있으면 HP·MP가 낮아졌을 때 자동으로 물약을 먹여 줘요.</small></div>`;
+    else pet = `<div class="card">🐾 <b>${esc(p.pet.n)}</b> 와 함께하는 중!</div>` + tg('auto', '펫 자동 물약', 'HP·MP가 낮아지면 펫이 자동으로 물약을 먹여 줘요') + (st.auto ? pct('autoT', '❤️ 이 이하일 때 HP 물약') + tg('autoMp', 'MP 물약도 자동', '') + (st.autoMp ? pct('autoMpT', '💧 이 이하일 때 MP 물약') : '') : '');
+    return pet + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요') +
       `<div class="card">🕹️ <b>조작</b>: ◀▶ 이동 · ▲ 밧줄 오르기/문 들어가기 · ▼ 밧줄 내려가기/발판 아래로(▼+점프) · ⚔️ 공격(꾹) · 보라 버튼 스킬 · ❤️💧 물약<br>⌨️ 키보드: 방향키/Space점프/Z공격/1~5스킬/H·M물약/E대화</div>` +
       `<div class="row2"><button class="btn sm" data-a="save">💾 지금 저장</button><button class="btn sm red" data-a="wipe">🗑 처음부터 다시</button></div>`;
   }
@@ -443,6 +457,7 @@
     for (const z of G.zones) Art.drawZone(c, z, time);
     for (const mm of G.mons) { if (!vis(mm.x, 160)) continue; c.save(); c.translate(mm.x, mm.y); Art.drawMon(c, mm, time); c.restore(); }
     if (p.buffs.def || p.buffs.atk) drawAura(c, p);
+    if (p.pet && !p.dead) { const pp = petState; c.save(); c.translate(pp.x, pp.y); Art.drawPet(c, time, pp.face, pp.moving, pp.cheer > 0); c.restore(); if (pp.cheer > 0) { c.font = '14px sans-serif'; c.textAlign = 'center'; c.fillText('💖', pp.x, pp.y - 34 - (0.8 - pp.cheer) * 14); } }
     if (p.dead) Art.drawGrave(c, p.x, p.y, time); else { c.save(); c.translate(p.x, p.y); ellShadow(c, p); Art.drawPlayer(c, G, time); c.restore(); }
     for (const q of G.proj) if (q.delay === undefined || q.delay <= 0) Art.drawProj(c, q, time);
     // 몬스터 HP바
@@ -470,13 +485,13 @@
     if (G) {
       if (started && !paused) {
         E.step(G, dt); handleEvents();
-        const p = G.p; if (!p.tut.move && Math.abs(p.x - 330) > 100 && G.mapId === 'perion') p.tut.move = 1; if (G.mapId !== 'perion') p.tut.move = 1;
+        const p = G.p; if (p.climb) p.tut.ladder = 1; if (!p.tut.move && Math.abs(p.x - 330) > 100 && G.mapId === 'perion') p.tut.move = 1; if (G.mapId !== 'perion') p.tut.move = 1;
         if (p.dead) { deathT -= dt; if (deathT <= 0 && !shownDeath) { shownDeath = true; showDeath(); } }
         hudT -= dt; if (hudT <= 0) { hudT = 0.1; updateHud(); updateSkillBtns(); }
         miniT -= dt; if (miniT <= 0) { miniT = 0.15; drawMini(); }
         saveT += dt; if (saveT > 15) { saveT = 0; save(); }
       } else if (!started) { G.t += dt; }
-      updateFx(dt);
+      updateFx(dt); if (started) updatePet(dt);
       if (G.p.buffs.atk && Math.random() < dt * 14) fx({ type: 'spark', x: G.p.x + (Math.random() - 0.5) * 16, y: G.p.y - 10, vx: 0, vy: -50, life: 0.5, col: '#ff8a4a', size: 2.4 });
     }
     render(dt);
