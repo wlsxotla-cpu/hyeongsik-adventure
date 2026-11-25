@@ -13,7 +13,35 @@
     if (S.track) { const t = S.track; S.track = null; S.play(t); }
   };
   S.setSound = (b) => { S.sound = b; if (S.sfxG) S.sfxG.gain.value = b ? 0.55 : 0; };
-  S.setMusic = (b) => { S.music = b; if (S.musG) S.musG.gain.value = b ? 0.16 : 0; };
+  S.setMusic = (b) => { S.music = b; if (S.musG) S.musG.gain.value = b ? 0.16 : 0; try { if (S.yt && S.yt.playVideo) { if (b && S.ytWant) S.yt.playVideo(); else if (!b) S.yt.pauseVideo(); } } catch (e) { } };
+
+  // 원곡 BGM(유튜브 임베드): 음원 파일은 게임에 넣지 않고 유튜브 플레이어로만 재생한다. 실패하면 합성 BGM으로 되돌아감.
+  S.ytId = '9lwOsX763N0'; S.ytOn = false; S.ytWant = false; S.ytFail = false; S.yt = null;
+  function ytFallback() { S.ytFail = true; S.ytWant = false; const t = S.track; S.track = null; if (t) S.play(t); }
+  function ytLoad(cb) {
+    if (root.YT && root.YT.Player) return cb();
+    if (!S.ytq) {
+      S.ytq = []; const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.onerror = ytFallback; document.head.appendChild(s);
+      root.onYouTubeIframeAPIReady = () => { const q = S.ytq; S.ytq = []; q.forEach((f) => f()); };
+    }
+    S.ytq.push(cb);
+  }
+  S.ytPlay = function () {
+    S.ytWant = true; if (!S.music) return;
+    ytLoad(() => {
+      if (!S.ytWant) return;
+      if (S.yt && S.yt.playVideo) { S.yt.playVideo(); return; }
+      if (S.yt) return;
+      const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-300px;top:0;width:200px;height:200px;opacity:0;pointer-events:none;z-index:-1';
+      const inner = document.createElement('div'); box.appendChild(inner); document.body.appendChild(box);
+      S.yt = new root.YT.Player(inner, { width: 200, height: 200, videoId: S.ytId, playerVars: { playsinline: 1, controls: 0, loop: 1, playlist: S.ytId, rel: 0, disablekb: 1, fs: 0 },
+        events: { onReady: (e) => { e.target.setVolume(70); if (S.ytWant && S.music) e.target.playVideo(); }, onError: ytFallback } });
+    });
+  };
+  S.ytPause = function () { S.ytWant = false; try { if (S.yt && S.yt.pauseVideo) S.yt.pauseVideo(); } catch (e) { } };
+  S.setYt = function (b) { S.ytOn = !!b; if (S.track) { const t = S.track; S.track = null; S.play(t); } };
+  // iPhone은 소리 자동 재생을 막으므로, 화면을 아무 데나 터치하면 멈춰 있던 원곡 BGM을 다시 시작한다
+  document.addEventListener('pointerdown', () => { try { if (S.ytWant && S.music && S.yt && S.yt.getPlayerState) { const st = S.yt.getPlayerState(); if (st !== 1 && st !== 3) S.yt.playVideo(); } } catch (e) { } }, true);
   function tone(f, dur, type, vol, slide, when, dest) {
     const c = S.ctx; if (!c) return; const t = when || c.currentTime; const o = c.createOscillator(), g = c.createGain();
     o.type = type || 'square'; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, f * slide), t + dur);
@@ -66,7 +94,9 @@
   };
   S.play = function (name) {
     if (S.track === name) return; S.track = name; if (!S.ctx) return;
-    if (S.timer) clearInterval(S.timer); const T = TR[name]; if (!T) return;
+    if (S.timer) clearInterval(S.timer); S.timer = null; const T = TR[name]; if (!T) return;
+    if (name === 'town' && S.ytOn && !S.ytFail) { S.ytPlay(); return; }
+    S.ytPause();
     S.step = 0; S.next = S.ctx.currentTime + 0.1;
     S.timer = setInterval(() => {
       if (!S.ctx || S.ctx.state !== 'running') return;
@@ -80,6 +110,6 @@
       }
     }, 90);
   };
-  S.stop = function () { if (S.timer) clearInterval(S.timer); S.timer = null; S.track = null; };
+  S.stop = function () { if (S.timer) clearInterval(S.timer); S.timer = null; S.track = null; S.ytPause(); };
   root.Snd = S;
 })(window);
