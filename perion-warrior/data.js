@@ -200,6 +200,18 @@
   });
   // ── 3차 전직 (Lv 50 + 오르비스 시험 퀘스트): 크루세이더 / 나이트 / 드래곤나이트 ──
   Object.assign(D.SKILLS, {
+    windslash: { job: 'fighter', n: '윈드 슬래시', icon: '🌪️', kind: 'atk', reqLv: 34, maxLv: 10, mp: (l) => 18 + l, mult: (l) => 1.4 + 0.14 * l, hits: 2, targets: 4, rng: 120, cd: 2.6, fx: 'slash',
+      desc: (l) => `검풍으로 앞의 적 최대 4명을 한 번에 ${Math.round((1.4 + 0.14 * l) * 100)}% 위력 × 2타. (MP ${18 + l})` },
+    fbooster: { job: 'fighter', n: '소드 부스터', icon: '⚔️', kind: 'buff', reqLv: 34, maxLv: 10, mp: (l) => 24 + l, cd: 1, dur: (l) => 40 + l * 5, buff: 'atk4', val: (l) => 0.08 + l * 0.015,
+      desc: (l) => `${40 + l * 5}초 동안 공격력 + ${Math.round((0.08 + l * 0.015) * 100)}%. (MP ${24 + l})` },
+    thunderbrk: { job: 'page', n: '선더 브레이크', icon: '⚡', kind: 'atk', reqLv: 34, maxLv: 10, mp: (l) => 20 + l, mult: (l) => 1.7 + 0.17 * l, targets: 5, rng: 130, cd: 3.0, fx: 'slash',
+      desc: (l) => `번개 검으로 앞의 적 최대 5명을 ${Math.round((1.7 + 0.17 * l) * 100)}% 위력. (MP ${20 + l})` },
+    holyshield: { job: 'page', n: '홀리 실드', icon: '🛡️', kind: 'buff', reqLv: 34, maxLv: 10, mp: (l) => 26 + l, cd: 1, dur: (l) => 40 + l * 5, buff: 'dr4', val: (l) => 0.08 + l * 0.012,
+      desc: (l) => `${40 + l * 5}초 동안 받는 피해 -${Math.round((0.08 + l * 0.012) * 100)}%. (MP ${26 + l})` },
+    firesweep: { job: 'spearman', n: '파이어 스윕', icon: '🔥', kind: 'atk', reqLv: 34, maxLv: 10, mp: (l) => 20 + l, mult: (l) => 1.5 + 0.15 * l, hits: 2, targets: 5, rng: 140, cd: 2.8, fx: 'power',
+      desc: (l) => `불꽃 창으로 앞의 적 최대 5명을 한 번에 ${Math.round((1.5 + 0.15 * l) * 100)}% 위력 × 2타. (MP ${20 + l})` },
+    spbooster: { job: 'spearman', n: '스피어 부스터', icon: '🏹', kind: 'buff', reqLv: 34, maxLv: 10, mp: (l) => 24 + l, cd: 1, dur: (l) => 40 + l * 5, buff: 'atk5', val: (l) => 0.08 + l * 0.015,
+      desc: (l) => `${40 + l * 5}초 동안 공격력 + ${Math.round((0.08 + l * 0.015) * 100)}%. (MP ${24 + l})` },
     brandish: { job: 'fighter', tier: 3, n: '브랜디쉬', icon: '🌙', kind: 'atk', reqLv: 70, maxLv: 10, mp: (l) => 26 + l, mult: (l) => 2.2 + 0.18 * l, hits: 2, targets: 3, rng: 112, cd: 2.4, fx: 'power',
       desc: (l) => `검을 두 번 휘둘러 앞의 적 최대 3명을 ${Math.round((2.2 + 0.18 * l) * 100)}% 위력으로 2연타. (MP ${26 + l})` },
     soulroar: { job: 'fighter', tier: 3, n: '소울 로어', icon: '🐲', kind: 'buff', reqLv: 70, maxLv: 10, mp: (l) => 30 + l, cd: 1, dur: (l) => 50 + l * 5, buff: 'atk3', val: (l) => 0.2 + l * 0.03,
@@ -246,7 +258,7 @@
     revenge: { job: 'spearman', tier: 4, n: '복수', icon: '🔥', kind: 'buff', reqLv: 120, maxLv: 10, mp: (l) => 50 + l, cd: 1, dur: (l) => 60 + l * 5, buff: 'dr3', val: (l) => 0.25 + l * 0.02, desc: (l) => `${60 + l * 5}초 동안 받는 피해 ${Math.round((0.25 + l * 0.02) * 100)}% 감소. (MP ${50 + l})` },
     dkwill: { job: 'spearman', tier: 4, n: '다크나이트의 의지', icon: '📙', kind: 'passive', reqLv: 120, maxLv: 10, desc: (l) => `치명타 확률 +${(l * 1.5).toFixed(1)}%p, 최소 데미지 비율 +${l * 2}%p.` },
   });
-  D.SKILL_ORDER = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness', 'rblow', 'berserk', 'fmastery', 'charge', 'guard', 'pmastery', 'crusher', 'hyper', 'smastery', 'brandish', 'soulroar', 'fmaster3', 'elcharge', 'achilles', 'pmaster3', 'dragonfury', 'dragonblood', 'smaster3', 'swordpanic', 'shout', 'blast3', 'guardwall', 'dragonroar', 'dragonthrust', 'rageupper', 'swordflash', 'enrage', 'stance', 'herowill', 'holymace', 'holyblast', 'blessing', 'guardian', 'paladinwill', 'darkspear', 'cataclysm', 'beholder', 'revenge', 'dkwill'];
+  D.SKILL_ORDER = ['power', 'slash', 'ironbody', 'rage', 'quake', 'mastery', 'toughness', 'rblow', 'berserk', 'fmastery', 'charge', 'guard', 'pmastery', 'crusher', 'hyper', 'smastery', 'windslash', 'fbooster', 'thunderbrk', 'holyshield', 'firesweep', 'spbooster', 'brandish', 'soulroar', 'fmaster3', 'elcharge', 'achilles', 'pmaster3', 'dragonfury', 'dragonblood', 'smaster3', 'swordpanic', 'shout', 'blast3', 'guardwall', 'dragonroar', 'dragonthrust', 'rageupper', 'swordflash', 'enrage', 'stance', 'herowill', 'holymace', 'holyblast', 'blessing', 'guardian', 'paladinwill', 'darkspear', 'cataclysm', 'beholder', 'revenge', 'dkwill'];
 
   /* ───────── 몬스터 ───────── */
   const M = {};

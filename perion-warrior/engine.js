@@ -87,7 +87,7 @@
   E.skill = (G, sid) => { G.input.skills.push(sid); };
   // 배운 버프를 한 번에 전부 켠다 (스킬이 많아져도 버튼 하나로)
   E.buffAll = (G) => { G.input.buffAll = true; };
-  E.usableBuffs = (G) => { const p = G.p; return D.SKILL_ORDER.filter((sid) => { const s = D.SKILLS[sid]; return s.kind === 'buff' && (p.skills[sid] || 0) > 0 && p.lv >= s.reqLv && (!s.job || s.job === p.job) && !(s.tier === 3 && !p.tier3) && !(s.tier === 4 && !p.tier4); }); };
+  E.usableBuffs = (G) => { const p = G.p; return D.SKILL_ORDER.filter((sid) => { const s = D.SKILLS[sid]; return s.kind === 'buff' && !((p.settings && p.settings.buffOff) || []).includes(sid) && (p.skills[sid] || 0) > 0 && p.lv >= s.reqLv && (!s.job || s.job === p.job) && !(s.tier === 3 && !p.tier3) && !(s.tier === 4 && !p.tier4); }); };
   function castAllBuffs(G) {
     const p = G.p; let n = 0, lack = false, last = null;
     for (const sid of E.usableBuffs(G)) { const s = D.SKILLS[sid], l = p.skills[sid], cost = s.mp(l); if (p.mp < cost) { lack = true; continue; } p.mp -= cost; p.buffs[s.buff] = { t: s.dur(l), val: s.val(l), sid, max: s.dur(l) }; n++; last = sid; }

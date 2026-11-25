@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzzi';
+  const BUILD = '20261125zzzj';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -361,6 +361,7 @@
       else if (k === 'nethost') { Net.host((ok) => { if (ok) logLine('👥 방을 만들었어요. 코드: ' + Net.code, 'i'); }); }
       else if (k === 'netjoin') { const code = prompt('친구가 알려 준 방 코드를 입력하세요 (5글자)', ''); if (code) Net.join(code, (ok) => { if (ok) logLine('👥 방에 들어왔어요! (' + Net.code + ')', 'i'); }); }
       else if (k === 'netleave') { Net.leave(); }
+      else if (k === 'qb') { const st = G.p.settings; const off = st.buffOff || (st.buffOff = []); const i = off.indexOf(v); if (i >= 0) off.splice(i, 1); else off.push(v); buildSkillBtns(); }
       else if (k === 'qsauto') { G.p.settings.slots = []; buildSkillBtns(); }
       else if (k === 'sreset') { E.resetSkills(G); buildSkillBtns(); updateHud(true); }
       else if (k === 'stat') { E.addStat(G, v, +w || 1); }
@@ -393,8 +394,8 @@
   function tabSkill() {
     const p = G.p; let s = `<div class="card row2"><span style="flex:1">남은 스킬 포인트 <b style="font-size:17px">${p.sp}</b> <small style="color:#cdbbe8">(총량이 스킬에 딱 맞아요)</small></span></div>`;
     if (!p.job) s += `<div class="card" style="font-size:12px">⚔️ <b>2차 전직</b>: Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후 마을의 교관 발도에게 가면 <b>파이터 / 페이지 / 스피어맨</b> 중 하나로 전직해요.</div>`; else s += `<div class="card" style="font-size:12px">${D.JOBS[p.job].icon} 현재 직업 <b style="color:${D.JOBS[p.job].col}">${E.jobName(p)}</b>${p.tier3 ? '' : ` <small style="color:#cdbbe8">· Lv ${D.JOB3_LV} + 오르비스 시험 후 3차 전직</small>`}</div>`;
-    { const qs = quickSkills(); s += `<div class="card" style="font-size:12px">⭐ <b>퀵슬롯</b> ${qs.length ? qs.map((id) => D.SKILLS[id].icon).join(' ') : '(공격 스킬을 배우면 자동으로 채워져요)'} <small style="color:#cdbbe8">· 화면 버튼은 최대 6개, 버프는 ✨ 한 버튼으로 한 번에 켜요</small><br><button class="btn sm gray" data-a="qsauto">자동 배치</button> <small style="color:#cdbbe8">스킬 옆 ⭐를 눌러 직접 고를 수 있어요</small></div>`; }
-    for (const sid of D.SKILL_ORDER) { const k = D.SKILLS[sid], l = p.skills[sid] || 0, lock = p.lv < k.reqLv; if (k.job && k.job !== p.job) continue; if (k.tier === 3 && !p.tier3) continue; if (k.tier === 4 && !p.tier4) continue; s += `<div class="sk ${lock ? 'lock' : ''}"><div class="ic">${k.icon}</div><div class="t"><b>${k.n}</b> <span style="color:#ffe08a">Lv ${l}/${k.maxLv}</span>${k.kind === 'passive' ? ' <span style="color:#9fe">[패시브]</span>' : k.kind === 'buff' ? ' <span style="color:#9fe">[버프]</span>' : ''}<br>${lock ? `<span style="color:#ff8a8a">Lv ${k.reqLv} 이상부터 배울 수 있어요</span>` : esc(k.desc(Math.max(1, l)))}</div>${!lock && l > 0 && k.kind === 'atk' ? `<button class="btn sm ${quickSkills().includes(sid) ? '' : 'gray'}" data-a="qs:${sid}">⭐</button>` : ''}${!lock && l < k.maxLv ? (l >= E.skillCap(G, k) ? `<small style="color:#ff8a8a">Lv ${k.reqLv + Math.ceil((l + 1 - 3) / 0.8)}<br>필요</small>` : `<button class="btn sm green" data-a="learn:${sid}" ${p.sp < 1 ? 'disabled' : ''}>＋</button>`) : ''}</div>`; }
+    { const qs = quickSkills(); s += `<div class="card" style="font-size:12px">⭐ <b>퀵슬롯</b> ${qs.length ? qs.map((id) => D.SKILLS[id].icon).join(' ') : '(공격 스킬을 배우면 자동으로 채워져요)'} <small style="color:#cdbbe8">· 화면 버튼은 최대 6개, 버프는 ✨ 한 버튼으로 한 번에 켜요</small><br><button class="btn sm gray" data-a="qsauto">자동 배치</button> <small style="color:#cdbbe8">공격 스킬 옆 ⭐ = 퀵슬롯, 버프 스킬 옆 ✨ = 일괄 버프에 포함(회색이면 제외)</small></div>`; }
+    for (const sid of D.SKILL_ORDER) { const k = D.SKILLS[sid], l = p.skills[sid] || 0, lock = p.lv < k.reqLv; if (k.job && k.job !== p.job) continue; if (k.tier === 3 && !p.tier3) continue; if (k.tier === 4 && !p.tier4) continue; s += `<div class="sk ${lock ? 'lock' : ''}"><div class="ic">${k.icon}</div><div class="t"><b>${k.n}</b> <span style="color:#ffe08a">Lv ${l}/${k.maxLv}</span>${k.kind === 'passive' ? ' <span style="color:#9fe">[패시브]</span>' : k.kind === 'buff' ? ' <span style="color:#9fe">[버프]</span>' : ''}<br>${lock ? `<span style="color:#ff8a8a">Lv ${k.reqLv} 이상부터 배울 수 있어요</span>` : esc(k.desc(Math.max(1, l)))}</div>${!lock && l > 0 && k.kind === 'buff' ? `<button class="btn sm ${(p.settings.buffOff || []).includes(sid) ? 'gray' : ''}" data-a="qb:${sid}">✨</button>` : ''}${!lock && l > 0 && k.kind === 'atk' ? `<button class="btn sm ${quickSkills().includes(sid) ? '' : 'gray'}" data-a="qs:${sid}">⭐</button>` : ''}${!lock && l < k.maxLv ? (l >= E.skillCap(G, k) ? `<small style="color:#ff8a8a">Lv ${k.reqLv + Math.ceil((l + 1 - 3) / 0.8)}<br>필요</small>` : `<button class="btn sm green" data-a="learn:${sid}" ${p.sp < 1 ? 'disabled' : ''}>＋</button>`) : ''}</div>`; }
     s += `<div class="row2"><button class="btn sm gray" data-a="sreset">스킬 초기화(무료)</button></div><div class="card" style="font-size:11px">💡 스킬 레벨은 캐릭터 레벨이 오를수록 더 올릴 수 있어요.</div>`;
     return s;
   }
