@@ -23,6 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
+  const BUILD = '20261125q';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -31,7 +32,9 @@
     app.style.transform = portrait ? `translateX(${iw}px) rotate(90deg)` : 'none';
     // 세로로 들면 화면을 90도 돌려 쓰므로, 안전 영역(상태바·홈 바)도 돌려서 맞춘다: 게임 왼쪽=폰 위쪽, 게임 오른쪽=폰 아래쪽, 게임 아래=폰 왼쪽
     if (portrait) { const pr = document.createElement('div'); pr.style.cssText = 'position:fixed;visibility:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'; document.body.appendChild(pr); const cs = getComputedStyle(pr); const t = parseFloat(cs.paddingTop) || 0, r = parseFloat(cs.paddingRight) || 0, bt = parseFloat(cs.paddingBottom) || 0, l = parseFloat(cs.paddingLeft) || 0; pr.remove();
-      app.style.setProperty('--sl', t + 'px'); app.style.setProperty('--sr', bt + 'px'); app.style.setProperty('--sb', l + 'px'); }
+      const sa = (window.navigator.standalone === true) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+      // 홈화면 앱은 상태바 밑까지 화면이 깔리므로, 안전 영역 값을 못 읽어도 최소 여백(위 48 / 아래 20)을 보장한다
+      app.style.setProperty('--sl', Math.max(t, sa ? 48 : 0) + 'px'); app.style.setProperty('--sr', Math.max(bt, sa ? 20 : 0) + 'px'); app.style.setProperty('--sb', l + 'px'); }
     else { app.style.removeProperty('--sl'); app.style.removeProperty('--sr'); app.style.removeProperty('--sb'); }
     view.s = h / VH; view.vw = w / view.s; view.dpr = Math.min(window.devicePixelRatio || 1, 2); view.k = view.dpr * view.s;
     cv.width = Math.round(w * view.dpr); cv.height = Math.round(h * view.dpr); view.w = w; view.h = h; dirty = true;
@@ -364,7 +367,7 @@
     if (!p.pet) pet = `<div class="card">🐾 <b>펫이 없어요</b><br>퀘스트 <b>'길 잃은 새끼 멧돼지'</b>(촌장 도란, Lv 5~)를 완료하면 펫이 생겨요.<br><small style="color:#cdbbe8">펫이 있으면 HP·MP가 낮아졌을 때 자동으로 물약을 먹여 줘요.</small></div>`;
     else pet = `<div class="card">🐾 <b>${esc(p.pet.n)}</b> 와 함께하는 중!</div>` + tg('auto', '펫 자동 물약', 'HP·MP가 낮아지면 펫이 자동으로 물약을 먹여 줘요') + (st.auto ? pct('autoT', '❤️ 이 이하일 때 HP 물약') + tg('autoMp', 'MP 물약도 자동', '') + (st.autoMp ? pct('autoMpT', '💧 이 이하일 때 MP 물약') : '') : '');
     const how = `<div class="card">🧪 <b>물약 쓰는 법</b><br>화면 <b>오른쪽 위 ❤️(HP)·💧(MP) 버튼</b>을 누르면 가진 물약을 먹어요. 버튼의 숫자는 남은 개수예요.<br>⌨️ 키보드: H(HP) · M(MP)<br><small style="color:#cdbbe8">자동으로 먹는 건 펫이 있어야 해요 (아래 참고)</small></div>`;
-    return how + pet + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 페리온 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
+    return how + pet + `<div class="card" style="font-size:11px;color:#cdbbe8">빌드 ${BUILD}</div>` + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 페리온 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
       `<div class="card">🕹️ <b>조작</b>: ◀▶ 이동 · ▲ 밧줄 오르기/문 들어가기 · ▼ 밧줄 내려가기/발판 아래로(▼+점프) · ⚔️ 공격(꾹) · 보라 버튼 스킬 · ❤️💧 물약<br>⌨️ 키보드: 방향키/Space점프/Z공격/1~5스킬/H·M물약/E대화</div>` +
       `<div class="row2"><button class="btn sm" data-a="save">💾 지금 저장</button><button class="btn sm red" data-a="wipe">🗑 처음부터 다시</button></div>`;
   }
@@ -571,7 +574,7 @@
     else logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i');
   }
   function init() {
-    layout(); initControls();
+    layout(); initControls(); setTimeout(layout, 400); setTimeout(layout, 1500);
     G = E.newGame('데모', 7); G.p.x = 700; onMap();
     const sv = loadSave(); $('bCont').style.display = sv ? '' : 'none'; if (sv) $('nameIn').value = sv.name;
     $('bNew').addEventListener('click', () => { if (loadSave() && !confirm('저장된 모험이 지워져요. 새로 시작할까요?')) return; Snd.init(); startGame(true); });
