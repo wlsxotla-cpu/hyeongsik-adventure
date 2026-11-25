@@ -188,8 +188,11 @@
   // 진행 중인 퀘스트가 요구하는 개수만큼은 못 팔고, 남는 건 팔 수 있다 (퀘스트 아이템도 포함)
   E.lockedQty = (G, id) => { let n = 0; for (const qid in G.p.quests) { if (G.p.quests[qid].st !== 'active') continue; for (const g of D.QUESTS[qid].goals) if (g.item === id) n += g.n; } return n; };
   E.sellable = (G, id) => Math.max(0, inv(G.p, id) - E.lockedQty(G, id));
-  E.sell = function (G, id, n) {
+  // 장비는 사본마다 강화가 달라서, 사본 번호(idx)를 정해 하나씩 판다. 강화된 사본은 값을 더 쳐 준다 (+1당 +10%)
+  E.sellPriceOf = (G, id, idx) => { const it = D.ITEMS[id]; const base = E.sellPrice(it); if (it.t !== 'equip' || idx == null) return base; const r = E.bagRecs(G, id)[idx]; return Math.floor(base * (1 + 0.1 * ((r && r.ok) || 0))); };
+  E.sell = function (G, id, n, idx) {
     const p = G.p, it = D.ITEMS[id]; const can = E.sellable(G, id); n = Math.min(n || 1, can); if (n < 1) return { ok: false, msg: it && E.lockedQty(G, id) > 0 ? '진행 중인 퀘스트에 필요한 물건이에요' : '팔 수 없어요' };
+    if (it.t === 'equip' && idx != null) { if (idx < 0 || idx >= E.bagRecs(G, id).length) return { ok: false, msg: '그 장비가 없어요' }; n = 1; p.meso += E.sellPriceOf(G, id, idx); E.bagRecs(G, id).splice(idx, 1); E.addItem(G, id, -1); if (inv(p, id) < 1 && p.bag) delete p.bag[id]; ev(G, { t: 'sfx', n: 'buy' }); return { ok: true }; }
     p.meso += E.sellPrice(it) * n; if (it.t === 'equip') { const l = E.bagRecs(G, id); for (let k = 0; k < n; k++) l.splice(E.worstIdx(l), 1); } E.addItem(G, id, -n); if (inv(p, id) < 1 && p.bag) delete p.bag[id]; ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
   };
   E.sellAllEtc = function (G) { let gain = 0; const p = G.p; for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (it.t === 'etc') { const k = E.sellable(G, id); if (k > 0 && it.price > 0) { gain += it.price * k; p.inv[id] -= k; if (p.inv[id] <= 0) delete p.inv[id]; } } } p.meso += gain; if (gain) ev(G, { t: 'sfx', n: 'buy' }); return gain; };

@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzr';
+  const BUILD = '20261125zzs';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -385,7 +385,7 @@
     const how = `<div class="card">🧪 <b>물약 쓰는 법</b><br>화면 <b>오른쪽 위 ❤️(HP)·💧(MP) 버튼</b>을 누르면 가진 물약을 먹어요. 버튼의 숫자는 남은 개수예요.<br>⌨️ 키보드: H(HP) · M(MP)<br><small style="color:#cdbbe8">자동으로 먹는 건 펫이 있어야 해요 (아래 참고)</small></div>`;
     const ctlRow = (k, lab) => `<div class="tog"><span><b>${lab}</b> <small style="color:#cdbbe8">${st[k] || 0}</small></span><span><button class="btn sm gray" data-a="ctl:${k}:-10">－</button> <button class="btn sm" data-a="ctl:${k}:10">＋</button></span></div>`;
     const ctl = `<div class="card"><b>🕹️ 버튼 위치 조절</b><br><small style="color:#cdbbe8">방향키·버튼이 화면 끝에 붙어 누르기 힘들면 안쪽으로 옮겨요.</small></div>` + ctlRow('padX', '방향키 ▶ 안쪽으로') + ctlRow('padY', '방향키 ▲ 위로') + ctlRow('btnX', '공격·스킬 ◀ 안쪽으로') + ctlRow('btnY', '공격·스킬 ▲ 위로') + `<div class="row2"><button class="btn sm gray" data-a="ctl:reset">위치 초기화</button></div>`;
-    return how + pet + `<div class="card" style="font-size:11px;color:#cdbbe8">빌드 ${BUILD}</div>` + ctl + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 페리온 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
+    return how + pet + `<div class="card" style="font-size:11px;color:#cdbbe8">빌드 ${BUILD}</div>` + ctl + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 메이플 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
       `<div class="card">🕹️ <b>조작</b>: ◀▶ 이동 · ▲ 밧줄 오르기/문 들어가기 · ▼ 밧줄 내려가기/발판 아래로(▼+점프) · ⚔️ 공격(꾹) · 보라 버튼 스킬 · ❤️💧 물약<br>⌨️ 키보드: 방향키/Space점프/Z공격/1~5스킬/H·M물약/E대화</div>` +
       `<div class="row2"><button class="btn sm" data-a="save">💾 지금 저장</button><button class="btn sm red" data-a="wipe">🗑 처음부터 다시</button></div>`;
   }
@@ -501,7 +501,11 @@
           return `<div class="it"><div class="slot ${low ? 'empty' : ''}">${ico(id)}</div><div class="t"><b>${esc(it.n)}</b>${it.t === 'equip' ? ` <small style="color:${low ? '#ff8a8a' : '#9fe'}">Lv ${it.lv}${(() => { const rq = E.req(it); return ' · STR ' + rq.str + (rq.dex ? ' · DEX ' + rq.dex : ''); })()}${low ? ' 필요' : ''}</small>` : ''}${own ? ` <small style="color:#cdbbe8">(보유 ${own})</small>` : ''}<br>${it.t === 'equip' ? [it.atk ? `공격 ${it.atk}` : '', it.def ? `방어 ${it.def}` : '', it.str ? `STR+${it.str}` : '', it.hp ? `HP+${it.hp}` : ''].filter(Boolean).join(' · ') : esc(it.desc)}</div><div style="text-align:right"><div class="price">💰 ${fmt(it.price)}</div><button class="btn sm green" data-a="buy:${id}:1" ${can ? '' : 'disabled'}>구매</button>${it.t === 'use' && it.price * 10 <= p.meso ? `<button class="btn sm" data-a="buy:${id}:10">x10</button>` : ''}</div></div>`; }).join('');
       } else {
         const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]).sort((a, b) => ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[a].t] - ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[b].t]);
-        list = `<div class="row2" style="margin-bottom:7px"><button class="btn sm green" data-a="sellall">🧺 기타 아이템 전부 팔기</button></div>` + (ids.length ? '' : '<div class="card" style="text-align:center">팔 물건이 없어요</div>') + ids.map((id) => { const it = D.ITEMS[id], n = p.inv[id], wi = it.t === 'equip' ? E.worstIdx(E.bagRecs(G, id)) : null; return `<div class="it"><div class="slot">${ico(id)}${enhBadge(id, wi)}</div><div class="t"><b>${esc(gname(id, wi))}</b> <small style="color:#cdbbe8">x${n}</small>${E.lockedQty(G, id) ? ` <small style="color:#ffb86a">퀘스트용 ${E.lockedQty(G, id)}개 제외</small>` : ''}<br><span class="price">개당 💰 ${fmt(E.sellPrice(it))}</span></div><div>${E.sellable(G, id) < 1 ? '' : `<button class="btn sm" data-a="sell:${id}:1">1개</button>${E.sellable(G, id) > 1 ? `<button class="btn sm" data-a="sell:${id}:${E.sellable(G, id)}">전부</button>` : ''}`}</div></div>`; }).join('');
+        // 장비는 사본마다 강화가 달라서 한 개씩 따로 보여 주고 따로 판다 (일괄 판매 없음). 강화된 사본은 값을 더 쳐 줌
+        const rowFor = (id) => { const it = D.ITEMS[id];
+          if (it.t === 'equip') return E.bagRecs(G, id).map((r, k) => { const en = r.ok || 0; return `<div class="it"><div class="slot">${ico(id)}${enhBadge(id, k)}</div><div class="t"><b>${gnameC(id, k)}</b><br><small style="color:#cdbbe8">${[it.atk || r.atk ? `공격 ${(it.atk || 0) + (r.atk || 0)}` : '', it.def || r.def ? `방어 ${(it.def || 0) + (r.def || 0)}` : '', it.str ? `STR+${it.str}` : '', it.dex ? `DEX+${it.dex}` : '', it.hp ? `HP+${it.hp}` : '', en ? `강화 ${en}회 성공` : '강화 없음'].filter(Boolean).join(' · ')}</small><br><span class="price">💰 ${fmt(E.sellPriceOf(G, id, k))}</span></div><div><button class="btn sm ${en ? 'red' : ''}" data-a="sell:${id}:1:${k}">팔기</button></div></div>`; }).join('');
+          const n = p.inv[id]; return `<div class="it"><div class="slot">${ico(id)}</div><div class="t"><b>${esc(D.ITEMS[id].n)}</b> <small style="color:#cdbbe8">x${n}</small>${E.lockedQty(G, id) ? ` <small style="color:#ffb86a">퀘스트용 ${E.lockedQty(G, id)}개 제외</small>` : ''}<br><span class="price">개당 💰 ${fmt(E.sellPrice(it))}</span></div><div>${E.sellable(G, id) < 1 ? '' : `<button class="btn sm" data-a="sell:${id}:1">1개</button>${E.sellable(G, id) > 1 ? `<button class="btn sm" data-a="sell:${id}:${E.sellable(G, id)}">전부</button>` : ''}`}</div></div>`; };
+        list = `<div class="row2" style="margin-bottom:7px"><button class="btn sm green" data-a="sellall">🧺 기타 아이템 전부 팔기</button></div>` + (ids.length ? '' : '<div class="card" style="text-align:center">팔 물건이 없어요</div>') + ids.map(rowFor).join('');
       }
       const ex = modal.querySelector('#shop');
       if (ex) { ex.querySelector('.mesoH').textContent = `💰 ${fmt(p.meso)} 메소`; ex.querySelectorAll('.tabs2 button').forEach((b) => { b.className = 'btn sm ' + (b.dataset.a === 't:' + tab ? '' : 'gray'); }); const l2 = ex.querySelector('.list'); l2.innerHTML = list; if (shopTab !== tab) l2.scrollTop = 0; }
@@ -509,11 +513,11 @@
       shopTab = tab;
     };
     modalClick = (a) => {
-      const [k, v, n] = a.split(':');
+      const [k, v, n, ix] = a.split(':');
       if (k === 'close') { closeModal(); return; }
       if (k === 't') tab = v;
       else if (k === 'buy') { const r = E.buy(G, v, +n); if (!r.ok) logLine(r.msg, 'q'); }
-      else if (k === 'sell') { E.sell(G, v, +n); }
+      else if (k === 'sell') { if (ix !== undefined) { const rec = E.bagRecs(G, v)[+ix]; if (rec && rec.ok > 0 && !confirm(`강화가 ${rec.ok}번 된 ${D.ITEMS[v].n}입니다. 정말 팔까요?`)) return; E.sell(G, v, 1, +ix); } else E.sell(G, v, +n); }
       else if (k === 'sellall') { const g = E.sellAllEtc(G); if (g) logLine(`💰 ${fmt(g)} 메소에 팔았어요`, 'g'); }
       draw(); updateHud(true);
     };
@@ -621,8 +625,8 @@
     else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
   }
   // 업데이트 소식: 새 소식 번호가 바뀌면 한 번만 보여 준다 (소식을 고칠 땐 NEWS_ID 도 올릴 것)
-  const NEWS_ID = 'n4';
-  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.', '🔄 교관 발도에게서 <b>직업을 바꿀</b> 수 있어요 (스킬 초기화, 포인트 환급). 다른 직업도 체험해 보세요!', '🔱 스피어맨 <b>드래곤 크러셔</b>가 3연속 찌르기로 바뀌었어요.', '🕳️ <b>히든 스트리트</b> 2곳! 개미굴 깊은 곳 맨 위 발판 끝 / 불꽃 협곡 맨 위 오른쪽 발판에 숨은 포탈이 있어요 (경험치·드랍 보너스).', '🔊 주문서 붙는/터지는 소리와 사냥터별 새 BGM(불꽃 협곡·자쿰·히든·시련의 탑).', '⚙️ 스탯 초기화해도 장비가 벗겨지지 않고 <b>비활성</b>으로 표시돼요. 스탯을 올리면 다시 켜져요.', '👹 <b>보스 패턴 개편</b> — 발판 위에서도 맞아요! 붉은 <b>바닥!/발판!</b> 표시가 뜨면 안전한 곳으로 이동하세요.'];
+  const NEWS_ID = 'n5';
+  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.', '🔄 교관 발도에게서 <b>직업을 바꿀</b> 수 있어요 (스킬 초기화, 포인트 환급). 다른 직업도 체험해 보세요!', '🔱 스피어맨 <b>드래곤 크러셔</b>가 3연속 찌르기로 바뀌었어요.', '🕳️ <b>히든 스트리트</b> 2곳! 개미굴 깊은 곳 맨 위 발판 끝 / 불꽃 협곡 맨 위 오른쪽 발판에 숨은 포탈이 있어요 (경험치·드랍 보너스).', '🔊 주문서 붙는/터지는 소리! 모든 사냥터·보스가 <b>메이플 원곡 BGM</b>으로 바뀌었어요 (설정에서 끌 수 있어요).', '🧾 상점에서 장비를 팔 때 <b>한 개씩 강화 상태</b>를 보고 팔 수 있어요 (강화된 건 값을 더 쳐 줘요).', '⚙️ 스탯 초기화해도 장비가 벗겨지지 않고 <b>비활성</b>으로 표시돼요. 스탯을 올리면 다시 켜져요.', '👹 <b>보스 패턴 개편</b> — 발판 위에서도 맞아요! 붉은 <b>바닥!/발판!</b> 표시가 뜨면 안전한 곳으로 이동하세요.'];
   function showNews() {
     let seen = null; try { seen = localStorage.getItem('pw.news'); } catch (e) {} if (seen === NEWS_ID) return;
     try { localStorage.setItem('pw.news', NEWS_ID); } catch (e) {}

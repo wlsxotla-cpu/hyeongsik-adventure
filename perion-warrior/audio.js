@@ -16,8 +16,9 @@
   S.setMusic = (b) => { S.music = b; if (S.musG) S.musG.gain.value = b ? 0.16 : 0; try { if (S.yt && S.yt.playVideo) { if (b && S.ytWant && S.ytReady) S.yt.playVideo(); else if (!b) S.yt.pauseVideo(); } } catch (e) { } };
 
   // 원곡 BGM(유튜브 임베드): 음원 파일은 게임에 넣지 않고 유튜브 플레이어로만 재생한다. 실패하면 합성 BGM으로 되돌아감.
-  // 구역별 원곡: 마을=Perion(Nightmare) / 바위산 사냥터=Highland Star(불타버린 땅) / 개미굴·채석장=Ancient Remains(유적 발굴지). 나머지(숲·보스)는 합성 BGM
-  S.ytMap = { town: '9lwOsX763N0', field: 'kOhEqf0wPnE', cave: 'fdoT7nTWMO8', quarry: 'fdoT7nTWMO8' };
+  // 구역별 원곡: 마을=Perion(Nightmare) / 바위산 사냥터=Highland Star / 개미굴·채석장=Ancient Remains
+  // 고목의 숲=Ellinia: Missing You / 보스(고목 대장·바위왕)=Horntail / 불꽃 협곡=El Nath: Abandoned Mine(Dead Mine) / 자쿰=Zakum: Final Fight / 히든 스트리트=Sleepywood: Ancient Move(Ant Tunnel) / 시련의 탑=Ellinia: Moonlight Shadow(수련의 숲)
+  S.ytMap = { town: '9lwOsX763N0', field: 'kOhEqf0wPnE', cave: 'fdoT7nTWMO8', quarry: 'fdoT7nTWMO8', forest: '2NoF8PHQJqQ', boss: 'WnLrTMmnyBc', lava: 'WmHOENuKkmk', zakum: 'rEtDrkAYs68', hidden: 'w9HagZ099c0', trial: 'XYtHWyrVm30' };
   S.ytId = null; S.ytReady = false; S.ytCur = null; S.ytOn = false; S.ytWant = false; S.ytFail = false; S.yt = null;
   function ytFallback() { S.ytFail = true; S.ytWant = false; const t = S.track; S.track = null; if (t) S.play(t); }
   function ytLoad(cb) {
