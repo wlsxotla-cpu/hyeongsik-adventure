@@ -514,6 +514,18 @@
     // 리스폰
     for (const sl of G.slots) { if (sl.mon && sl.mon.dead && !G.mons.includes(sl.mon)) sl.mon = null; if (!sl.mon && !sl.minion) { sl.respT -= dt; if (sl.respT <= 0 && Math.abs(G.p.x - sl.x) > 120 || sl.respT < -6) spawnMon(G, sl); } }
     G.slots = G.slots.filter((s) => !s.minion);
+    // 시련의 탑: 인내의 숲처럼 옆에서 공이 날아온다 (맞으면 밀려나 떨어짐, 점프로 피하기). 위로 갈수록 빠르고 자주
+    if (G.mapId === 'trial' && !p.dead) {
+      G.hz = (G.hz || 2) - dt;
+      if (G.hz <= 0) {
+        const pls = map.plats, gy = pls[0].y, top = pls[pls.length - 1].y, fr = clamp((gy - p.y) / (gy - top), 0, 1);
+        const stg = fr < 0.3 ? 0 : fr < 0.66 ? 1 : 2; G.hz = [3.0, 2.1, 1.5][stg] * rr(G, 0.8, 1.2);
+        if (p.y < gy - 40) {
+          const cand = pls.filter((q, i) => i > 0 && q.y > p.y - 170 && q.y < p.y + 40); const pl = cand.length ? cand[Math.floor(rand(G) * cand.length)] : null;
+          if (pl) { const dir = rand(G) < 0.5 ? 1 : -1; addProj(G, { kind: 'ball', x: dir > 0 ? -24 : map.w + 24, y: pl.y - 16, vx: dir * [130, 165, 205][stg], w: 18, h: 18, dmg: 4, lv: 1, life: 16 }); }
+        }
+      }
+    }
     // 투사체
     for (let i = G.proj.length - 1; i >= 0; i--) {
       const q = G.proj[i];
