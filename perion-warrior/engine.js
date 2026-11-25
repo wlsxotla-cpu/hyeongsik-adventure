@@ -12,9 +12,9 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3', 'tier4', 'slots', 'auction'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'sps', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3', 'tier4', 'slots', 'auction'];
   E.newPlayer = function (name) {
-    return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, skills: { power: 1 }, baseHp: 55, baseMp: 14,
+    return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, sps: { 1: 0, 2: 0, 3: 0, 4: 0 }, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
       settings: { auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: false, shakeV2: true }, pet: null, enh: {}, hp: 55, mp: 14, play: 0, tut: {} };
   };
@@ -260,33 +260,42 @@
   };
   // 3차 전직: Lv50 + 오르비스 시험 퀘스트(qt3) 완료. 직업을 바꾸면 3차는 다시 해야 한다(무료)
   E.canAdvance3 = (G) => { const p = G.p; if (!p.job) return { ok: false, msg: '먼저 2차 전직을 해야 해요' }; if (p.tier3) return { ok: false, msg: '이미 3차 전직을 했어요' }; if (p.lv < D.JOB3_LV) return { ok: false, msg: `Lv ${D.JOB3_LV} 이상부터 3차 전직을 할 수 있어요` }; if (E.qState(G, 'qt3') !== 'done') return { ok: false, msg: '「3차 전직의 시험」을 먼저 완료해야 해요' }; return { ok: true }; };
-  E.advance3 = function (G) { const p = G.p, c = E.canAdvance3(G); if (!c.ok) return c; p.tier3 = true; p.sp += 5; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `3차 전직! ${D.JOBS[p.job].n3}이(가) 되었어요` }); return { ok: true }; };
+  E.advance3 = function (G) { const p = G.p, c = E.canAdvance3(G); if (!c.ok) return c; p.tier3 = true; E.syncSp(G); p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `3차 전직! ${D.JOBS[p.job].n3}이(가) 되었어요` }); return { ok: true }; };
   // 4차 전직: Lv120 + 마가티아 시험(qt4) 완료
   E.canAdvance4 = (G) => { const p = G.p; if (!p.tier3) return { ok: false, msg: '먼저 3차 전직을 해야 해요' }; if (p.tier4) return { ok: false, msg: '이미 4차 전직을 했어요' }; if (p.lv < D.JOB4_LV) return { ok: false, msg: `Lv ${D.JOB4_LV} 이상부터 4차 전직을 할 수 있어요` }; if (E.qState(G, 'qt4') !== 'done') return { ok: false, msg: '「4차 전직의 시험」을 먼저 완료해야 해요' }; return { ok: true }; };
-  E.advance4 = function (G) { const p = G.p, c = E.canAdvance4(G); if (!c.ok) return c; p.tier4 = true; p.sp += 5; p.ap += 5; const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `4차 전직! ${D.JOBS[p.job].n4}이(가) 되었어요` }); return { ok: true }; };
+  E.advance4 = function (G) { const p = G.p, c = E.canAdvance4(G); if (!c.ok) return c; p.tier4 = true; E.syncSp(G); p.ap += 5; const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `4차 전직! ${D.JOBS[p.job].n4}이(가) 되었어요` }); return { ok: true }; };
   E.jobName = (p) => (p.job ? (p.tier4 ? D.JOBS[p.job].n4 : p.tier3 ? D.JOBS[p.job].n3 : D.JOBS[p.job].n) : '전사');
   E.canAdvance = (G) => { const p = G.p; if (p.job) return { ok: false, msg: '이미 전직했어요' }; if (p.lv < D.JOB_LV) return { ok: false, msg: `Lv ${D.JOB_LV} 이상부터 전직할 수 있어요` }; if (E.qState(G, 'q9') !== 'done') return { ok: false, msg: '「고대 골렘의 시련」을 먼저 완료해야 해요' }; return { ok: true }; };
   E.advance = function (G, jid) {
     const p = G.p, j = D.JOBS[jid]; const c = E.canAdvance(G); if (!j || !c.ok) return c.ok ? { ok: false, msg: '없는 직업이에요' } : c;
-    p.job = jid; p.sp += 3; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
+    p.job = jid; E.syncSp(G); p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
   };
   // 스킬 레벨 상한: 캐릭터 레벨이 오를수록 천천히 열린다 (스킬 요구 레벨 +12~13 에서 만렙)
   E.skillCap = (G, s) => Math.min(s.maxLv, 3 + Math.floor(Math.max(0, G.p.lv - s.reqLv) * (s.tier || s.job ? 0.3 : 0.8)));
   // 스킬 포인트 총량을 스킬 필요량에 딱 맞춤: Lv2~30 합계 69(1차 스킬 7종 만렙, 파워 스트라이크 1레벨은 기본) + 전직 3 + Lv31~39 레벨당 3 = 직업 스킬 30
-  E.spEarned = (lv) => (lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69 + (lv - 30)); // 31레벨부터 매 레벨 SP 1 (200까지 꾸준히). 2·3·4차 전직 보너스는 fixSp에서
+  // 스킬 포인트는 1·2·3·4차 풀로 나뉘어 서로 옮겨 쓸 수 없다 (원작처럼)
+  const skTier = (s) => s.tier || (s.job ? 2 : 1);
+  const POOL = { 2: [30, 65], 3: [70, 115], 4: [120, 190] }; // 해당 차수 SP를 다 받는 구간(레벨)
+  const needT = (job, t) => { let n = 0; for (const k in D.SKILLS) { const s = D.SKILLS[k]; if (skTier(s) === t && (t === 1 || s.job === job)) n += s.maxLv; } return n; };
+  E.skTier = skTier;
+  E.spEarnedT = (p, t) => { const lv = p.lv; if (t === 1) return lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69; if (!p.job || (t === 3 && !p.tier3) || (t === 4 && !p.tier4)) return 0; const [a, b] = POOL[t]; return Math.floor(needT(p.job, t) * Math.max(0, Math.min(lv - a, b - a)) / (b - a)); };
+  E.spSpentT = (p, t) => { let n = 0; for (const sid in p.skills) { const s = D.SKILLS[sid]; if (s && skTier(s) === t) n += Math.max(0, (p.skills[sid] || 0) - (sid === 'power' ? 1 : 0)); } return n; };
+  E.spEarned = (lv) => E.spEarnedT({ lv, job: null }, 1);
+  // 풀별 남은 포인트를 다시 계산 (레벨업·전직·불러오기 때). 한 풀이 모자라면 그 차수 스킬만 초기화
+  E.syncSp = function (G) { const p = G.p; let changed = false; p.sps = p.sps || {}; for (let t = 1; t <= 4; t++) { const e = E.spEarnedT(p, t); let sp = E.spSpentT(p, t); if (sp > e) { for (const sid in p.skills) { const s = D.SKILLS[sid]; if (s && skTier(s) === t) { if (sid === 'power') p.skills[sid] = 1; else delete p.skills[sid]; } } sp = 0; changed = true; } p.sps[t] = e - sp; } p.sp = p.sps[1] + p.sps[2] + p.sps[3] + p.sps[4]; return changed; };
   E.spSpent = (p) => { let n = 0; for (const sid in p.skills) n += Math.max(0, (p.skills[sid] || 0) - (sid === 'power' ? 1 : 0)); return n; };
   // 옛 저장 보정: 받은 포인트 총량이 새 기준보다 많으면 스킬을 초기화하고 기준량만 돌려준다
-  E.fixSp = function (G) { const p = G.p; if (p.tier3 && p.lv < D.JOB3_LV) p.tier3 = false; if (p.tier4 && (p.lv < D.JOB4_LV || !p.tier3)) p.tier4 = false; const earned = E.spEarned(p.lv) + (p.job ? 3 : 0) + (p.tier3 ? 5 : 0) + (p.tier4 ? 5 : 0), spent = E.spSpent(p); if (spent + p.sp < earned) { const add = earned - spent - p.sp; p.sp += add; ev(G, { t: 'msg', text: '스킬 포인트 ' + add + '점을 추가로 받았어요! (31레벨부터 매 레벨 1점)' }); return true; } if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
-  E.resetSkills = function (G) { const p = G.p; let back = 0; for (const sid in p.skills) { const l = p.skills[sid] || 0; const keep = sid === 'power' ? 1 : 0; back += Math.max(0, l - keep); if (keep) p.skills[sid] = keep; else delete p.skills[sid]; } p.sp += back; p.buffs = {}; return back; };
+  E.fixSp = function (G) { const p = G.p; if (p.tier3 && p.lv < D.JOB3_LV) p.tier3 = false; if (p.tier4 && (p.lv < D.JOB4_LV || !p.tier3)) p.tier4 = false; const first = !p.sps; const ch = E.syncSp(G); if (first) { ev(G, { t: 'msg', text: '스킬 포인트가 1·2·3·4차로 나뉘었어요. 차수별 포인트는 서로 옮겨 쓸 수 없어요.' }); p.buffs = {}; } return first || ch; };
+  E.resetSkills = function (G) { const p = G.p; let back = 0; for (const sid in p.skills) { const l = p.skills[sid] || 0; const keep = sid === 'power' ? 1 : 0; back += Math.max(0, l - keep); if (keep) p.skills[sid] = keep; else delete p.skills[sid]; } E.syncSp(G); p.buffs = {}; return back; };
   // 직업 변경: 다른 직업을 체험해 볼 수 있게 언제든 가능. 스킬은 전부 초기화(포인트는 그대로 돌려받음), 못 쓰는 무기는 직업 기본 무기로 교체
   E.changeJob = function (G, jid) {
     const p = G.p; if (!p.job) return { ok: false, msg: '아직 2차 전직 전이에요' }; if (!D.JOBS[jid] || jid === p.job) return { ok: false, msg: '지금과 다른 직업을 골라 주세요' };
-    E.resetSkills(G); p.job = jid; p.tier3 = false; p.tier4 = false; p.skCd = {}; E.checkGear(G); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `${D.JOBS[jid].n}(으)로 직업을 바꿨어요. 스킬 포인트를 다시 찍어 주세요!` }); return { ok: true };
+    p.job = jid; p.tier3 = false; p.tier4 = false; E.resetSkills(G); p.skCd = {}; E.checkGear(G); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `${D.JOBS[jid].n}(으)로 직업을 바꿨어요. 스킬 포인트를 다시 찍어 주세요!` }); return { ok: true };
   };
   E.learn = function (G, sid) {
     const p = G.p, s = D.SKILLS[sid]; const l = p.skills[sid] || 0;
-    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job) || (s.tier === 3 && !p.tier3) || (s.tier === 4 && !p.tier4) || l >= E.skillCap(G, s)) return false;
-    p.skills[sid] = l + 1; p.sp -= 1; ev(G, { t: 'sfx', n: 'equip' }); return true;
+    if (!s || p.sp < 1 || (p.sps && p.sps[skTier(s)] < 1) || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job) || (s.tier === 3 && !p.tier3) || (s.tier === 4 && !p.tier4) || l >= E.skillCap(G, s)) return false;
+    p.skills[sid] = l + 1; p.sp -= 1; if (p.sps) p.sps[skTier(s)]--; ev(G, { t: 'sfx', n: 'equip' }); return true;
   };
 
   /* ───────── 전투 ───────── */
@@ -349,7 +358,7 @@
     if (p.lv >= D.MAX_LV) p.exp = 0;
   }
   function levelUp(G) {
-    const p = G.p; p.lv++; p.ap += 5; p.sp += E.spEarned(p.lv) - E.spEarned(p.lv - 1); p.baseHp += 16 + Math.floor(p.lv * 0.9); p.baseMp += 3;
+    const p = G.p; p.lv++; p.ap += 5; E.syncSp(G); p.baseHp += 16 + Math.floor(p.lv * 0.9); p.baseMp += 3;
     const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp;
     ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' });
     for (const sid of D.SKILL_ORDER) if (D.SKILLS[sid].reqLv === p.lv) ev(G, { t: 'msg', text: `새 스킬 사용 가능: ${D.SKILLS[sid].n}` });

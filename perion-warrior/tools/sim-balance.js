@@ -4,7 +4,7 @@ function mkPlayer(job, L, gearTag, rid) {
   const G = E.newGame('b' + L, 5); const p = G.p; p.lv = L; p.str = Math.round(12 + 4.2 * (L - 1)); p.dex = Math.round(5 + 0.45 * (L - 1)); p.ap = 0; p.int = 4; p.luk = 4;
   p.baseHp = 55; for (let l = 2; l <= L; l++) p.baseHp += 16 + Math.floor(l * 0.9); p.baseMp = 14 + 3 * (L - 1);
   p.quests.q9 = { st: 'done', prog: [] }; p.quests.qt3 = { st: 'done', prog: [] }; p.quests.qt4 = { st: 'done', prog: [] };
-  E.advance(G, job); if (L >= 70) E.advance3(G); if (L >= 120) E.advance4(G); p.sp = 999; p.ap = 0;
+  E.advance(G, job); if (L >= 70) E.advance3(G); if (L >= 120) E.advance4(G); p.sps = { 1: 999, 2: 999, 3: 999, 4: 999 }; p.sp = 3996; p.ap = 0;
   for (const s of D.SKILL_ORDER) for (let i = 0; i < 12; i++) E.learn(G, s);
   const wt = { fighter: 'great', page: 'mace', spearman: 'spear' }[job]; const wid = `g${rid}${gearTag}_${wt}`;
   p.inv = {}; for (const sfx of [wt, 'hm', 'ar', 'gl', 'sh']) { const id = `g${rid}${gearTag}_${sfx}`; p.inv[id] = 1; }

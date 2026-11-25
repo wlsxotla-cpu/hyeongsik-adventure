@@ -3,7 +3,7 @@ const E = require('../engine.js'), D = require('../data.js'); let bad = 0, runs 
 let seed = 12345; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 for (const job of [null, 'fighter', 'page', 'spearman']) for (const mid of Object.keys(D.MAPS)) {
   try {
-    const G = E.newGame('f', 7 + runs); const p = G.p; p.lv = job ? 36 : 20; p.str = 120; p.dex = 60; p.int = 30; p.sp = 200; p.ap = 0;
+    const G = E.newGame('f', 7 + runs); const p = G.p; p.lv = job ? 36 : 20; p.str = 120; p.dex = 60; p.int = 30; p.sps = { 1: 200, 2: 200, 3: 200, 4: 200 }; p.sp = 800; p.ap = 0;
     if (job) { p.quests.q9 = { st: 'done', prog: [] }; E.advance(G, job); }
     for (const s of D.SKILL_ORDER) for (let i = 0; i < 12; i++) E.learn(G, s);
     p.inv = { hp4: 99, mp3: 99, sw4: 1, gs3: 1, ax4: 1, mc4: 1, sp4: 1, hmk: 1, scW100: 20 }; for (const w of ['sw4', 'gs3', 'ax4', 'mc4', 'sp4']) E.equip(G, w); E.equip(G, 'hmk');
