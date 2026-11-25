@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzg';
+  const BUILD = '20261125zzh';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -109,6 +109,9 @@
           if (e.kind === 'power' || e.kind === 'rblow' || e.kind === 'crusher') fx({ type: 'beam', x: cx, y: cy + 2, face: e.face, r: a.rng * 1.15, col: FXCOL[e.kind] || '#ffb066', life: 0.3, delay: 0 });
           else if (e.kind === 'quake') { fx({ type: 'ring', x: p.x, y: p.y - 2, r: 40, flat: 0.25, col: '#ffcc66', size: 5, life: 0.5 }); }
           else fx({ type: 'arc', kind: e.kind, face: e.face, combo: e.combo, r: Math.max(34, a.rng * 0.78), col: e.kind === 'basic' ? (D.ITEMS[p.equip.weapon].wt === 'axe' ? '#ffd9a0' : D.ITEMS[p.equip.weapon].wt === 'great' ? '#ffe0ff' : D.ITEMS[p.equip.weapon].wt === 'spear' ? '#c8ffd8' : D.ITEMS[p.equip.weapon].wt === 'mace' ? '#ffe3b8' : FXCOL.basic) : FXCOL[e.kind], life: e.kind === 'slash' ? 0.42 : 0.26, delay: 0 }), fxs[fxs.length - 1].delay = 0;
+          if (e.kind === 'rblow') { fx({ type: 'ring', x: cx + e.face * a.rng * 0.7, y: p.y - 24, r: 38, col: '#ff5a3a', size: 7, life: 0.38 }); G.shake = Math.max(G.shake, 1); }
+          else if (e.kind === 'crusher') { for (const dy of [-9, 9]) fx({ type: 'beam', x: cx, y: cy + 2 + dy, face: e.face, r: a.rng * 1.05, col: '#b6ffd0', life: 0.24, delay: 0.03 }); }
+          else if (e.kind === 'charge') { fx({ type: 'ring', x: p.x, y: p.y - 24, r: 64, flat: 0.55, col: '#fff0a0', size: 6, life: 0.42 }); }
           break; }
         case 'dmg': {
           if (e.who === 'player') dmgText(e.x, e.y, e.amt, { col: '#ff6a7a', grad: '#ff2a4a', stroke: '#3a0610', size: 20 });
