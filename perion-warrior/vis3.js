@@ -109,6 +109,7 @@
       else if (n.role === 'shop' && n.shopKind === 'smith') house(c, x - 30, base, 240, 104, shade(wall, -0.1), '#6a6e7c', '대장간');
       else if (n.role === 'shop') house(c, x, base, 200, 116, wall, roofA, '주문서', true);
       else if (n.role === 'quest') house(c, x - 20, base, 240, 132, wall, roofB, '수호대', true);
+      else if (n.role === 'auction') house(c, n.x - 80, base, 160, 104, shade(wall, 0.05), '#c8a030', '경매장');
       else if (n.role === 'travel') { c.strokeStyle = OUT; c.lineWidth = 6; c.beginPath(); c.moveTo(n.x - 70, base); c.lineTo(n.x - 70, base - 96); c.stroke(); c.strokeStyle = '#a0703c'; c.lineWidth = 3; c.beginPath(); c.moveTo(n.x - 70, base); c.lineTo(n.x - 70, base - 96); c.stroke(); c.beginPath(); rrect(c, n.x - 70, base - 100, 96, 22, 5); fs(c, roofB, 2); c.font = 'bold 11px sans-serif'; c.fillStyle = '#fff'; c.textAlign = 'center'; c.fillText('🧭 이동', n.x - 22, base - 85); }
       else if (n.role === 'master4') { const hx = n.x - 120; c.beginPath(); rrect(c, hx, base - 130, 240, 130, 4); fs(c, wall, 2.4); for (let i = 0; i < 5; i++) { c.beginPath(); rrect(c, hx + 12 + i * 48, base - 128, 16, 126, 3); fs(c, '#fff', 1.6); } c.beginPath(); c.moveTo(hx - 10, base - 130); c.lineTo(hx + 120, base - 186); c.lineTo(hx + 250, base - 130); c.closePath(); fs(c, roofA, 2.4); }
     }

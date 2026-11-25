@@ -837,6 +837,7 @@
         { id: tag + '_scribe', n: r.npc[2], x: 1700, role: 'shop', shop: 'scroll', shopKind: 'scroll', look: 'scribe', quests: [q(6)] },
         { id: tag + '_captain', n: r.npc[4], x: 2200, y: 330, role: 'quest', look: 'captain', quests: [q(1), q(3), q(5), q(7)] },
         { id: tag + '_travel', n: r.npc[5], x: 2480, role: 'travel', look: 'miner', quests: [] },
+        { id: tag + '_auction', n: '경매인 ' + r.n.slice(0, 2), x: 1020, role: 'auction', look: 'merchant', quests: [] },
       ].concat(tag === 'magatia' ? [{ id: 'mag_master4', n: '시간의 관문지기 크로노스', x: 2600, role: 'master4', look: 'master', quests: ['qt4'] }] : []) };
     huntMap(H1, r.hunts[0], `Lv ${L0}~${Math.round(L0 + span * 0.55)}`, r.theme, 'hunt_' + tag, mon3([0, 1, 2]), [{ id: 'back', x: 60, to: T, tx: 'toHunt', label: r.n }, { id: 'next', x: 2740, to: H2, tx: 'back', label: r.hunts[1], lv: `Lv ${Math.round(L0 + span * 0.4)}~${L1}`, col: '#cfe' }]);
     huntMap(H2, r.hunts[1], `Lv ${Math.round(L0 + span * 0.4)}~${L1}`, r.theme, 'hunt_' + tag, mon3([3, 4, 5]), [{ id: 'back', x: 60, to: H1, tx: 'next', label: r.hunts[0] }, { id: 'next', x: 2740, to: BM, tx: 'back', label: r.boss.n, lv: `Lv ${bl - 2}+ 보스`, col: '#f96' }, { id: 'hid', x: 1020, y: 228, to: HM, tx: 'back', label: r.hid, hidden: true, col: '#b8f' }]);
@@ -862,6 +863,7 @@
   genOrder.splice(genOrder.indexOf('magatiaq3') + 1, 0, 'qt4');
   // 오르비스 -> 새 지역: 비공정 조종사
   maps.orbis.npcs.push({ id: 'o_travel', n: '비공정 조종사 하리', x: 2800, role: 'travel', look: 'miner', quests: [] });
+  maps.orbis.npcs.push({ id: 'o_auction', n: '경매인 골드윈', x: 1130, role: 'auction', look: 'merchant', quests: [] });
   Object.assign(D.QUESTS, genQuests); D.QUEST_ORDER = D.QUEST_ORDER.concat(genOrder);
 
   // 자동 밧줄: 위아래로 겹치는 발판 사이마다 밧줄을 놓아 모든 발판을 걸어서(밧줄로) 오를 수 있게 한다 (점프맵·마을 제외)

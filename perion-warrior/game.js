@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzzc';
+  const BUILD = '20261125zzzd';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -282,6 +282,35 @@
   function showModal(html, handler, lock) { modal.innerHTML = html; modal.dataset.lock = lock ? '1' : ''; modal.classList.add('on'); paused = true; modalClick = handler; releaseAll(); }
   function closeModal() { modal.classList.remove('on'); modal.innerHTML = ''; paused = false; modalClick = null; if (G) updateHud(true); }
 
+  /* ───────── 경매장 화면 ───────── */
+  function auctionUI(npc, tab) {
+    tab = tab || 'buy'; const p = G.p, A = E.auction(G); E.auctionRefresh(G); const sr = E.auctionSettle(G);
+    if (sr.sold) logLine(`🏛️ 경매에서 ${sr.sold}개가 팔렸어요! (+${fmt(sr.gold)} 메소, 정산 대기)`, 'g'); if (sr.back) logLine(`🏛️ 기간이 지난 ${sr.back}개가 가방으로 돌아왔어요`, 'i');
+    const nameH = (id, rec) => { const it = D.ITEMS[id], o = rec && rec.ok; return esc(it.n) + (o ? ` <span style="color:${Art.enhColor(o)}">+${o}</span>` : ''); };
+    const infoH = (id, rec) => { const it = D.ITEMS[id]; if (it.t !== 'equip') return esc(it.desc || ''); const r = rec || {}, v = (k) => (it[k] || 0) + (r[k] || 0); return [v('atk') ? `공격 ${v('atk')}` : '', v('def') ? `방어 ${v('def')}` : '', v('str') ? `STR+${v('str')}` : '', v('dex') ? `DEX+${v('dex')}` : '', v('hp') ? `HP+${v('hp')}` : '', r.ok ? `강화 ${r.ok}회` : '', `Lv ${it.lv}`].filter(Boolean).join(' · '); };
+    const left = (t) => { const m = Math.max(0, Math.round((t - Date.now()) / 60000)); return m >= 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m}분`; };
+    let list = '';
+    if (tab === 'buy') {
+      const nxt = Math.max(0, Math.ceil(((A.slot + 1) * E.AUC.SLOT_MS - Date.now()) / 60000));
+      list = `<div class="card" style="font-size:12px">🏛️ 다른 모험가들이 내놓은 물건이에요. 매물은 30분마다 바뀌어요. <small style="color:#cdbbe8">(다음 교체 ${nxt}분 후)</small></div>` + (A.market.length ? A.market.map((L) => `<div class="it"><div class="slot">${ico(L.id)}</div><div class="t"><b>${nameH(L.id, L.rec)}</b><br><small style="color:#cdbbe8">${infoH(L.id, L.rec)}</small><br><span class="price">💰 ${fmt(L.price)}</span></div><div><button class="btn sm green" data-a="abuy:${L.uid}" ${p.meso < L.price ? 'disabled' : ''}>구매</button></div></div>`).join('') : '<div class="card" style="text-align:center">지금은 나온 물건이 없어요</div>');
+    } else if (tab === 'sell') {
+      const rows = []; const preset = (id, k, mv) => [[0.8, '빠르게'], [1, '시세'], [1.5, '비싸게']].map(([m, lab]) => `<button class="btn sm ${m === 1 ? 'green' : ''}" data-a="alist:${id}:${k}:${m}">${lab} ${fmt(Math.round(mv * m))}</button>`).join('');
+      for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (!it) continue;
+        if (it.t === 'equip') E.bagRecs(G, id).forEach((r, k) => { const mv = E.marketValue(it, r); rows.push(`<div class="it"><div class="slot">${ico(id)}</div><div class="t"><b>${nameH(id, r)}</b><br><small style="color:#cdbbe8">${infoH(id, r)}</small><br><span class="price">시세 💰 ${fmt(mv)}</span></div><div style="display:flex;flex-direction:column;gap:3px">${preset(id, k, mv)}</div></div>`); });
+        else if (E.sellable(G, id) > 0) { const mv = E.marketValue(it); rows.push(`<div class="it"><div class="slot">${ico(id)}</div><div class="t"><b>${esc(it.n)}</b> <small style="color:#cdbbe8">x${p.inv[id]} (1개씩)</small><br><span class="price">시세 💰 ${fmt(mv)}</span></div><div style="display:flex;flex-direction:column;gap:3px">${preset(id, 'x', mv)}</div></div>`); } }
+      list = `<div class="card" style="font-size:12px">📤 내놓을 가격을 고르세요. 싸게 내놓을수록 빨리 팔려요. 수수료 5%, 최대 ${E.AUC.MAX}개 · ${E.AUC.HOURS}시간. <small style="color:#cdbbe8">(올린 ${A.mine.length}/${E.AUC.MAX})</small></div>` + (rows.length ? rows.join('') : '<div class="card" style="text-align:center">올릴 물건이 없어요</div>');
+    } else {
+      list = `<div class="card" style="display:flex;justify-content:space-between;align-items:center">💰 정산 대기 <b>${fmt(A.gold)}</b> 메소 <button class="btn sm green" data-a="acollect" ${A.gold > 0 ? '' : 'disabled'}>받기</button></div>` + (A.mine.length ? A.mine.map((L) => `<div class="it"><div class="slot">${ico(L.id)}</div><div class="t"><b>${nameH(L.id, L.rec)}</b><br><span class="price">💰 ${fmt(L.price)}</span> <small style="color:#cdbbe8">· 남은 ${left(L.exp)}</small></div><div><button class="btn sm gray" data-a="acancel:${L.uid}">취소</button></div></div>`).join('') : '<div class="card" style="text-align:center">올려 둔 물건이 없어요</div>');
+    }
+    showModal(`<div class="panel" id="shop"><h3><span>🏛️ ${esc(npc.n)}의 경매장</span><span class="mesoH">💰 ${fmt(p.meso)} 메소</span><button class="x" data-a="close">✕</button></h3><div class="body"><div class="tabs2"><button class="btn sm ${tab === 'buy' ? '' : 'gray'}" data-a="t:buy">구매</button><button class="btn sm ${tab === 'sell' ? '' : 'gray'}" data-a="t:sell">내놓기</button><button class="btn sm ${tab === 'mine' ? '' : 'gray'}" data-a="t:mine">내 경매${A.gold > 0 ? ' ●' : ''}</button></div><div class="list">${list}</div></div></div>`,
+      (a) => { const [k, v, n, m] = a.split(':'); if (k === 'close') { closeModal(); return; } let nt = tab;
+        if (k === 't') nt = v; else if (k === 'abuy') { const r = E.auctionBuy(G, +v); if (!r.ok) logLine(r.msg, 'q'); }
+        else if (k === 'alist') { const r = E.auctionList(G, v, n === 'x' ? null : +n, +m); if (!r.ok) logLine(r.msg, 'q'); else { logLine(`📤 경매에 올렸어요 (${fmt(r.listing.price)} 메소)`, 'i'); nt = 'mine'; } }
+        else if (k === 'acollect') { const g = E.auctionCollect(G); if (g) logLine(`💰 경매 대금 ${fmt(g)} 메소를 받았어요`, 'g'); }
+        else if (k === 'acancel') { E.auctionCancel(G, +v); }
+        updateHud(true); auctionUI(npc, nt); });
+  }
+
   /* ───────── 아이템 설명 ───────── */
   const ico = (id, cls) => { const u = Art.itemIconUrl(id); const it = D.ITEMS[id]; return u ? `<img class="ii ${cls || ''}" src="${u}" alt="">` : it.icon; };
   const enhOf = (id, idx) => E.recOf(G, id, idx);
@@ -483,6 +512,8 @@
         const fee = 3000, to = D.MAPS[npc.dest];
         text = `나는 ${npc.n}. ${to.n}행 배를 운항한다네.\n\n🚢 승선료 **${fmt(fee)} 메소**, 항해는 약 75초.\n⚠️ 가끔 **크림슨 발록**이 배를 습격한다네. 물약을 챙기게!`;
         opts.push({ label: `🚢 ${to.n}행 배 타기 (${fmt(fee)} 메소)`, cls: 'green', fn: () => { const r = E.boardShip(G, npc.dest, fee); if (!r.ok) { dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); return; } handleEvents(); closeModal(); save(); toastBanner('🚢 출항! ' + to.n + '(으)로 갑니다'); } });
+      } else if (npc.role === 'auction') {
+        text = '어서 오세요, 경매장입니다! 🏛️\n다른 모험가들의 장비와 주문서를 사거나, 안 쓰는 물건을 시세에 올려 보세요.\n강화된 장비도 강화 수치대로 값을 쳐 드립니다.'; opts.push({ label: '🏛️ 경매장 열기', cls: 'green', fn: () => auctionUI(npc) });
       } else if (npc.role === 'travel') {
         text = '어디로 모셔다 드릴까요? 🧭\n레벨이 되는 도시라면 요금만 내면 바로 갈 수 있어요.';
         for (const tw of D.TOWNS) { if (tw.id === G.mapId) continue; const fee = E.travelFee(tw), low = G.p.lv < tw.min; opts.push({ label: `🧭 ${tw.n} <small>(Lv ${tw.min}+ · ${fmt(fee)} 메소)</small>`, cls: low ? 'gray' : '', dis: low, fn: () => { const r = E.travel(G, tw.id); if (!r.ok) { dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); return; } handleEvents(); closeModal(); save(); toastBanner('🧭 ' + tw.n + '에 도착!'); } }); }
@@ -652,7 +683,7 @@
     G = E.newGame(sv ? sv.name : name, undefined, sv); if (sv) E.fixSp(G); started = true; paused = false; Snd.init(); Snd.setSound(G.p.settings.sound); Snd.setMusic(G.p.settings.music); if (G.p.settings.ytbgm === undefined) G.p.settings.ytbgm = true; Snd.setYt(G.p.settings.ytbgm);
     $('title').classList.add('hidden'); $('hud').classList.remove('hidden'); $('ctl').classList.remove('hidden');
     if (!sv) { G.p.name = name; }
-    if (G.p.settings.hq === undefined) G.p.settings.hq = true; applyHq(); applyCtl(); onMap(); buildSkillBtns(); updateHud(true); hc.sk = null;
+    if (G.p.settings.hq === undefined) G.p.settings.hq = true; applyHq(); { const as = E.auctionSettle(G); if (as.sold) setTimeout(() => logLine(`🏛️ 경매에서 ${as.sold}개가 팔렸어요! 경매장에서 정산 받으세요 (+${fmt(as.gold)})`, 'g'), 1500); } applyCtl(); onMap(); buildSkillBtns(); updateHud(true); hc.sk = null;
     if (isNew) { showModal(`<div class="panel" id="dlg"><h3><span>📖 프롤로그</span></h3><div class="body"><div class="txt"><div>바위와 용기의 마을 <b>페리온</b>.\n이곳은 수많은 전사가 첫걸음을 내딛은 곳이에요.\n\n오늘, 새로운 전사 <b>${esc(name)}</b>의 모험이 시작됩니다!\n\n⚔️ 사냥하고, 레벨을 올리고, 장비를 갖춰\n페리온의 위협 <b>고목 대장</b>과 <b>바위왕 골렘</b>을 쓰러뜨리세요.</div><div class="opts"><button class="btn green" data-a="go" style="min-height:52px;font-size:16px">모험 시작!</button></div></div></div></div>`, (a) => { if (a === 'go') closeModal(); }, true); }
     else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
   }

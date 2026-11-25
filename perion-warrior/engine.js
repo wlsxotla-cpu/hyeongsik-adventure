@@ -12,7 +12,7 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3', 'tier4', 'slots'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh', 'bag', 'job', 'tier3', 'tier4', 'slots', 'auction'];
   E.newPlayer = function (name) {
     return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
@@ -210,6 +210,37 @@
     if (it.t === 'equip' && idx != null) { if (idx < 0 || idx >= E.bagRecs(G, id).length) return { ok: false, msg: '그 장비가 없어요' }; n = 1; p.meso += E.sellPriceOf(G, id, idx); E.bagRecs(G, id).splice(idx, 1); E.addItem(G, id, -1); if (inv(p, id) < 1 && p.bag) delete p.bag[id]; ev(G, { t: 'sfx', n: 'buy' }); return { ok: true }; }
     p.meso += E.sellPrice(it) * n; if (it.t === 'equip') { const l = E.bagRecs(G, id); for (let k = 0; k < n; k++) l.splice(E.worstIdx(l), 1); } E.addItem(G, id, -n); if (inv(p, id) < 1 && p.bag) delete p.bag[id]; ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
   };
+  /* ───────── 경매장 (오프라인 시장: 30분마다 바뀌는 매물 + NPC 구매자) ───────── */
+  const AUC_FEE = 0.05, AUC_MAX = 10, AUC_SLOT_MS = 30 * 60 * 1000, AUC_HOURS = 24;
+  E.AUC = { FEE: AUC_FEE, MAX: AUC_MAX, SLOT_MS: AUC_SLOT_MS, HOURS: AUC_HOURS };
+  E.marketValue = (it, rec) => { if (it.t === 'equip') return Math.max(20, Math.round(it.price * 0.7 * (1 + 0.12 * ((rec && rec.ok) || 0)))); if (it.t === 'scroll') return Math.round(it.price * 2.2); return Math.max(1, Math.round((it.price || 10) * 1.5)); };
+  const lcg = (seed) => { let s = (seed >>> 0) || 1; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; };
+  E.auction = (G) => { const p = G.p; if (!p.auction) p.auction = { slot: -1, market: [], mine: [], gold: 0, uid: 1 }; return p.auction; };
+  E.auctionRefresh = function (G, now) {
+    const p = G.p, A = E.auction(G); now = now || Date.now(); const slot = Math.floor(now / AUC_SLOT_MS); if (A.slot === slot && A.market.length) return false;
+    const r = lcg(slot * 9973 + Math.floor(p.lv / 10) * 131 + 7), lo = Math.max(1, p.lv - 25), hi = p.lv + 8;
+    const eq = Object.keys(D.ITEMS).filter((id) => { const it = D.ITEMS[id]; return it.t === 'equip' && it.lv >= lo && it.lv <= hi && it.price > 100; }), sc = Object.keys(D.ITEMS).filter((id) => D.ITEMS[id].t === 'scroll');
+    const list = [], pick = (a) => a[Math.floor(r() * a.length)];
+    for (let i = 0; i < 9 && eq.length; i++) { const id = pick(eq), it = D.ITEMS[id], ok = Math.floor(r() * 4), rec = { n: ok + (r() < 0.4 ? 1 : 0), atk: it.slot === 'weapon' ? Math.round((it.atk || 0) * 0.05 * ok) : 0, def: it.slot !== 'weapon' ? Math.round((it.def || 0) * 0.07 * ok) : 0, ok, str: 0, dex: 0, hp: 0, hm: 0 }; list.push({ id, rec, price: Math.round(E.marketValue(it, rec) * (0.9 + r() * 0.6)) }); }
+    for (let i = 0; i < 3 && sc.length; i++) { const id = pick(sc), it = D.ITEMS[id]; list.push({ id, rec: null, price: Math.round(E.marketValue(it) * (0.9 + r() * 0.5)) }); }
+    list.forEach((l, i) => { l.uid = slot * 100 + i; }); A.market = list; A.slot = slot; return true;
+  };
+  E.auctionList = function (G, id, idx, mult) {
+    const p = G.p, A = E.auction(G), it = D.ITEMS[id]; if (!it) return { ok: false, msg: '없는 물건이에요' }; if (A.mine.length >= AUC_MAX) return { ok: false, msg: `경매에는 최대 ${AUC_MAX}개까지 올릴 수 있어요` };
+    if (it.t === 'equip') { const l = E.bagRecs(G, id); if (idx == null || idx < 0 || idx >= l.length) return { ok: false, msg: '그 장비가 없어요' }; } else if (E.sellable(G, id) < 1) return { ok: false, msg: E.lockedQty(G, id) > 0 ? '진행 중인 퀘스트에 필요한 물건이에요' : '올릴 수 없어요' };
+    let rec = null; if (it.t === 'equip') rec = E.bagRecs(G, id).splice(idx, 1)[0]; E.addItem(G, id, -1); if (inv(p, id) < 1 && p.bag) delete p.bag[id];
+    const mv = E.marketValue(it, rec), price = Math.max(1, Math.round(mv * mult)), ratio = price / mv, pHour = Math.max(0.02, Math.min(0.6, 0.55 * Math.exp(-(ratio - 0.8) * 2.2)));
+    let h = 0; while (h < 200 && Math.random() > pHour) h++; const now = Date.now();
+    const L = { uid: A.uid++, id, rec, price, t0: now, soldAt: now + (h + Math.random()) * 3600 * 1000, exp: now + AUC_HOURS * 3600 * 1000 }; A.mine.push(L); return { ok: true, listing: L, hours: h };
+  };
+  E.auctionSettle = function (G, now) {
+    const A = E.auction(G); now = now || Date.now(); let sold = 0, gold = 0, back = 0; const keep = [];
+    for (const L of A.mine) { if (L.soldAt <= now && L.soldAt <= L.exp) { const g = Math.floor(L.price * (1 - AUC_FEE)); A.gold += g; gold += g; sold++; } else if (L.exp <= now) { E.addItem(G, L.id, 1); if (D.ITEMS[L.id].t === 'equip') pushBag(G, L.id, L.rec || freshRec()); back++; } else keep.push(L); }
+    A.mine = keep; return { sold, gold, back };
+  };
+  E.auctionCollect = (G) => { const A = E.auction(G), g = A.gold; A.gold = 0; G.p.meso += g; if (g) ev(G, { t: 'sfx', n: 'buy' }); return g; };
+  E.auctionCancel = (G, uid) => { const A = E.auction(G), i = A.mine.findIndex((l) => l.uid === uid); if (i < 0) return false; const L = A.mine.splice(i, 1)[0]; E.addItem(G, L.id, 1); if (D.ITEMS[L.id].t === 'equip') pushBag(G, L.id, L.rec || freshRec()); return true; };
+  E.auctionBuy = function (G, uid) { const p = G.p, A = E.auction(G), i = A.market.findIndex((l) => l.uid === uid); if (i < 0) return { ok: false, msg: '이미 팔린 물건이에요' }; const L = A.market[i]; if (p.meso < L.price) return { ok: false, msg: '메소가 부족해요' }; p.meso -= L.price; E.addItem(G, L.id, 1); if (D.ITEMS[L.id].t === 'equip') pushBag(G, L.id, JSON.parse(JSON.stringify(L.rec))); A.market.splice(i, 1); ev(G, { t: 'sfx', n: 'buy' }); return { ok: true }; };
   E.sellAllEtc = function (G) { let gain = 0; const p = G.p; for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (it.t === 'etc') { const k = E.sellable(G, id); if (k > 0 && it.price > 0) { gain += it.price * k; p.inv[id] -= k; if (p.inv[id] <= 0) delete p.inv[id]; } } } p.meso += gain; if (gain) ev(G, { t: 'sfx', n: 'buy' }); return gain; };
   function questNeeds(G, id) { for (const qid in G.p.quests) { if (G.p.quests[qid].st !== 'active') continue; for (const g of D.QUESTS[qid].goals) if (g.item === id) return true; } return false; }
 
