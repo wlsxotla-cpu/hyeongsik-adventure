@@ -208,10 +208,15 @@
   E.canAdvance = (G) => { const p = G.p; if (p.job) return { ok: false, msg: '이미 전직했어요' }; if (p.lv < D.JOB_LV) return { ok: false, msg: `Lv ${D.JOB_LV} 이상부터 전직할 수 있어요` }; if (E.qState(G, 'q9') !== 'done') return { ok: false, msg: '「고대 골렘의 시련」을 먼저 완료해야 해요' }; return { ok: true }; };
   E.advance = function (G, jid) {
     const p = G.p, j = D.JOBS[jid]; const c = E.canAdvance(G); if (!j || !c.ok) return c.ok ? { ok: false, msg: '없는 직업이에요' } : c;
-    p.job = jid; p.sp += 6; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
+    p.job = jid; p.sp += 3; p.ap += 5; E.checkGear(G); const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
   };
   // 스킬 레벨 상한: 캐릭터 레벨이 오를수록 천천히 열린다 (스킬 요구 레벨 +12~13 에서 만렙)
   E.skillCap = (G, s) => Math.min(s.maxLv, 3 + Math.floor(Math.max(0, G.p.lv - s.reqLv) * 0.8));
+  // 스킬 포인트 총량을 스킬 필요량에 딱 맞춤: Lv2~30 합계 69(1차 스킬 7종 만렙, 파워 스트라이크 1레벨은 기본) + 전직 3 + Lv31~39 레벨당 3 = 직업 스킬 30
+  E.spEarned = (lv) => (lv <= 30 ? Math.floor((Math.max(1, lv) - 1) * 69 / 29) : 69 + 3 * Math.min(lv - 30, 9));
+  E.spSpent = (p) => { let n = 0; for (const sid in p.skills) n += Math.max(0, (p.skills[sid] || 0) - (sid === 'power' ? 1 : 0)); return n; };
+  // 옛 저장 보정: 받은 포인트 총량이 새 기준보다 많으면 스킬을 초기화하고 기준량만 돌려준다
+  E.fixSp = function (G) { const p = G.p, earned = E.spEarned(p.lv) + (p.job ? 3 : 0), spent = E.spSpent(p); if (spent + p.sp <= earned) return false; E.resetSkills(G); p.sp = earned; ev(G, { t: 'msg', text: '스킬 포인트 총량이 새 기준으로 조정되어 스킬이 초기화됐어요. 다시 찍어 주세요!' }); return true; };
   E.resetSkills = function (G) { const p = G.p; let back = 0; for (const sid in p.skills) { const l = p.skills[sid] || 0; const keep = sid === 'power' ? 1 : 0; back += Math.max(0, l - keep); if (keep) p.skills[sid] = keep; else delete p.skills[sid]; } p.sp += back; p.buffs = {}; return back; };
   E.learn = function (G, sid) {
     const p = G.p, s = D.SKILLS[sid]; const l = p.skills[sid] || 0;
@@ -276,7 +281,7 @@
     if (p.lv >= D.MAX_LV) p.exp = 0;
   }
   function levelUp(G) {
-    const p = G.p; p.lv++; p.ap += 5; p.sp += 3; p.baseHp += 16 + Math.floor(p.lv * 0.9); p.baseMp += 3;
+    const p = G.p; p.lv++; p.ap += 5; p.sp += E.spEarned(p.lv) - E.spEarned(p.lv - 1); p.baseHp += 16 + Math.floor(p.lv * 0.9); p.baseMp += 3;
     const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp;
     ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' });
     for (const sid of D.SKILL_ORDER) if (D.SKILLS[sid].reqLv === p.lv) ev(G, { t: 'msg', text: `새 스킬 사용 가능: ${D.SKILLS[sid].n}` });

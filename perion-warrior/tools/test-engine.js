@@ -16,7 +16,7 @@ const g2=E.newGame('q',3); ok(E.qState(g2,'q1')==='avail','q1 avail'); E.qAccept
 // 직렬화
 const s=JSON.parse(JSON.stringify(E.serialize(g2))); const g3=E.newGame('x',1,s); ok(g3.p.quests.q1.st==='done'&&g3.p.lv===g2.p.lv,'save/load');
 // 레벨업 & 스킬
-const g4=E.newGame('l',9); E.gainExp(g4,D.expToNext(1)+1); ok(g4.p.lv===2&&g4.p.ap===5&&g4.p.sp===3,'levelup ap/sp'); 
+const g4=E.newGame('l',9); E.gainExp(g4,D.expToNext(1)+1); ok(g4.p.lv===2&&g4.p.ap===5&&g4.p.sp===E.spEarned(2),'levelup ap/sp'); 
 // 전체 퀘스트 연계 + 펫
 const g5=E.newGame('c',11); g5.p.lv=30; let order=D.QUEST_ORDER; for(const q of order){ if(E.qState(g5,q)!=='avail'){ok(false,'quest '+q+' not avail: '+E.qState(g5,q));break;} E.qAccept(g5,q); D.QUESTS[q].goals.forEach((gl,i)=>{ if(gl.kill) g5.p.quests[q].prog[i]=gl.n; else E.addItem(g5,gl.item,gl.n); }); ok(E.qComplete(g5,q),'complete '+q); }
 ok(!!g5.p.pet&&g5.p.pet.n==='멧돌이','pet granted');
