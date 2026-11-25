@@ -47,6 +47,10 @@
     slam: () => { noise(0.35, 0.55, 220, 0.8, null, 'lowpass'); tone(80, 0.3, 'sine', 0.4, 0.4); },
     roar: () => { tone(110, 0.5, 'sawtooth', 0.22, 0.6); noise(0.4, 0.2, 400, 0.6, null, 'lowpass'); },
     fire: () => { noise(0.3, 0.25, 1500, 0.5, null, 'highpass'); tone(340, 0.3, 'sawtooth', 0.1, 0.6); },
+    scrollApply: () => { const t = S.ctx.currentTime; for (let i = 0; i < 9; i++) tone(420 + i * 85, 0.14, 'triangle', 0.09, 1.15, t + 0.55 + i * 0.17); noise(0.5, 0.18, 2600, 1.5, t + 0.1); noise(1.4, 0.07, 4200, 2, t + 0.7); },
+    enhOk: () => { const t = S.ctx.currentTime; [72, 76, 79, 84, 88].forEach((m, i) => tone(N(m), 0.3, 'square', 0.14, 1, t + i * 0.07)); tone(N(96), 0.9, 'triangle', 0.2, 1, t + 0.4); noise(0.4, 0.3, 6000, 1, t); },
+    enhFail: () => { const t = S.ctx.currentTime; tone(240, 0.7, 'sawtooth', 0.2, 0.3, t); tone(110, 0.9, 'sine', 0.3, 0.5, t + 0.15); noise(0.6, 0.4, 260, 1, t, 'lowpass'); },
+    tick: () => { tone(1300, 0.03, 'square', 0.05); },
     click: () => { tone(900, 0.04, 'square', 0.07); },
   };
   S.sfx = function (n) { if (!S.ctx || !S.sound || !SFX[n]) return; try { SFX[n](); } catch (e) { } };

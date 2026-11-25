@@ -299,7 +299,7 @@
       else if (k === 'eq') { const r = E.equip(G, v); if (!r.ok) logLine(r.msg, 'q'); else { menuSel = null; Snd.sfx('equip'); } }
       else if (k === 'un') { E.unequip(G, v); menuSel = null; }
       else if (k === 'use') { E.useItem(G, v); if (!p.inv[v]) menuSel = null; if (G.mapId === 'perion' && D.ITEMS[v].town) { closeModal(); return; } }
-      else if (k === 'enh') { const r = E.enhance(G, v, w); logLine((r.success ? '✨ ' : '💨 ') + r.msg, r.success ? 'g' : 'q'); toastBanner(r.success ? '강화 성공!' : r.ok ? '강화 실패…' : r.msg); if (!p.inv[v]) menuSel = null; handleEvents(); }
+      else if (k === 'enh') { enhAnim(v, w); return; }
       else if (k === 'learn') { E.learn(G, v); buildSkillBtns(); }
       else if (k === 'stat') { E.addStat(G, v, +w || 1); }
       else if (k === 'auto') { E.autoStat(G); }
@@ -357,6 +357,35 @@
     return pet + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요') +
       `<div class="card">🕹️ <b>조작</b>: ◀▶ 이동 · ▲ 밧줄 오르기/문 들어가기 · ▼ 밧줄 내려가기/발판 아래로(▼+점프) · ⚔️ 공격(꾹) · 보라 버튼 스킬 · ❤️💧 물약<br>⌨️ 키보드: 방향키/Space점프/Z공격/1~5스킬/H·M물약/E대화</div>` +
       `<div class="row2"><button class="btn sm" data-a="save">💾 지금 저장</button><button class="btn sm red" data-a="wipe">🗑 처음부터 다시</button></div>`;
+  }
+
+  /* ───────── 주문서 바르기 연출 ───────── */
+  const SLOTN2 = { weapon: '무기', helmet: '투구', armor: '갑옷', gloves: '장갑', shoes: '신발' };
+  function enhAnim(sid, slot) {
+    const p = G.p, gid = p.equip[slot], sc = D.ITEMS[sid]; const before = JSON.stringify(p.enh[gid] || {});
+    const r = E.enhance(G, sid, slot);
+    if (!r.ok) { logLine(r.msg, 'q'); toastBanner(r.msg); openMenu('inv'); return; }
+    // 연출이 끝날 때까지 월드 효과·소리는 미룬다
+    const held = G.events.filter((e) => e.t === 'scroll'); G.events = G.events.filter((e) => !(e.t === 'scroll' || (e.t === 'sfx' && (e.n === 'questdone' || e.n === 'deny'))));
+    const inf = E.enhInfo(G, gid), gurl = Art.itemIconUrl(gid), surl = Art.itemIconUrl(sid);
+    const html = `<div class="panel" id="enhp"><h3><span>🔨 장비 강화 · ${esc(sc.n)}</span></h3><div class="stage busy"><div class="glow"></div><img class="gear" src="${gurl}" alt=""><img class="scr" src="${surl}" alt=""><div class="flash"></div></div><div class="res"><div style="color:#ffe08a;font-weight:800">${SLOTN2[slot]} · ${esc(D.ITEMS[gid].n)}</div><div class="dots" style="margin-top:4px">주문서를 바르는 중</div></div><div class="btns"></div></div>`;
+    showModal(html, (a) => { if (a === 'again') { enhAnim(sid, slot); } else if (a === 'back') { openMenu('inv'); } }, true);
+    const root = modal.querySelector('#enhp'), stage = root.querySelector('.stage');
+    Snd.sfx('scrollApply');
+    const spark = (col, n, far) => { for (let i = 0; i < n; i++) { const s = document.createElement('i'); s.className = 'sp'; const ang = Math.random() * 6.283, d = (far ? 90 : 55) + Math.random() * (far ? 120 : 60); s.style.setProperty('--dx', Math.cos(ang) * d + 'px'); s.style.setProperty('--dy', Math.sin(ang) * d * 0.8 + 'px'); s.style.background = col; s.style.boxShadow = '0 0 8px ' + col; s.style.animationDelay = (Math.random() * 0.15) + 's'; stage.appendChild(s); setTimeout(() => s.remove(), 1300); } };
+    let tk = 0; const ti = setInterval(() => { if (!modal.contains(root)) { clearInterval(ti); return; } spark('#ffe9a0', 2, false); Snd.sfx('tick'); if (++tk > 10) clearInterval(ti); }, 200);
+    setTimeout(() => {
+      if (!modal.contains(root)) return; clearInterval(ti);
+      const after = E.enhInfo(G, gid);
+      stage.classList.remove('busy'); stage.classList.add(r.success ? 'ok' : 'fail');
+      const fl = stage.querySelector('.flash'); if (r.success) { fl.classList.add('on'); spark('#fff27a', 34, true); spark('#ffffff', 14, true); Snd.sfx('enhOk'); } else { spark('#6a6a78', 18, false); Snd.sfx('enhFail'); }
+      for (const e of held) G.events.push(e); handleEvents();
+      const total = r.success && sc.kind !== 'restore' ? (sc.kind === 'weapon' ? `공격력 <b style="color:#7aff9a">+${r.bonus}</b> (강화 누계 +${after.atk})` : `방어력 <b style="color:#7aff9a">+${r.bonus}</b> (강화 누계 +${after.def})`) : '';
+      const again = p.inv[sid] > 0 && (sc.kind === 'restore' ? after.used > 0 : after.left > 0);
+      root.querySelector('.res').innerHTML = (r.success ? `<div class="big ok">✨ ${sc.kind === 'restore' ? '복구 성공' : '강화 성공'}! ✨</div>` : `<div class="big bad">${sc.kind === 'restore' ? '복구 실패…' : '강화 실패…'}</div>`) + `<div style="color:#ffe08a;font-weight:800">${SLOTN2[slot]} · ${esc(gname(gid))}</div>` + (total ? `<div>${total}</div>` : '') + `<div style="color:#cdbbe8">남은 강화 횟수 <b>${after.left}/${after.slots}</b>${r.success || sc.kind === 'restore' ? '' : ' (실패해도 횟수는 줄어요)'}</div>`;
+      root.querySelector('.btns').innerHTML = (again ? `<button class="btn green" data-a="again">🔨 한 번 더 바르기 (${p.inv[sid]}장)</button>` : '') + '<button class="btn gray" data-a="back">🎒 가방으로</button>';
+      modal.dataset.lock = '';
+    }, 2500);
   }
 
   /* ───────── NPC 대화 / 퀘스트 / 상점 ───────── */

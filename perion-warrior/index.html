@@ -155,6 +155,35 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 .price{color:#ffe08a;font-weight:900;font-size:12.5px;white-space:nowrap}
 #death{width:min(80%,380px);text-align:center;padding:18px}
 #death h2{margin:0 0 6px;font-size:22px;color:#ff8a8a}
+/* 주문서 연출 */
+#enhp{width:min(94%,540px)}
+#enhp .stage{position:relative;height:170px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%,#5a4678,#1c1524 75%);overflow:hidden;border-bottom:2px solid #00000066}
+#enhp .gear{width:112px;height:112px;position:relative;z-index:2;filter:drop-shadow(0 4px 6px #000a)}
+#enhp .glow{position:absolute;left:50%;top:50%;width:190px;height:190px;margin:-95px 0 0 -95px;border-radius:50%;background:radial-gradient(circle,#ffe36acc,#ffb83a44 45%,transparent 70%);opacity:0;z-index:1}
+#enhp .scr{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;z-index:3;opacity:0;animation:scrIn .8s ease-in forwards}
+@keyframes scrIn{0%{opacity:0;transform:translate(-150px,-80px) rotate(-40deg) scale(1.5)}25%{opacity:1}75%{opacity:1;transform:translate(10px,10px) rotate(12deg) scale(1)}100%{opacity:0;transform:translate(0,6px) rotate(0) scale(.45)}}
+#enhp .stage.busy .gear{animation:enhShake .11s linear infinite .8s}
+#enhp .stage.busy .glow{animation:enhPulse .55s ease-in-out infinite .8s}
+@keyframes enhShake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-3px,1px) rotate(-2deg)}50%{transform:translate(2px,-2px) rotate(2deg)}75%{transform:translate(-2px,-1px) rotate(-1deg)}100%{transform:translate(0,0)}}
+@keyframes enhPulse{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.95;transform:scale(1.25)}}
+#enhp .stage.ok .gear{animation:enhPop .6s ease-out}
+#enhp .stage.ok .glow{opacity:1;animation:enhGlow 1.2s ease-out forwards}
+@keyframes enhPop{0%{transform:scale(.9)}40%{transform:scale(1.3)}100%{transform:scale(1.05)}}
+@keyframes enhGlow{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.6);opacity:.35}}
+#enhp .stage.fail .gear{animation:enhShake .08s 6;filter:grayscale(1) brightness(.55) drop-shadow(0 4px 6px #000a)}
+#enhp .stage.fail{background:radial-gradient(circle at 50% 55%,#3a3038,#120e16 75%)}
+#enhp .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5}
+#enhp .flash.on{animation:enhFlash .7s ease-out}
+@keyframes enhFlash{0%{opacity:.95}100%{opacity:0}}
+#enhp .sp{position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;z-index:4;animation:spk 1s ease-out forwards}
+@keyframes spk{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+#enhp .res{min-height:92px;padding:10px 14px;text-align:center;font-size:13px;line-height:1.5}
+#enhp .res .big{font-size:25px;font-weight:900;letter-spacing:1px;margin-bottom:2px}
+#enhp .res .big.ok{color:#fff27a;-webkit-text-stroke:1.5px #8a4a08;text-shadow:0 3px 0 #8a4a08,0 0 16px #ffc93a}
+#enhp .res .big.bad{color:#b8b8c8;text-shadow:0 2px 0 #000}
+#enhp .res .dots::after{content:"";animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+#enhp .btns{display:flex;gap:8px;justify-content:center;padding:0 12px 12px}
 /* 타이틀 */
 #title{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 20%,#0006,#000d);pointer-events:auto}
 #title .logo{font-size:52px;font-weight:900;color:#ffe36a;-webkit-text-stroke:3px #5a2d0a;text-shadow:0 6px 0 #5a2d0a,0 0 30px #ff9a2a;letter-spacing:4px;line-height:1}
@@ -213,10 +242,10 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
     <div class="ver">가로 화면 권장 · 세로로 들고 있어도 자동으로 돌려 드려요 · v1</div>
   </div>
 </div>
-<script src="data.js?v=20261125f"></script>
-<script src="engine.js?v=20261125f"></script>
-<script src="art.js?v=20261125f"></script>
-<script src="audio.js?v=20261125f"></script>
-<script src="game.js?v=20261125f"></script>
+<script src="data.js?v=20261125g"></script>
+<script src="engine.js?v=20261125g"></script>
+<script src="art.js?v=20261125g"></script>
+<script src="audio.js?v=20261125g"></script>
+<script src="game.js?v=20261125g"></script>
 </body>
 </html>
