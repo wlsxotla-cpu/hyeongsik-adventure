@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzk';
+  const BUILD = '20261125zzl';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -580,7 +580,9 @@
     if (!(started && paused) || dirty) { render(dt); dirty = false; }
   }
   let rafOk = false, lastRaf = 0;
-  function loop(now) { rafOk = true; lastRaf = performance.now(); frame(now); requestAnimationFrame(loop); }
+  let errRun = 0, errShown = false;
+  // 한 프레임에서 예외가 나도 게임이 멈추지 않도록 보호 (예전엔 예외 한 번에 화면이 얼어붙었음)
+  function loop(now) { rafOk = true; lastRaf = performance.now(); try { frame(now); errRun = 0; } catch (e) { errRun++; if (window.console) console.error(e); if (errRun === 3 && !errShown) { errShown = true; try { save(); toastBanner('오류가 났어요. 앱을 다시 열어 주세요 (저장은 됐어요)'); } catch (e2) {} } } requestAnimationFrame(loop); }
   setInterval(() => { const n = performance.now(); if (n - lastRaf > 200) { lastRaf = n - 16; frame(n); } }, 33);
 
   /* ───────── 시작 ───────── */
