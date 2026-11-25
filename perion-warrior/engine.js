@@ -209,9 +209,12 @@
     const p = G.p, j = D.JOBS[jid]; const c = E.canAdvance(G); if (!j || !c.ok) return c.ok ? { ok: false, msg: '없는 직업이에요' } : c;
     p.job = jid; p.sp += 6; p.ap += 5; const st = E.stats(G); p.hp = st.maxHp; p.mp = st.maxMp; ev(G, { t: 'levelup', lv: p.lv }); ev(G, { t: 'sfx', n: 'levelup' }); ev(G, { t: 'msg', text: `2차 전직! ${j.n}이(가) 되었어요` }); return { ok: true };
   };
+  // 스킬 레벨 상한: 캐릭터 레벨이 오를수록 천천히 열린다 (스킬 요구 레벨 +12~13 에서 만렙)
+  E.skillCap = (G, s) => Math.min(s.maxLv, 3 + Math.floor(Math.max(0, G.p.lv - s.reqLv) * 0.8));
+  E.resetSkills = function (G) { const p = G.p; let back = 0; for (const sid in p.skills) { const l = p.skills[sid] || 0; const keep = sid === 'power' ? 1 : 0; back += Math.max(0, l - keep); if (keep) p.skills[sid] = keep; else delete p.skills[sid]; } p.sp += back; p.buffs = {}; return back; };
   E.learn = function (G, sid) {
     const p = G.p, s = D.SKILLS[sid]; const l = p.skills[sid] || 0;
-    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job)) return false;
+    if (!s || p.sp < 1 || l >= s.maxLv || p.lv < s.reqLv || (s.job && s.job !== p.job) || l >= E.skillCap(G, s)) return false;
     p.skills[sid] = l + 1; p.sp -= 1; ev(G, { t: 'sfx', n: 'equip' }); return true;
   };
 

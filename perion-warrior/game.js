@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125t';
+  const BUILD = '20261125u';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -314,6 +314,7 @@
       else if (k === 'use') { E.useItem(G, v); if (!p.inv[v]) menuSel = null; if (G.mapId === 'perion' && D.ITEMS[v].town) { closeModal(); return; } }
       else if (k === 'enh') { enhAnim(v, w); return; }
       else if (k === 'learn') { E.learn(G, v); buildSkillBtns(); }
+      else if (k === 'sreset') { E.resetSkills(G); buildSkillBtns(); updateHud(true); }
       else if (k === 'stat') { E.addStat(G, v, +w || 1); }
       else if (k === 'auto') { E.autoStat(G); }
       else if (k === 'reset') { E.resetStats(G); handleEvents(); }
@@ -343,7 +344,8 @@
   function tabSkill() {
     const p = G.p; let s = `<div class="card row2"><span style="flex:1">남은 스킬 포인트 <b style="font-size:17px">${p.sp}</b> <small style="color:#cdbbe8">(레벨업마다 +3)</small></span></div>`;
     if (!p.job) s += `<div class="card" style="font-size:12px">⚔️ <b>2차 전직</b>: Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후 마을의 교관 발도에게 가면 <b>파이터 / 페이지 / 스피어맨</b> 중 하나로 전직해요.</div>`; else s += `<div class="card" style="font-size:12px">${D.JOBS[p.job].icon} 현재 직업 <b style="color:${D.JOBS[p.job].col}">${D.JOBS[p.job].n}</b></div>`;
-    for (const sid of D.SKILL_ORDER) { const k = D.SKILLS[sid], l = p.skills[sid] || 0, lock = p.lv < k.reqLv; if (k.job && k.job !== p.job) continue; s += `<div class="sk ${lock ? 'lock' : ''}"><div class="ic">${k.icon}</div><div class="t"><b>${k.n}</b> <span style="color:#ffe08a">Lv ${l}/${k.maxLv}</span>${k.kind === 'passive' ? ' <span style="color:#9fe">[패시브]</span>' : k.kind === 'buff' ? ' <span style="color:#9fe">[버프]</span>' : ''}<br>${lock ? `<span style="color:#ff8a8a">Lv ${k.reqLv} 이상부터 배울 수 있어요</span>` : esc(k.desc(Math.max(1, l)))}</div>${!lock && l < k.maxLv ? `<button class="btn sm green" data-a="learn:${sid}" ${p.sp < 1 ? 'disabled' : ''}>＋</button>` : ''}</div>`; }
+    for (const sid of D.SKILL_ORDER) { const k = D.SKILLS[sid], l = p.skills[sid] || 0, lock = p.lv < k.reqLv; if (k.job && k.job !== p.job) continue; s += `<div class="sk ${lock ? 'lock' : ''}"><div class="ic">${k.icon}</div><div class="t"><b>${k.n}</b> <span style="color:#ffe08a">Lv ${l}/${k.maxLv}</span>${k.kind === 'passive' ? ' <span style="color:#9fe">[패시브]</span>' : k.kind === 'buff' ? ' <span style="color:#9fe">[버프]</span>' : ''}<br>${lock ? `<span style="color:#ff8a8a">Lv ${k.reqLv} 이상부터 배울 수 있어요</span>` : esc(k.desc(Math.max(1, l)))}</div>${!lock && l < k.maxLv ? (l >= E.skillCap(G, k) ? `<small style="color:#ff8a8a">Lv ${k.reqLv + Math.ceil((l + 1 - 3) / 0.8)}<br>필요</small>` : `<button class="btn sm green" data-a="learn:${sid}" ${p.sp < 1 ? 'disabled' : ''}>＋</button>`) : ''}</div>`; }
+    s += `<div class="row2"><button class="btn sm gray" data-a="sreset">스킬 초기화(무료)</button></div><div class="card" style="font-size:11px">💡 스킬 레벨은 캐릭터 레벨이 오를수록 더 올릴 수 있어요.</div>`;
     return s;
   }
   function tabStat() {
