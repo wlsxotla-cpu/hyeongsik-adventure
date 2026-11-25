@@ -25,6 +25,11 @@
     gs2: { w: 5.4, blade: '#dde3ee', guard: '#4a5262', grip: '#3a2a22', style: 'serrated' },
     mc0: { head: '#a2754a', handle: '#7a4a2a', style: 'mace' }, mc1: { head: '#aab2bd', handle: '#6a4020', style: 'mace' }, mc2: { head: '#b6bece', handle: '#5a3a22', style: 'mace', big: 1 }, mc3: { head: '#cdd5e2', handle: '#4a3224', style: 'mace', spike: 1 }, mc4: { head: '#e8cf7a', handle: '#3a2a22', style: 'mace', spike: 1, big: 1, glow: '#ffd24a', gem: '#d6343c' },
     sp0: { head: '#bfc7d1', handle: '#a2754a', style: 'spear' }, sp1: { head: '#dde3ee', handle: '#7a4a2a', style: 'spear' }, sp2: { head: '#b0b8c6', handle: '#5a3a22', style: 'spear' }, sp3: { head: '#f4e8b8', handle: '#7a2a2a', style: 'spear', tassel: '#d6343c' }, sp4: { head: '#ff9c7a', handle: '#2a1a1a', style: 'spear', tassel: '#ffd24a', glow: '#ff7a3a' },
+    sw5: { w: 4.2, blade: '#ffb27a', guard: '#7a2a1a', grip: '#2a1a1a', style: 'rune', gem: '#ff4a1a', glow: '#ff7a3a', lenK: 1.06 },
+    ax5: { head: '#ff8a4a', handle: '#3a2420', style: 'stone', gem: '#ffd24a', glow: '#ff5a2a' },
+    gs4: { w: 5.8, blade: '#ff8a5a', guard: '#5a1a1a', grip: '#1a1010', style: 'dragon', glow: '#ff5a2a', gem: '#ffd24a', lenK: 1.06 },
+    mc5: { head: '#ff9a4a', handle: '#3a2420', style: 'mace', spike: 1, big: 1, glow: '#ff6a2a', gem: '#ffd24a' },
+    sp5: { head: '#ffb27a', handle: '#2a1a1a', style: 'spear', tassel: '#ff4a1a', glow: '#ff5a2a' },
     gs3: { w: 5.6, blade: '#ff9c7a', guard: '#7a2a2a', grip: '#2a1a1a', style: 'dragon', glow: '#ff7a3a', gem: '#ffd24a', lenK: 1.05 },
   };
   // 강화 등급 색 (메이플처럼 올릴수록 색이 달라짐): +1~2 하늘 / +3~4 보라 / +5~6 금 / +7 이상 빨강
@@ -208,7 +213,7 @@
   }
   A.drawHuman = drawHuman;
 
-  const TIER = { ar0: 0, ar1: 1, ar2: 2, ar3: 3, ar4: 4 };
+  const TIER = { ar0: 0, ar1: 1, ar2: 2, ar3: 3, ar4: 4, ar5: 4 };
   A.playerLook = function (G, extra) {
     const p = G.p, D = root.DATA; const eq = p.equip; const ar = D.ITEMS[eq.armor], w = D.ITEMS[eq.weapon], h = eq.helmet && D.ITEMS[eq.helmet], gl = eq.gloves && D.ITEMS[eq.gloves], sh = eq.shoes && D.ITEMS[eq.shoes];
     return Object.assign({ armor: ar ? ar.col : '#c9b48a', armorId: ar ? ar.id : 'ar0', tier: ar ? (TIER[ar.id] || 0) : 0, pants: '#5a4636', shoes: sh ? sh.col : '#6b4426', shoeId: sh ? sh.id : null, gloves: gl ? gl.col : null, gloveId: gl ? gl.id : null, helmet: h ? h.id : null, helmetCol: h ? h.col : null, band: h ? null : '#d6343c', weapon: w ? { id: w.id, wt: w.wt, col: w.col, len: (w.wt === 'great' || w.wt === 'spear') ? 26 : 24, enh: (p.enh && p.enh[w.id] && p.enh[w.id].ok) || 0 } : null }, extra || {});
@@ -292,7 +297,7 @@
       c.restore();
     },
     woodmask(c, m, t) {
-      const st = m.def.hue === 'stone'; const base = st ? '#8d939c' : '#b4854a'; const hop = m.y < m.py - 2 ? 0 : Math.abs(Math.sin(t * 6 + m.seed)) * 2;
+      const st = m.def.hue === 'stone', fl = m.def.hue === 'flame'; const base = fl ? '#c4503a' : st ? '#8d939c' : '#b4854a'; const hop = m.y < m.py - 2 ? 0 : Math.abs(Math.sin(t * 6 + m.seed)) * 2;
       c.save(); c.translate(0, -hop);
       c.beginPath(); rrect(c, -9, -10, 6, 10, 2); fillStroke(c, shade(base, -0.25), 1.6); c.beginPath(); rrect(c, 3, -10, 6, 10, 2); fillStroke(c, shade(base, -0.25), 1.6);
       c.beginPath(); c.moveTo(0, -42); c.quadraticCurveTo(15, -40, 15, -24); c.quadraticCurveTo(14, -10, 0, -8); c.quadraticCurveTo(-14, -10, -15, -24); c.quadraticCurveTo(-15, -40, 0, -42); c.closePath(); fillStroke(c, base, 2.2);
@@ -316,20 +321,20 @@
       if (h === 'soldier') { c.fillStyle = '#e8c04a'; c.beginPath(); c.rect(-17, -13, 3, 6); c.fill(); }
     },
     boar(c, m, t) {
-      const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 60) * 1.5 : 0; const run = m.st === 'dash';
+      const lv = m.def.hue === 'lava', B1 = lv ? '#35283a' : '#c4452d', B2 = lv ? '#4d3548' : '#d65a3a', B3 = lv ? '#1f1620' : '#7a2a1c'; const wind = m.st === 'wind'; const sh = wind ? Math.sin(t * 60) * 1.5 : 0; const run = m.st === 'dash';
       c.save(); c.translate(sh, 0);
       c.strokeStyle = OUT; c.lineWidth = 2; const lg = Math.sin(t * (run ? 24 : 10));
-      c.beginPath(); rrect(c, -14, -9, 6, 9 + lg * 1.5, 2); fillStroke(c, '#7a2a1c', 1.6); c.beginPath(); rrect(c, 8, -9, 6, 9 - lg * 1.5, 2); fillStroke(c, '#7a2a1c', 1.6);
-      c.beginPath(); c.moveTo(-22, -16); c.quadraticCurveTo(-18, -34, 0, -33); c.quadraticCurveTo(18, -33, 22, -18); c.quadraticCurveTo(22, -8, 10, -8); c.lineTo(-14, -8); c.quadraticCurveTo(-22, -9, -22, -16); c.closePath(); fillStroke(c, '#c4452d', 2.2);
+      c.beginPath(); rrect(c, -14, -9, 6, 9 + lg * 1.5, 2); fillStroke(c, B3, 1.6); c.beginPath(); rrect(c, 8, -9, 6, 9 - lg * 1.5, 2); fillStroke(c, B3, 1.6);
+      c.beginPath(); c.moveTo(-22, -16); c.quadraticCurveTo(-18, -34, 0, -33); c.quadraticCurveTo(18, -33, 22, -18); c.quadraticCurveTo(22, -8, 10, -8); c.lineTo(-14, -8); c.quadraticCurveTo(-22, -9, -22, -16); c.closePath(); fillStroke(c, B1, 2.2);
       for (let i = 0; i < 4; i++) { const fx = -14 + i * 9, fl = 8 + Math.sin(t * 9 + i * 1.7) * 3; c.beginPath(); c.moveTo(fx - 4, -30 + i); c.quadraticCurveTo(fx, -30 - fl - 4, fx + 2, -30 - fl - 10); c.quadraticCurveTo(fx + 6, -30 - fl, fx + 5, -29); c.closePath(); c.fillStyle = i % 2 ? '#ffb23a' : '#ff6a2a'; c.fill(); }
-      c.beginPath(); ell(c, 24, -17, 9, 8); fillStroke(c, '#d65a3a', 2.2); c.beginPath(); ell(c, 30, -14, 4, 3.6); fillStroke(c, '#f0a08a', 1.6); c.fillStyle = OUT; c.beginPath(); c.arc(29, -14, 0.9, 0, TAU); c.arc(32, -14, 0.9, 0, TAU); c.fill();
+      c.beginPath(); ell(c, 24, -17, 9, 8); fillStroke(c, B2, 2.2); c.beginPath(); ell(c, 30, -14, 4, 3.6); fillStroke(c, '#f0a08a', 1.6); c.fillStyle = OUT; c.beginPath(); c.arc(29, -14, 0.9, 0, TAU); c.arc(32, -14, 0.9, 0, TAU); c.fill();
       c.beginPath(); c.moveTo(26, -10); c.quadraticCurveTo(34, -10, 33, -20); c.quadraticCurveTo(30, -12, 25, -10); c.closePath(); fillStroke(c, '#f6ecd0', 1.4);
-      c.beginPath(); c.moveTo(20, -24); c.lineTo(17, -31); c.lineTo(24, -26); c.closePath(); fillStroke(c, '#7a2a1c', 1.4);
+      c.beginPath(); c.moveTo(20, -24); c.lineTo(17, -31); c.lineTo(24, -26); c.closePath(); fillStroke(c, B3, 1.4);
       c.fillStyle = wind ? '#ffee66' : '#fff'; c.beginPath(); c.arc(24, -20, 2.8, 0, TAU); c.fill(); c.lineWidth = 1.3; c.strokeStyle = OUT; c.stroke(); c.fillStyle = OUT; c.beginPath(); c.arc(25, -19.5, 1.4, 0, TAU); c.fill();
       c.restore();
     },
     golem(c, m, t) {
-      const fire = m.def.hue === 'fire'; const rock = fire ? '#6a4038' : '#8d939c'; const glow = fire ? '#ff7a2a' : '#6fd0e8'; const b = Math.sin(t * 2 + m.seed) * 1;
+      const lava = m.def.hue === 'lava', fire = m.def.hue === 'fire' || lava; const rock = lava ? '#3a2a34' : fire ? '#6a4038' : '#8d939c'; const glow = lava ? '#ff4a1a' : fire ? '#ff7a2a' : '#6fd0e8'; const b = Math.sin(t * 2 + m.seed) * 1;
       const wd = m.def.w, ht = m.def.h; const g = (x, y, w, h, r, col) => { c.beginPath(); rrect(c, x, y, w, h, r); fillStroke(c, col || rock, 2.2); };
       g(-wd * 0.34, -ht * 0.22, wd * 0.26, ht * 0.22, 4, shade(rock, -0.12)); g(wd * 0.08, -ht * 0.22, wd * 0.26, ht * 0.22, 4, shade(rock, -0.12));
       const sw = Math.sin(t * 3) * 3;
@@ -417,6 +422,7 @@
     forest: { sky: ['#1d3a3a', '#2f6a56', '#8ac28a'], far: '#1f4a3a', mid: '#173a2c', near: '#10281f', grass: '#4a9a3a', soil: '#5a3f2a', rock: '#47301f', kind: 'forest', fire: true },
     cave: { sky: ['#1a1218', '#2a1c22', '#3d2a2a'], far: '#2a1d22', mid: '#3a2a2c', near: '#4a3633', grass: '#6a8a3a', soil: '#5a4030', rock: '#463024', kind: 'cave' },
     cave2: { sky: ['#0f0a18', '#1d1230', '#2e1c44'], far: '#1c1230', mid: '#2a1c42', near: '#38275a', grass: '#7a6aa0', soil: '#46345c', rock: '#32224a', kind: 'cave', crystal: true },
+    lava: { sky: ['#2a0c10', '#5a1a14', '#d0602a'], far: '#4a1c1c', mid: '#6a2a22', near: '#8a3a2a', grass: '#8a5a2a', soil: '#4a2a22', rock: '#3a1c1a', kind: 'mesa', dust: true },
     quarry: { sky: ['#e8884a', '#f4b46a', '#ffe0a0'], far: '#b86a4a', mid: '#9a5440', near: '#7a4032', grass: '#c4a45a', soil: '#8a5a40', rock: '#6a4030', kind: 'mesa', dust: true },
     temple: { sky: ['#140e24', '#2a1a48', '#4a2a68'], far: '#2a1d48', mid: '#3a2a60', near: '#4a3878', grass: '#8a78c0', soil: '#4a3a66', rock: '#352850', kind: 'temple' },
   };

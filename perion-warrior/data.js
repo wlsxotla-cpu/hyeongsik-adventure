@@ -48,6 +48,7 @@
   etc('treeheart', '고목의 심장', '💚', 900, '#4cc46a');
   etc('goldcore', '바위왕의 핵', '💎', 3000, '#ffd24a');
   etc('relic', '고대 골렘의 인장', '🗿', 0, '#ffd24a'); I.relic.desc = '시련의 탑 꼭대기 고대 상자에 잠들어 있던 인장.'; I.relic.q = true;
+  etc('flamefrag', '불꽃 가면 조각', '🔥', 90, '#ff6a3a'); etc('lavahide', '용암 가죽', '🟠', 120, '#c4452d'); etc('magmacore', '마그마 핵', '🔴', 200, '#ff4a1a');
   etc('zeye', '자쿰의 불꽃 눈', '🔥', 0, '#ff7a2a'); I.zeye.desc = '자쿰의 이마에서 타오르던 불꽃 눈. 경비대장 레온이 찾는 증표.';
   I.stonefrag.q = true; I.axefrag.q = true; I.treeheart.q = true; I.goldcore.q = true;
 
@@ -68,6 +69,16 @@
   eq('gs1', '대검', 'weapon', 10, { wt: 'great', atk: 34, spd: 0.62, rng: 74, price: 2400, col: '#c4ccd8', desc: '양손으로 휘두르는 큰 검' });
   eq('gs2', '철 대검', 'weapon', 18, { wt: 'great', atk: 58, spd: 0.62, rng: 78, price: 8800, col: '#d6dde8', desc: '두꺼운 철 대검' });
   eq('gs3', '용살검', 'weapon', 26, { wt: 'great', atk: 84, spd: 0.62, rng: 84, price: 30000, col: '#ff9c7a', str: 6, desc: '용도 벤다는 전설의 대검' });
+  // Lv30+ 불꽃 협곡 장비
+  eq('sw5', '플레임 소드', 'weapon', 32, { wt: 'sword', atk: 74, spd: 0.42, rng: 66, price: 52000, col: '#ff8a5a', str: 6, dex: 4, desc: '불꽃이 일렁이는 검' });
+  eq('ax5', '용암 도끼', 'weapon', 32, { wt: 'axe', atk: 92, spd: 0.52, rng: 64, price: 56000, col: '#ff7a3a', str: 5, desc: '식지 않는 용암으로 벼린 도끼' });
+  eq('gs4', '화염 대검', 'weapon', 32, { wt: 'great', atk: 108, spd: 0.62, rng: 88, price: 60000, col: '#ff6a4a', str: 7, desc: '타오르는 양손 대검' });
+  eq('mc5', '마그마 해머', 'weapon', 32, { wt: 'mace', atk: 96, spd: 0.5, rng: 64, price: 56000, col: '#ff9a4a', str: 5, desc: '마그마가 흐르는 거대한 망치' });
+  eq('sp5', '용암 창', 'weapon', 32, { wt: 'spear', atk: 110, spd: 0.55, rng: 94, price: 60000, col: '#ff7a5a', str: 6, dex: 4, desc: '용암을 두른 장창' });
+  eq('hm5', '마그마 투구', 'helmet', 31, { def: 26, hp: 140, str: 3, price: 30000, col: '#c4452d', desc: '식은 마그마로 굳힌 투구' });
+  eq('ar5', '용암 갑옷', 'armor', 32, { def: 52, hp: 240, str: 4, price: 70000, col: '#d6502a', desc: '뜨거운 열기를 막아내는 갑옷' });
+  eq('gl4', '용암 건틀릿', 'gloves', 30, { def: 14, atk: 4, price: 24000, col: '#e0603a', desc: '불꽃이 새겨진 건틀릿' });
+  eq('sh5', '용암 장화', 'shoes', 30, { def: 16, dex: 4, price: 24000, col: '#d6502a', desc: '용암 위도 걷는 장화' });
   // 둔기 (한손, 페이지용)
   eq('mc0', '나무 망치', 'weapon', 1, { wt: 'mace', atk: 14, spd: 0.5, rng: 56, price: 100, col: '#a2754a', desc: '둔기의 기본, 나무 망치' });
   eq('mc1', '철 메이스', 'weapon', 8, { wt: 'mace', atk: 25, spd: 0.5, rng: 56, price: 1000, col: '#aab2bd', desc: '묵직한 철 곤봉' });
@@ -172,6 +183,9 @@
   mon('firegolem', '불 골렘', 28, 'golem', { hue: 'fire', hp: 3100, atk: 108, def: 84, speed: 40, w: 50, h: 58, ai: 'shoot', aggro: 260, drops: [['golemcore', 0.45], ['ember', 0.4], ['hp4', 0.06], ['mp3', 0.05]], eq: [['ax4', 0.005], ['ar4', 0.006], ['hm4', 0.006]] });
   // 보스
   mon('bosstree', '고목 대장', 14, 'bosstree', { boss: true, ai: 'bosstree', hp: 14000, atk: 92, def: 30, exp: 700, speed: 30, w: 86, h: 110, aggro: 520, mesos: [900, 1500], drops: [['treeheart', 1], ['hp3', 1], ['hp3', 0.7], ['wood', 1]], eq: [['sw2', 0.35], ['ax2', 0.3], ['hm3', 0.3]] });
+  mon('lavamask', '불꽃 가면', 30, 'woodmask', { hue: 'flame', hp: 3700, atk: 112, def: 90, speed: 62, w: 34, h: 42, ai: 'hop', aggro: 220, drops: [['flamefrag', 0.5], ['hp4', 0.07], ['mp3', 0.05]], eq: [['gl4', 0.01], ['hm5', 0.008], ['sw5', 0.005]] });
+  mon('lavaboar', '용암 멧돼지', 32, 'boar', { hue: 'lava', hp: 4600, atk: 124, def: 100, speed: 66, w: 48, h: 34, ai: 'charge', aggro: 250, drops: [['lavahide', 0.5], ['hp4', 0.07], ['mp3', 0.05]], eq: [['sh5', 0.01], ['ax5', 0.005], ['mc5', 0.005]] });
+  mon('magmagolem', '마그마 골렘', 34, 'golem', { hue: 'lava', hp: 5900, atk: 136, def: 114, speed: 40, w: 52, h: 60, ai: 'shoot', aggro: 270, drops: [['magmacore', 0.45], ['golemcore', 0.2], ['hp4', 0.07], ['mp3', 0.06]], eq: [['ar5', 0.007], ['gs4', 0.005], ['sp5', 0.005], ['hm5', 0.008]] });
   mon('zakum', '자쿰', 32, 'zakum', { boss: true, ai: 'bosszakum', hp: 110000, atk: 230, def: 105, exp: 12000, speed: 28, w: 120, h: 140, aggro: 700, mesos: [16000, 24000], drops: [['zeye', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['hmk', 0.2], ['sw4', 0.3], ['gs3', 0.3], ['ar4', 0.3], ['ax4', 0.2], ['mc4', 0.2], ['sp4', 0.2]] });
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 62000, atk: 185, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
   D.MON = M;
@@ -192,7 +206,6 @@
       { id: 'toRock', x: 70, to: 'rock1', tx: 'back', label: '바위산 초입', lv: 'Lv 1~6', col: '#7ac' },
       { id: 'toAnt', x: 1650, to: 'ant1', tx: 'back', label: '개미굴', lv: 'Lv 12~19', col: '#c87' },
       { id: 'toQuarry', x: 2530, to: 'quarry', tx: 'back', label: '버려진 채석장', lv: 'Lv 20~28', col: '#da6' },
-      { id: 'toZakum', x: 2520, to: 'zakum', tx: 'back', label: '자쿰의 제단', lv: 'Lv 30+ 보스', col: '#f96' },
       { id: 'toTrial', x: 2420, to: 'trial', tx: 'back', label: '시련의 탑 (점프맵)', lv: 'Lv 26+', col: '#fd8' },
     ],
     npcs: [
@@ -201,8 +214,8 @@
       { id: 'potion', n: '잡화상 포포', x: 1010, role: 'shop', shop: 'potion', look: 'merchant', quests: ['qpo1'] },
       { id: 'scribe', n: '주문서상 루나', x: 865, role: 'shop', shop: 'scroll', look: 'scribe', quests: ['qsc1'] },
       { id: 'smith', n: '대장장이 바르크', x: 1250, y: 330, role: 'shop', shop: 'smith', look: 'smith', quests: ['qs1', 'qs2', 'qs3'] },
-      { id: 'miner', n: '광부 반장 곡', x: 1480, role: 'quest', look: 'miner', quests: ['q3', 'qm2', 'q6', 'qm3', 'qm4', 'qh3'] },
-      { id: 'captain', n: '경비대장 레온', x: 1900, role: 'quest', look: 'captain', quests: ['q4', 'q5', 'qc2', 'q7', 'qc3', 'q8', 'qc4', 'qz', 'qh1', 'qh2', 'qh4'] },
+      { id: 'miner', n: '광부 반장 곡', x: 1480, role: 'quest', look: 'miner', quests: ['q3', 'qm2', 'q6', 'qm3', 'qm4', 'qv3', 'qh3'] },
+      { id: 'captain', n: '경비대장 레온', x: 1900, role: 'quest', look: 'captain', quests: ['q4', 'q5', 'qc2', 'q7', 'qc3', 'q8', 'qc4', 'qv1', 'qv2', 'qz', 'qh1', 'qh2', 'qh4'] },
       { id: 'master', n: '전사 교관 발도', x: 2180, y: 330, role: 'master', look: 'master', quests: ['q9'] },
     ],
   };
@@ -259,7 +272,15 @@
     plats: [P(0, 500, 2800, 1), P(240, 432, 320), P(760, 432, 300), P(1280, 432, 340), P(1840, 432, 300), P(2340, 432, 320), P(480, 364, 280), P(1020, 364, 260), P(1560, 364, 260), P(2100, 364, 260), P(760, 296, 280), P(1340, 296, 280), P(1900, 296, 240), P(900, 228, 240)],
     ladders: [{ x: 900, y1: 432, y2: 500 }, { x: 2000, y1: 432, y2: 500 }],
     spawns: [{ m: 'stonemask', p: 0, n: 3 }, { m: 'fireboar', p: 0, n: 3 }, { m: 'stonegolem', p: 0, n: 2 }, { m: 'stonemask', p: 2, n: 2 }, { m: 'fireboar', p: 4, n: 2 }, { m: 'stonemask', p: 5, n: 2 }, { m: 'stonegolem', p: 7, n: 2 }, { m: 'fireboar', p: 8, n: 2 }, { m: 'stonegolem', p: 9, n: 1 }, { m: 'stonemask', p: 10, n: 2 }, { m: 'stonegolem', p: 11, n: 2 }, { m: 'firegolem', p: 13, n: 1 }],
-    portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toQuarry', label: '페리온 마을' }, { id: 'next', x: 2740, to: 'bossgolem', tx: 'back', label: '골렘 사원', lv: 'Lv 26+ 보스', col: '#c9c' }],
+    portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toQuarry', label: '페리온 마을' }, { id: 'toLava', x: 2580, to: 'lava', tx: 'back', label: '불꽃 협곡', lv: 'Lv 29~36', col: '#f84' }, { id: 'next', x: 2740, to: 'bossgolem', tx: 'back', label: '골렘 사원', lv: 'Lv 26+ 보스', col: '#c9c' }],
+    npcs: [],
+  };
+  maps.lava = {
+    id: 'lava', n: '불꽃 협곡', sub: '', lvTxt: 'Lv 29~36', w: 3000, h: 560, theme: 'lava', bgm: 'quarry',
+    plats: [P(0, 500, 3000, 1), P(220, 432, 320), P(740, 432, 300), P(1260, 432, 340), P(1820, 432, 300), P(2360, 432, 320), P(2760, 364, 200), P(460, 364, 280), P(1000, 364, 260), P(1540, 364, 260), P(2080, 364, 260), P(740, 296, 280), P(1320, 296, 280), P(1880, 296, 240), P(2400, 296, 220), P(1000, 228, 260), P(1620, 228, 240)],
+    ladders: [{ x: 880, y1: 432, y2: 500 }, { x: 2000, y1: 432, y2: 500 }, { x: 2860, y1: 364, y2: 500 }],
+    spawns: [{ m: 'lavamask', p: 0, n: 3 }, { m: 'lavaboar', p: 0, n: 3 }, { m: 'magmagolem', p: 0, n: 2 }, { m: 'lavamask', p: 2, n: 2 }, { m: 'lavaboar', p: 4, n: 2 }, { m: 'lavamask', p: 6, n: 2 }, { m: 'magmagolem', p: 8, n: 2 }, { m: 'lavaboar', p: 9, n: 2 }, { m: 'lavamask', p: 11, n: 2 }, { m: 'magmagolem', p: 12, n: 2 }, { m: 'lavaboar', p: 14, n: 1 }, { m: 'magmagolem', p: 15, n: 1 }, { m: 'lavamask', p: 16, n: 1 }],
+    portals: [{ id: 'back', x: 60, to: 'quarry', tx: 'toLava', label: '버려진 채석장' }, { id: 'next', x: 2940, to: 'zakum', tx: 'back', label: '자쿰의 제단', lv: 'Lv 30+ 보스', col: '#f96' }],
     npcs: [],
   };
   maps.zakum = {
@@ -267,7 +288,7 @@
     plats: [P(0, 400, 1900, 1), P(160, 330, 260), P(1480, 330, 260), P(820, 262, 260)],
     ladders: [{ x: 940, y1: 262, y2: 400 }],
     spawns: [],
-    portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toZakum', label: '페리온 마을' }],
+    portals: [{ id: 'back', x: 60, to: 'lava', tx: 'next', label: '불꽃 협곡' }],
     npcs: [],
   };
   maps.bossgolem = {
@@ -433,8 +454,8 @@
       done: '역시 페리온의 영웅이다! 약속한 전설의 무기를 받아라.',
       goals: [{ kill: 'firegolem', n: 30 }], reward: { exp: 24000, meso: 25000, items: [['mc4', 1],['sp4', 1],['hp4', 20],['mp3', 20]] } },
     qz: { n: '불꽃의 제단, 자쿰', npc: 'captain', lv: 30, pre: 'q9',
-      ask: '페리온 최후의 위협이다. 마을 맨 오른쪽 **불꽃의 제단**에 \'자쿰\'이 깨어났다. 팔이 여럿 달린 거대한 석상으로, 땅을 쪼개고 불덩이를 쏟아낸다.\n**자쿰을 처치**하고 이마의 **자쿰의 불꽃 눈**을 가져와라! 전설의 **자쿰의 투구**를 내주겠다.',
-      doing: '마을 맨 오른쪽 끝 주황색 포탈이 불꽃의 제단이다. 하늘에서 떨어지는 불덩이와 땅에서 솟는 바위를 조심해라! 물약을 넉넉히!',
+      ask: '페리온 최후의 위협이다. **불꽃 협곡** 깊숙한 곳 **불꽃의 제단**에 \'자쿰\'이 깨어났다. 팔이 여럿 달린 거대한 석상으로, 땅을 쪼개고 불덩이를 쏟아낸다.\n**자쿰을 처치**하고 이마의 **자쿰의 불꽃 눈**을 가져와라! 전설의 **자쿰의 투구**를 내주겠다.',
+      doing: '채석장 오른쪽 주황색 포탈로 불꽃 협곡에 들어가 끝까지 가면 불꽃의 제단이다. 하늘에서 떨어지는 불덩이와 땅에서 솟는 바위를 조심해라! 물약을 넉넉히!',
       done: '자쿰을 쓰러뜨리다니… 네가 페리온 최강의 전사다! 약속한 투구를 받아라. 불꽃의 왕관이 너를 지켜줄 것이다.',
       goals: [{ kill: 'zakum', n: 1 }, { item: 'zeye', n: 1 }], reward: { exp: 60000, meso: 80000, items: [['hmk', 1], ['scW10', 2], ['scA10', 2], ['hp4', 20], ['mp3', 20]] } },
     qh1: { n: '돌 골렘 대청소', npc: 'captain', lv: 30, pre: 'qc4',
@@ -457,8 +478,23 @@
       doing: '자쿰은 불꽃의 제단에서 다시 나타난다. 매번 불꽃 눈을 떨어뜨린다.',
       done: '대단한 수집량이군! 학자도 기뻐할 거다. 후한 사례다.',
       goals: [{ item: 'zeye', n: 3 }], reward: { exp: 100000, meso: 100000, items: [['scW10', 5], ['scA10', 5], ['hp4', 30], ['mp3', 30]] } },
+    qv1: { n: '불꽃 협곡 개척', npc: 'captain', lv: 29, pre: 'q8',
+      ask: '채석장 너머 **불꽃 협곡**이 열렸다. 용암 기운에 물든 몬스터들이 득실댄다. **불꽃 가면 25마리**를 처치해 길을 열어라. 협곡 입구는 채석장 오른쪽 주황 포탈이다.',
+      doing: '채석장 오른쪽 끝 주황색 포탈이 협곡 입구다. 불꽃 가면은 폴짝 뛰며 들이받는다.',
+      done: '좋다! 협곡 개척의 첫걸음이군. 용암 건틀릿을 받아라.',
+      goals: [{ kill: 'lavamask', n: 25 }], reward: { exp: 22000, meso: 20000, items: [['gl4', 1], ['hp4', 15], ['mp3', 15]] } },
+    qv2: { n: '용암 멧돼지 사냥', npc: 'captain', lv: 31, pre: 'qv1',
+      ask: '협곡의 **용암 멧돼지 30마리**를 처치해라. 돌진이 빠르니 점프로 피하고 반격해라.',
+      doing: '용암 멧돼지는 협곡 바닥을 질주한다. 멈칫하는 순간이 기회다.',
+      done: '해냈군! 용암 장화를 받아라.',
+      goals: [{ kill: 'lavaboar', n: 30 }], reward: { exp: 30000, meso: 28000, items: [['sh5', 1], ['hp4', 20], ['mp3', 20]] } },
+    qv3: { n: '마그마 핵 연구', npc: 'miner', lv: 33, pre: 'qv2',
+      ask: '협곡의 마그마 골렘에게서 나오는 **마그마 핵 10개**를 구해 줘. 최고의 연료가 될 거야! 사례로 용암 갑옷을 줄게.',
+      doing: '마그마 골렘은 멀리서 불덩이를 던져. 거리를 좁혀서 싸워!',
+      done: '이게 마그마 핵이구나! 이 갑옷을 가져가.',
+      goals: [{ item: 'magmacore', n: 10 }], reward: { exp: 40000, meso: 50000, items: [['ar5', 1], ['scW10', 2], ['scA10', 2]] } },
   };
-  D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qc4', 'q9', 'qz', 'qh1', 'qh2', 'qh3', 'qh4'];
+  D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qv1', 'qv2', 'qv3', 'qc4', 'q9', 'qz', 'qh1', 'qh2', 'qh3', 'qh4'];
 
   root.DATA = D;
   if (typeof module !== 'undefined' && module.exports) module.exports = D;
