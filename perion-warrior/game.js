@@ -160,7 +160,9 @@
     const need = D.expToNext(p.lv); bar('xpbar', p.lv >= D.MAX_LV ? 1 : p.exp, p.lv >= D.MAX_LV ? 1 : need, p.lv >= D.MAX_LV ? 'MAX' : `EXP ${fmt(p.exp)} / ${fmt(need)}  (${(p.exp / need * 100).toFixed(1)}%)`);
     const o = E.objective(G); const ot = '📌 ' + esc(o.txt) + (o.sub ? `<small>📍 ${esc(o.sub)}</small>` : ''); setTxt($('obj'), ot, 'obj'); $('obj').classList.toggle('ready', !!o.ready);
     const potc = (k) => Object.keys(p.inv).reduce((a, id) => a + (D.ITEMS[id] && D.ITEMS[id][k] ? p.inv[id] : 0), 0);
-    setTxt($('bHp').querySelector('b'), String(potc('heal')), 'hpc'); setTxt($('bMp').querySelector('b'), String(potc('mana')), 'mpc');
+    const hpN = potc('heal'), mpN = potc('mana');
+    setTxt($('bHp').querySelector('b'), String(hpN), 'hpc'); setTxt($('bMp').querySelector('b'), String(mpN), 'mpc');
+    $('bHp').classList.toggle('empty', hpN <= 0); $('bMp').classList.toggle('empty', mpN <= 0);
     // 보스바
     const bb = $('bossbar'); const b = G.boss; if (b && !b.dead) { bb.style.display = 'block'; bb.querySelector('.nm').textContent = `${b.def.n}  Lv.${b.def.lv}`; bb.querySelector('i').style.width = Math.max(0, b.hp / b.maxhp * 100) + '%'; } else bb.style.display = 'none';
     // 힌트
