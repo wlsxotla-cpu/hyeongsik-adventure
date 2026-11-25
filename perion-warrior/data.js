@@ -23,6 +23,15 @@
   add('mp3', { n: '마나 엘릭서', t: 'use', icon: '💧', col: '#7a5cff', mana: 400, price: 520, desc: 'MP 400 회복' });
   add('scroll', { n: '마을 귀환 주문서', t: 'use', icon: '📜', col: '#d9c07a', town: true, price: 400, desc: '사용하면 페리온 마을로 순간이동' });
 
+  // 강화 주문서 (착용 중인 장비에 사용)
+  add('scW100', { n: '무기 공격력 주문서 100%', t: 'scroll', kind: 'weapon', rate: 1, mark: '공', icon: '📜', col: '#e8b04a', price: 450, desc: '착용 중인 무기의 공격력을 조금 올려요. 성공 확률 100%! 강화 가능 횟수가 1 줄어요.' });
+  add('scA100', { n: '방어구 방어력 주문서 100%', t: 'scroll', kind: 'armor', rate: 1, mark: '방', icon: '📜', col: '#7fb0d8', price: 450, desc: '착용 중인 투구·갑옷·장갑·신발의 방어력을 조금 올려요. 성공 확률 100%!' });
+  add('scW60', { n: '무기 공격력 주문서 60%', t: 'scroll', kind: 'weapon', rate: 0.6, mark: '공', icon: '📜', col: '#e5484d', price: 700, desc: '착용 중인 무기의 공격력을 올려요. 성공 확률 60%. 성공·실패와 상관없이 강화 가능 횟수가 1 줄어요.' });
+  add('scW10', { n: '무기 공격력 주문서 10%', t: 'scroll', kind: 'weapon', rate: 0.1, mark: '공', icon: '📜', col: '#ff8a2a', price: 1500, desc: '착용 중인 무기의 공격력을 크게 올려요. 성공 확률 10%. 보스에게서 얻을 수 있어요.' });
+  add('scA60', { n: '방어구 방어력 주문서 60%', t: 'scroll', kind: 'armor', rate: 0.6, mark: '방', icon: '📜', col: '#3e7bfa', price: 700, desc: '착용 중인 투구·갑옷·장갑·신발의 방어력을 올려요. 성공 확률 60%.' });
+  add('scA10', { n: '방어구 방어력 주문서 10%', t: 'scroll', kind: 'armor', rate: 0.1, mark: '방', icon: '📜', col: '#8a5cff', price: 1500, desc: '착용 중인 방어구의 방어력을 크게 올려요. 성공 확률 10%. 보스에게서 얻을 수 있어요.' });
+  add('scRe', { n: '복구 주문서', t: 'scroll', kind: 'restore', rate: 0.7, mark: '복', icon: '📜', col: '#2fb36a', price: 5000, desc: '착용 중인 장비의 강화 가능 횟수를 1 되돌려요. 성공 확률 70%.' });
+
   // 기타(팔기·퀘스트)
   const etc = (id, n, icon, price, col) => add(id, { n, t: 'etc', icon, price, col: col || '#8b8f9c', desc: '잡다한 전리품. 상점에 팔 수 있다.' });
   etc('shell', '달팽이 껍질', '🐚', 4, '#e9d6a8');
@@ -124,6 +133,9 @@
   mon('bosstree', '고목 대장', 14, 'bosstree', { boss: true, ai: 'bosstree', hp: 14000, atk: 92, def: 30, exp: 700, speed: 30, w: 86, h: 110, aggro: 520, mesos: [900, 1500], drops: [['treeheart', 1], ['hp3', 1], ['hp3', 0.7], ['wood', 1]], eq: [['sw2', 0.35], ['ax2', 0.3], ['hm3', 0.3]] });
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 62000, atk: 185, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
   D.MON = M;
+  // 주문서 드랍
+  for (const id in M) { const m = M[id]; if (m.boss) continue; if (m.lv >= 3) m.drops.push(['scW100', 0.02], ['scA100', 0.02]); if (m.lv >= 8) m.drops.push(['scW60', 0.012], ['scA60', 0.012]); if (m.lv >= 14) m.drops.push(['scW10', 0.004], ['scA10', 0.004], ['scRe', 0.003]); }
+  M.bosstree.drops.push(['scW10', 1], ['scA10', 0.6]); M.bossgolem.drops.push(['scW10', 1], ['scA10', 1], ['scRe', 1]);
 
   /* ───────── 맵 ───────── */
   const maps = {};
@@ -218,7 +230,7 @@
   /* ───────── 상점 ───────── */
   D.SHOPS = {
     potion: { n: '포포 잡화점', items: ['hp1', 'hp2', 'hp3', 'hp4', 'mp1', 'mp2', 'mp3', 'scroll'] },
-    smith: { n: '바르크 대장간', items: ['sw1', 'ax1', 'gs1', 'sw2', 'ax2', 'gs2', 'hm1', 'hm2', 'hm3', 'ar1', 'ar2', 'ar3', 'gl1', 'gl2', 'gl3', 'sh1', 'sh2', 'sh3'] },
+    smith: { n: '바르크 대장간', items: ['sw1', 'ax1', 'gs1', 'sw2', 'ax2', 'gs2', 'hm1', 'hm2', 'hm3', 'ar1', 'ar2', 'ar3', 'gl1', 'gl2', 'gl3', 'sh1', 'sh2', 'sh3', 'scW100', 'scA100', 'scW60', 'scA60', 'scRe'] },
   };
 
   /* ───────── 퀘스트 ───────── */
@@ -232,7 +244,7 @@
       ask: '요즘 바위산에 그루터기들이 늘어 광부들이 곤란해하네.\n바위산 초입에서 **그루터기 10마리**를 처치해 주게. 무기가 약하면 대장장이 바르크에게 철검을 맞춰 가게나.',
       doing: '그루터기는 바위산 초입 위쪽 바위에 많이 있다네.',
       done: '정말 고맙네! 이 가죽 갑옷을 받게. 이제 바위산 중턱까지 가도 괜찮겠어.',
-      goals: [{ kill: 'stump', n: 10 }], reward: { exp: 180, meso: 400, items: [['ar1', 1], ['hp1', 10]] } },
+      goals: [{ kill: 'stump', n: 10 }], reward: { exp: 180, meso: 400, items: [['ar1', 1], ['hp1', 10], ['scW100', 2]] } },
     qp: { n: '길 잃은 새끼 멧돼지', npc: 'elder', lv: 5, pre: 'q2',
       ask: '바위산에서 어미를 잃은 새끼 멧돼지가 마을 근처를 맴돌고 있네. 배가 고픈가 봐.\n그루터기가 떨어뜨리는 **나무 조각 8개**를 모아 먹이로 주면 자네를 따를지도 모르지!\n\n🐾 **펫**이 생기면 메뉴 설정에서 **자동 물약**을 쓸 수 있다네.',
       doing: '나무 조각은 바위산의 그루터기가 가끔 떨어뜨리네. 8개를 모아 오게!',
@@ -247,7 +259,7 @@
       ask: '고목의 숲 깊은 곳에 거대한 \'고목 대장\'이 눌러앉았다. 놈이 숲을 오염시키고 있어.\n**고목 대장을 처치**하고 **고목의 심장**을 가져와라! 물약을 넉넉히 챙기는 게 좋을 거다.',
       doing: '고목의 숲 오른쪽 끝 포탈이 놈의 둥지로 이어진다. 놈은 땅을 내리치고 잎사귀를 쏟아낸다!',
       done: '해냈구나! 네 실력은 이제 경비대도 인정한다. 보상을 받아라.',
-      goals: [{ kill: 'bosstree', n: 1 }, { item: 'treeheart', n: 1 }], reward: { exp: 2500, meso: 3000, items: [['sw2', 1], ['hp3', 10], ['mp2', 10]] } },
+      goals: [{ kill: 'bosstree', n: 1 }, { item: 'treeheart', n: 1 }], reward: { exp: 2500, meso: 3000, items: [['sw2', 1], ['hp3', 10], ['mp2', 10], ['scW60', 3]] } },
     q5: { n: '개미굴 수색', npc: 'captain', lv: 13, pre: 'q4',
       ask: '마을 동쪽 개미굴에서 개미 떼가 몰려나오고 있다. 개미굴 입구에서 **개미 25마리**를 처치해 길을 열어줘라.',
       doing: '개미굴 포탈은 마을 중앙 오른쪽 돌문이다. 개미는 단단하니 방어 버프를 써라.',
@@ -267,7 +279,7 @@
       ask: '채석장 깊은 곳 골렘 사원의 \'바위왕 골렘\'이 깨어났다. 페리온 최대의 위협이다.\n**바위왕 골렘을 처치**하고 **바위왕의 핵**을 가져와라. 전사의 이름을 걸고!',
       doing: '채석장 오른쪽 끝 포탈이 사원으로 이어진다. 낙석과 충격파를 조심해라!',
       done: '…믿기지 않는군. 페리온의 영웅이 탄생했다! 2차 전직 소식은 발도 교관에게 들어봐라.',
-      goals: [{ kill: 'bossgolem', n: 1 }, { item: 'goldcore', n: 1 }], reward: { exp: 20000, meso: 30000, items: [['ar4', 1], ['hp4', 20], ['mp3', 20]] } },
+      goals: [{ kill: 'bossgolem', n: 1 }, { item: 'goldcore', n: 1 }], reward: { exp: 20000, meso: 30000, items: [['ar4', 1], ['hp4', 20], ['mp3', 20], ['scW10', 1], ['scA10', 1]] } },
   };
   D.QUEST_ORDER = ['q1', 'q2', 'qp', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'];
 

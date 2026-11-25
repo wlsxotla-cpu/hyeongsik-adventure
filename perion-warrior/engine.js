@@ -12,11 +12,11 @@
   const ev = (G, e) => { if (G.events.length < 400) G.events.push(e); };
 
   /* ───────── 새 게임 / 저장 ───────── */
-  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet'];
+  const PERSIST = ['name', 'lv', 'exp', 'str', 'dex', 'int', 'luk', 'ap', 'sp', 'skills', 'baseHp', 'baseMp', 'equip', 'inv', 'meso', 'quests', 'settings', 'hp', 'mp', 'play', 'kills', 'tut', 'pet', 'enh'];
   E.newPlayer = function (name) {
     return { name: name || '전사', lv: 1, exp: 0, str: 12, dex: 5, int: 4, luk: 4, ap: 0, sp: 0, skills: { power: 1 }, baseHp: 55, baseMp: 14,
       equip: { weapon: 'sw0', armor: 'ar0', helmet: null, gloves: null, shoes: null }, inv: { hp1: 10, mp1: 3 }, meso: 50, quests: {}, kills: {},
-      settings: { auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: true }, pet: null, hp: 55, mp: 14, play: 0, tut: {} };
+      settings: { auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: true }, pet: null, enh: {}, hp: 55, mp: 14, play: 0, tut: {} };
   };
   E.newGame = function (name, seed, save) {
     const G = { rng: mulberry32(seed || (Date.now() & 0xffffffff)), t: 0, acc: 0, events: [], mons: [], drops: [], proj: [], zones: [], slots: [], map: null, mapId: null,
@@ -35,7 +35,7 @@
   E.sk = (G, sid) => G.p.skills[sid] || 0;
   E.stats = function (G) {
     const p = G.p; const b = { atk: 0, def: 0, str: 0, dex: 0, hp: 0 };
-    for (const slot in p.equip) { const it = D.ITEMS[p.equip[slot]]; if (!it) continue; b.atk += it.atk || 0; b.def += it.def || 0; b.str += it.str || 0; b.dex += it.dex || 0; b.hp += it.hp || 0; }
+    for (const slot in p.equip) { const it = D.ITEMS[p.equip[slot]]; if (!it) continue; b.atk += it.atk || 0; b.def += it.def || 0; b.str += it.str || 0; b.dex += it.dex || 0; b.hp += it.hp || 0; const en = p.enh && p.enh[it.id]; if (en) { b.atk += en.atk || 0; b.def += en.def || 0; } }
     const w = D.ITEMS[p.equip.weapon] || D.ITEMS.sw0;
     const str = p.str + b.str, dex = p.dex + b.dex;
     const tough = p.skills.toughness || 0, mast = p.skills.mastery || 0;
@@ -118,9 +118,40 @@
     if (p.meso < cost) return { ok: false, msg: '메소가 부족해요' };
     p.meso -= cost; E.addItem(G, id, n); ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
   };
+  /* ───── 장비 강화(주문서) ───── */
+  E.enhSlots = (it) => 3 + Math.floor(it.lv / 10);
+  E.enhInfo = function (G, id) { const it = D.ITEMS[id]; const r = (G.p.enh && G.p.enh[id]) || { n: 0, atk: 0, def: 0, ok: 0 }; const slots = E.enhSlots(it); return { slots, used: r.n, left: slots - r.n, atk: r.atk, def: r.def, ok: r.ok }; };
+  E.scrollTargets = function (G, sid) {
+    const sc = D.ITEMS[sid], out = [];
+    for (const slot of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = G.p.equip[slot]; if (!id) continue; if (sc.kind === 'weapon' && slot !== 'weapon') continue; if (sc.kind === 'armor' && slot === 'weapon') continue; const inf = E.enhInfo(G, id); out.push({ slot, id, left: inf.left, slots: inf.slots, ok: inf.ok, used: inf.used }); }
+    return out;
+  };
+  E.enhance = function (G, sid, slot) {
+    const p = G.p, sc = D.ITEMS[sid]; if (!sc || sc.t !== 'scroll' || inv(p, sid) < 1) return { ok: false, success: false, msg: '주문서가 없어요' };
+    const id = p.equip[slot]; if (!id) return { ok: false, success: false, msg: '착용 중인 장비가 아니에요' };
+    const it = D.ITEMS[id]; if (!p.enh) p.enh = {};
+    const r = p.enh[id] || (p.enh[id] = { n: 0, atk: 0, def: 0, ok: 0 }); const inf = E.enhInfo(G, id);
+    if (sc.kind === 'weapon' && slot !== 'weapon') return { ok: false, success: false, msg: '무기에만 쓸 수 있어요' };
+    if (sc.kind === 'armor' && slot === 'weapon') return { ok: false, success: false, msg: '방어구에만 쓸 수 있어요' };
+    if (sc.kind === 'restore') {
+      if (r.n <= 0) return { ok: false, success: false, msg: '복구할 강화 횟수가 없어요' };
+      E.addItem(G, sid, -1); const win = rand(G) < sc.rate; if (win) r.n -= 1;
+      ev(G, { t: 'scroll', ok: win, x: p.x, y: p.y }); ev(G, { t: 'sfx', n: win ? 'questdone' : 'deny' });
+      return { ok: true, success: win, msg: win ? `${it.n}의 강화 가능 횟수가 1 늘었어요!` : '복구에 실패했어요…' };
+    }
+    if (inf.left <= 0) return { ok: false, success: false, msg: `${it.n}은(는) 더 이상 강화할 수 없어요 (횟수 소진)` };
+    E.addItem(G, sid, -1); r.n += 1; const win = rand(G) < sc.rate; let bonus = 0;
+    if (win) {
+      r.ok += 1;
+      if (sc.kind === 'weapon') { bonus = sc.rate >= 0.99 ? Math.max(1, Math.round(it.atk * 0.03)) : sc.rate >= 0.5 ? Math.max(2, Math.round(it.atk * 0.06)) : Math.max(5, Math.round(it.atk * 0.16)); r.atk += bonus; }
+      else { bonus = sc.rate >= 0.99 ? Math.max(1, Math.round((it.def || 0) * 0.05)) : sc.rate >= 0.5 ? Math.max(1, Math.round((it.def || 0) * 0.1 + 1)) : Math.max(3, Math.round((it.def || 0) * 0.25 + 2)); r.def += bonus; }
+    }
+    ev(G, { t: 'scroll', ok: win, x: p.x, y: p.y }); ev(G, { t: 'sfx', n: win ? 'questdone' : 'deny' });
+    return { ok: true, success: win, bonus, msg: win ? `강화 성공! ${it.n} ${sc.kind === 'weapon' ? '공격력' : '방어력'} +${bonus}` : `강화 실패… (${it.n}, 남은 횟수 ${inf.left - 1})` };
+  };
   E.sell = function (G, id, n) {
     const p = G.p, it = D.ITEMS[id]; n = Math.min(n || 1, inv(p, id)); if (n < 1 || it.q) return { ok: false, msg: it && it.q ? '퀘스트에 필요한 물건이에요' : '팔 수 없어요' };
-    p.meso += E.sellPrice(it) * n; E.addItem(G, id, -n); ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
+    p.meso += E.sellPrice(it) * n; E.addItem(G, id, -n); if (inv(p, id) < 1 && p.equip[it.slot] !== id && p.enh) delete p.enh[id]; ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
   };
   E.sellAllEtc = function (G) { let gain = 0; const p = G.p; for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (it.t === 'etc' && !it.q && !questNeeds(G, id)) { gain += it.price * p.inv[id]; delete p.inv[id]; } } p.meso += gain; if (gain) ev(G, { t: 'sfx', n: 'buy' }); return gain; };
   function questNeeds(G, id) { for (const qid in G.p.quests) { if (G.p.quests[qid].st !== 'active') continue; for (const g of D.QUESTS[qid].goals) if (g.item === id) return true; } return false; }
