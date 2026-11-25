@@ -119,6 +119,8 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 .slot small{position:absolute;right:3px;bottom:1px;font-size:11px;font-weight:900;text-shadow:0 1px 2px #000,0 0 3px #000}
 .slot .lv{position:absolute;left:3px;top:1px;font-size:9px;font-weight:900;color:#ffe08a;text-shadow:0 1px 2px #000}
 .slot .lv.bad{color:#ff7a8a}
+.slot.off{filter:grayscale(.85) brightness(.7)}
+.slot .offt{position:absolute;left:0;right:0;bottom:13px;text-align:center;font-size:10px;color:#ff6a6a;font-weight:900;text-shadow:0 1px 2px #000,0 0 3px #000;line-height:1}
 .slot .up{position:absolute;left:3px;top:1px;color:#7aff9a;font-size:12px;font-weight:900;text-shadow:0 1px 2px #000,0 0 3px #000;line-height:1}
 .slot.empty{opacity:.45;font-size:11px;color:#b8a8d0}
 .eqrow{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:8px}
@@ -247,12 +249,12 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 </div>
 <script>
 // 자동 업데이트 확인: version.txt(캐시 안 씀)와 이 페이지의 빌드가 다르면 새 주소로 다시 열어 최신 파일을 받는다 (홈화면 앱 캐시 대응)
-(function () { try { var B = '20261125zzq'; if (!window.fetch) return; fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) { t = (t || '').trim(); if (/^\d+[a-z]*$/.test(t) && t !== B) { var k = 'pw.upd.' + t; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); location.replace(location.pathname + '?r=' + t); } }).catch(function () {}); } catch (e) {} })();
+(function () { try { var B = '20261125zzr'; if (!window.fetch) return; fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) { t = (t || '').trim(); if (/^\d+[a-z]*$/.test(t) && t !== B) { var k = 'pw.upd.' + t; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); location.replace(location.pathname + '?r=' + t); } }).catch(function () {}); } catch (e) {} })();
 </script>
-<script src="data.js?v=20261125zzq"></script>
-<script src="engine.js?v=20261125zzq"></script>
-<script src="art.js?v=20261125zzq"></script>
-<script src="audio.js?v=20261125zzq"></script>
-<script src="game.js?v=20261125zzq"></script>
+<script src="data.js?v=20261125zzr"></script>
+<script src="engine.js?v=20261125zzr"></script>
+<script src="art.js?v=20261125zzr"></script>
+<script src="audio.js?v=20261125zzr"></script>
+<script src="game.js?v=20261125zzr"></script>
 </body>
 </html>

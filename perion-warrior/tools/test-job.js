@@ -3,9 +3,11 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
 const G = E.newGame('j', 3); const p = G.p;
 // 스탯 초기화 시 못 입는 장비는 벗겨짐
 p.lv = 30; p.str = 60; p.dex = 20; p.inv = { sw4: 1, hm4: 1, gl3: 1 }; ['sw4', 'hm4', 'gl3'].forEach((i) => ok(E.equip(G, i).ok, i + ' 착용'));
-E.resetStats(G);
-ok(p.equip.weapon === 'sw0' && p.inv.sw4 === 1, '스탯 초기화 → 무기는 낡은 검으로, 미스릴 소드는 가방');
-ok(!p.equip.helmet && !p.equip.gloves && p.inv.hm4 === 1, '투구·장갑 벗겨짐');
+const before = E.stats(G).maxDmg; E.resetStats(G);
+ok(p.equip.weapon === 'sw4' && p.equip.helmet === 'hm4' && p.equip.gloves === 'gl3', '스탯 초기화해도 장비는 벗겨지지 않는다 (비활성)');
+const st0 = E.stats(G); ok(st0.inactive.includes('weapon') && st0.inactive.includes('helmet') && st0.inactive.includes('gloves'), '못 입는 장비는 비활성 목록에 ' + st0.inactive.join(','));
+ok(st0.maxDmg < before * 0.3 && st0.bonus.def < E.stats(G).def + 1, '비활성 무기는 맨손 수준 (' + Math.round(st0.maxDmg) + ' < ' + Math.round(before) + ')');
+p.ap = 200; E.addStat(G, 'str', 60); E.addStat(G, 'dex', 20); const st1 = E.stats(G); ok(!st1.inactive.includes('weapon') && st1.maxDmg > st0.maxDmg * 3, '스탯을 다시 올리면 장비가 다시 켜진다');
 // 전직
 const g = E.newGame('a', 4); const q = g.p; q.lv = 30;
 ok(!E.advance(g, 'fighter').ok, '시련 전에는 전직 불가');

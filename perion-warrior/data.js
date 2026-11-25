@@ -264,7 +264,7 @@
     plats: [P(0, 500, 2600, 1), P(200, 432, 300), P(660, 432, 300), P(1120, 432, 340), P(1640, 432, 300), P(2100, 432, 320), P(420, 364, 260), P(940, 364, 260), P(1400, 364, 260), P(1900, 364, 260), P(700, 296, 260), P(1240, 296, 280), P(1760, 296, 240), P(760, 228, 240)],
     ladders: [{ x: 260, y1: 432, y2: 500 }, { x: 1780, y1: 432, y2: 500 }],
     spawns: [{ m: 'soldierant', p: 0, n: 3 }, { m: 'zombieant', p: 0, n: 4 }, { m: 'zombieant', p: 2, n: 2 }, { m: 'soldierant', p: 3, n: 2 }, { m: 'zombieant', p: 5, n: 2 }, { m: 'zombieant', p: 6, n: 2 }, { m: 'zombieant', p: 7, n: 2 }, { m: 'soldierant', p: 8, n: 2 }, { m: 'zombieant', p: 10, n: 2 }, { m: 'zombieant', p: 11, n: 2 }, { m: 'zombieant', p: 13, n: 1 }],
-    portals: [{ id: 'back', x: 60, to: 'ant1', tx: 'next', label: '개미굴 입구' }],
+    portals: [{ id: 'back', x: 60, to: 'ant1', tx: 'next', label: '개미굴 입구' }, { id: 'hid', x: 880, y: 228, to: 'hiddenA', tx: 'back', label: '숨겨진 갱도', hidden: true, col: '#b8f' }],
     npcs: [],
   };
   maps.quarry = {
@@ -276,15 +276,32 @@
     npcs: [],
   };
   maps.lava = {
-    id: 'lava', n: '불꽃 협곡', sub: '', lvTxt: 'Lv 29~36', w: 3000, h: 560, theme: 'lava', bgm: 'quarry',
+    id: 'lava', n: '불꽃 협곡', sub: '', lvTxt: 'Lv 29~36', w: 3000, h: 560, theme: 'lava', bgm: 'lava',
     plats: [P(0, 500, 3000, 1), P(220, 432, 320), P(740, 432, 300), P(1260, 432, 340), P(1820, 432, 300), P(2360, 432, 320), P(2760, 364, 200), P(460, 364, 280), P(1000, 364, 260), P(1540, 364, 260), P(2080, 364, 260), P(740, 296, 280), P(1320, 296, 280), P(1880, 296, 240), P(2400, 296, 220), P(1000, 228, 260), P(1620, 228, 240)],
     ladders: [{ x: 880, y1: 432, y2: 500 }, { x: 2000, y1: 432, y2: 500 }, { x: 2860, y1: 364, y2: 500 }],
     spawns: [{ m: 'lavamask', p: 0, n: 3 }, { m: 'lavaboar', p: 0, n: 3 }, { m: 'magmagolem', p: 0, n: 2 }, { m: 'lavamask', p: 2, n: 2 }, { m: 'lavaboar', p: 4, n: 2 }, { m: 'lavamask', p: 6, n: 2 }, { m: 'magmagolem', p: 8, n: 2 }, { m: 'lavaboar', p: 9, n: 2 }, { m: 'lavamask', p: 11, n: 2 }, { m: 'magmagolem', p: 12, n: 2 }, { m: 'lavaboar', p: 14, n: 1 }, { m: 'magmagolem', p: 15, n: 1 }, { m: 'lavamask', p: 16, n: 1 }],
-    portals: [{ id: 'back', x: 60, to: 'quarry', tx: 'toLava', label: '버려진 채석장' }, { id: 'next', x: 2940, to: 'zakum', tx: 'back', label: '자쿰의 제단', lv: 'Lv 30+ 보스', col: '#f96' }],
+    portals: [{ id: 'back', x: 60, to: 'quarry', tx: 'toLava', label: '버려진 채석장' }, { id: 'next', x: 2940, to: 'zakum', tx: 'back', label: '자쿰의 제단', lv: 'Lv 30+ 보스', col: '#f96' }, { id: 'hid', x: 1740, y: 228, to: 'hiddenB', tx: 'back', label: '불의 비밀 통로', hidden: true, col: '#b8f' }],
+    npcs: [],
+  };
+  // 히든 스트리트: 숨은 포탈로만 들어가는 사냥터 (몬스터 빽빽, 경험치·드랍 보너스)
+  maps.hiddenA = {
+    id: 'hiddenA', n: '숨겨진 갱도', sub: '히든 스트리트', lvTxt: 'Lv 17~24 · 경험치×1.6 드랍×1.5', w: 2200, h: 520, theme: 'cave2', bgm: 'hidden', expMul: 1.6, dropMul: 1.5,
+    plats: [P(0, 460, 2200, 1), P(160, 392, 300), P(640, 392, 300), P(1120, 392, 300), P(1600, 392, 320), P(400, 324, 280), P(900, 324, 260), P(1380, 324, 260), P(1860, 324, 240), P(640, 256, 260), P(1160, 256, 260), P(1640, 256, 240)],
+    ladders: [{ x: 300, y1: 392, y2: 460 }, { x: 1700, y1: 392, y2: 460 }],
+    spawns: [{ m: 'zombieant', p: 0, n: 5 }, { m: 'soldierant', p: 0, n: 4 }, { m: 'stonemask', p: 0, n: 3 }, { m: 'zombieant', p: 1, n: 3 }, { m: 'soldierant', p: 2, n: 3 }, { m: 'stonemask', p: 3, n: 3 }, { m: 'zombieant', p: 4, n: 3 }, { m: 'zombieant', p: 5, n: 3 }, { m: 'soldierant', p: 6, n: 3 }, { m: 'stonemask', p: 7, n: 3 }, { m: 'zombieant', p: 8, n: 3 }, { m: 'stonemask', p: 9, n: 3 }, { m: 'soldierant', p: 10, n: 3 }, { m: 'zombieant', p: 11, n: 3 }],
+    portals: [{ id: 'back', x: 60, to: 'ant2', tx: 'hid', label: '개미굴 깊은 곳' }],
+    npcs: [],
+  };
+  maps.hiddenB = {
+    id: 'hiddenB', n: '불의 비밀 통로', sub: '히든 스트리트', lvTxt: 'Lv 31~37 · 경험치×1.5 드랍×1.6', w: 2400, h: 520, theme: 'lava', bgm: 'hidden', expMul: 1.5, dropMul: 1.6,
+    plats: [P(0, 460, 2400, 1), P(180, 392, 320), P(700, 392, 300), P(1240, 392, 320), P(1780, 392, 320), P(440, 324, 280), P(980, 324, 280), P(1520, 324, 260), P(2060, 324, 240), P(700, 256, 260), P(1260, 256, 260), P(1800, 256, 240)],
+    ladders: [{ x: 320, y1: 392, y2: 460 }, { x: 1900, y1: 392, y2: 460 }],
+    spawns: [{ m: 'magmagolem', p: 0, n: 4 }, { m: 'lavamask', p: 0, n: 4 }, { m: 'lavaboar', p: 0, n: 3 }, { m: 'lavamask', p: 1, n: 3 }, { m: 'magmagolem', p: 2, n: 3 }, { m: 'lavaboar', p: 3, n: 3 }, { m: 'lavamask', p: 4, n: 3 }, { m: 'magmagolem', p: 5, n: 3 }, { m: 'lavaboar', p: 6, n: 3 }, { m: 'lavamask', p: 7, n: 3 }, { m: 'magmagolem', p: 8, n: 3 }, { m: 'lavamask', p: 9, n: 3 }, { m: 'magmagolem', p: 10, n: 3 }, { m: 'lavaboar', p: 11, n: 3 }],
+    portals: [{ id: 'back', x: 60, to: 'lava', tx: 'hid', label: '불꽃 협곡' }],
     npcs: [],
   };
   maps.zakum = {
-    id: 'zakum', n: '자쿰의 제단', sub: '보스', lvTxt: 'Lv 30+ 보스', w: 1900, h: 460, theme: 'temple', bgm: 'boss', boss: 'zakum', bossX: 1300,
+    id: 'zakum', n: '자쿰의 제단', sub: '보스', lvTxt: 'Lv 30+ 보스', w: 1900, h: 460, theme: 'temple', bgm: 'zakum', boss: 'zakum', bossX: 1300,
     plats: [P(0, 400, 1900, 1), P(160, 330, 260), P(1480, 330, 260), P(820, 262, 260)],
     ladders: [{ x: 940, y1: 262, y2: 400 }],
     spawns: [],
@@ -317,7 +334,7 @@
     }
     { const t0 = pl[pl.length - 1]; pl[pl.length - 1] = P(t0.x + t0.w / 2 - 110, t0.y, 220); }
     const top = pl[pl.length - 1]; const xc = top.x + top.w / 2;
-    maps.trial = { id: 'trial', n: '시련의 탑', sub: '점프맵', lvTxt: 'Lv 26+ 점프맵', w: 1400, h: H, theme: 'temple', bgm: 'boss', plats: pl, ladders: [], spawns: [],
+    maps.trial = { id: 'trial', n: '시련의 탑', sub: '점프맵', lvTxt: 'Lv 26+ 점프맵', w: 1400, h: H, theme: 'temple', bgm: 'trial', plats: pl, ladders: [], spawns: [],
       portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toTrial', label: '페리온 마을' }],
       npcs: [{ id: 'chest', n: '고대 상자', x: xc, y, role: 'chest', look: 'chest' }] };
   })();

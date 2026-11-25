@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzq';
+  const BUILD = '20261125zzr';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -200,7 +200,7 @@
   function drawMini() {
     const c = $('mini').getContext('2d'), W = 260, H = 60, m = G.map, sx = W / m.w; c.clearRect(0, 0, W, H);
     c.fillStyle = 'rgba(255,255,255,.14)'; for (const pl of m.plats) { const y = 6 + (pl.y / m.h) * (H - 14); c.fillRect(pl.x * sx, y, Math.max(2, pl.w * sx), 2.6); }
-    for (const pt of m.portals) { c.fillStyle = '#6ab4ff'; c.fillRect(pt.x * sx - 2, H - 16, 4, 12); }
+    for (const pt of m.portals) { if (pt.hidden) continue; c.fillStyle = '#6ab4ff'; c.fillRect(pt.x * sx - 2, H - 16, 4, 12); }
     for (const n of m.npcs) { c.fillStyle = '#ffe36a'; c.beginPath(); c.arc(n.x * sx, 6 + ((n.y || m.plats[0].y) / m.h) * (H - 14) - 3, 3, 0, TAU); c.fill(); }
     for (const mm of G.mons) if (!mm.dead) { c.fillStyle = mm.def.boss ? '#ff2a2a' : '#ff6a6a'; c.beginPath(); c.arc(mm.x * sx, 6 + (mm.y / m.h) * (H - 14) - 3, mm.def.boss ? 5 : 2.6, 0, TAU); c.fill(); }
     c.fillStyle = '#5fff8a'; c.strokeStyle = '#000'; c.lineWidth = 1.5; c.beginPath(); c.arc(G.p.x * sx, 6 + (G.p.y / m.h) * (H - 14) - 3, 4, 0, TAU); c.fill(); c.stroke();
@@ -291,7 +291,7 @@
     if (it.t === 'equip') {
       const cur = G.p.equip[it.slot] && D.ITEMS[G.p.equip[it.slot]]; const en = enhOf(id, idx), inf = E.enhInfo(G, id, idx); const row = (k, lab) => { const v = it[k] || 0, c = cur ? (cur[k] || 0) : 0; if (!v && !c && !(en[k])) return ''; const d = v - c; return `${lab} <b>${v}</b>${en[k] ? ` <span style="color:#7aff9a">(+${en[k]} 강화)</span>` : ''}${cur && cur.id !== id && d ? ` <span style="color:${d > 0 ? '#7aff9a' : '#ff8a8a'}">(${d > 0 ? '▲' : '▼'}${Math.abs(d)})</span>` : ''}<br>`; };
       s += `<div style="color:#bda8e0">${SLOTN[it.slot]}${it.wt ? ' · ' + ({ sword: '한손검', axe: '도끼', great: '대검(양손)', mace: '둔기', spear: '창(양손)' })[it.wt] : ''}</div>`;
-      { const rq = E.req(it), pp = G.p; const c = (ok) => ok ? '#cfe' : '#ff8a8a'; s += `<span style="color:${c(pp.lv >= rq.lv)}">요구 Lv ${rq.lv}</span> · <span style="color:${c(pp.str >= rq.str)}">STR ${rq.str}</span>` + (rq.dex ? ` · <span style="color:${c(pp.dex >= rq.dex)}">DEX ${rq.dex}</span>` : '') + '<br>'; } s += '' + row('atk', '공격력') + row('def', '방어력') + row('str', 'STR') + row('dex', 'DEX') + row('hp', '최대 HP');
+      { const rq = E.req(it), pp = G.p; const c = (ok) => ok ? '#cfe' : '#ff8a8a'; s += `<span style="color:${c(pp.lv >= rq.lv)}">요구 Lv ${rq.lv}</span> · <span style="color:${c(pp.str >= rq.str)}">STR ${rq.str}</span>` + (rq.dex ? ` · <span style="color:${c(pp.dex >= rq.dex)}">DEX ${rq.dex}</span>` : '') + '<br>'; if (idx == null && G.p.equip[it.slot] === id && !E.canWear(G, it).ok) s += '<div style="color:#ff8a8a">⚠ 능력치가 모자라 효과가 꺼져 있어요</div>'; } s += '' + row('atk', '공격력') + row('def', '방어력') + row('str', 'STR') + row('dex', 'DEX') + row('hp', '최대 HP');
       s += `<div style="color:#ffe08a">🔨 강화 +${inf.ok} · 남은 횟수 <b>${inf.left}/${inf.slots}</b></div>`; if (it.wt) s += `공격 속도 <b>${it.spd <= 0.45 ? '빠름' : it.spd <= 0.55 ? '보통' : '느림'}</b> · 사거리 <b>${it.rng}</b><br>`;
     }
     s += `<div style="color:#cdbbe8;margin-top:3px">${esc(it.desc || '')}</div>`; s += `<div class="price">판매가 ${fmt(E.sellPrice(it))} 메소${E.lockedQty(G, id) ? ' (진행 중 퀘스트용 ' + E.lockedQty(G, id) + '개 제외)' : ''}</div>`; return s;
@@ -335,7 +335,7 @@
   }
   function tabInv() {
     const p = G.p; let s = '<div class="eqrow">';
-    for (const sl of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[sl]; const it = id && D.ITEMS[id]; s += `<div class="c"><button class="slot eq ${it ? '' : 'empty'}" ${it ? `data-a="sel:${id}:e"` : ''} style="width:100%">${it ? ico(id) : SLOTN[sl]}${it ? `<span class="lv">Lv${it.lv}</span>${enhBadge(id)}` : ''}</button>${SLOTN[sl]}</div>`; }
+    for (const sl of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[sl]; const it = id && D.ITEMS[id]; const off = it && !E.canWear(G, it).ok; s += `<div class="c"><button class="slot eq ${it ? '' : 'empty'} ${off ? 'off' : ''}" ${it ? `data-a="sel:${id}:e"` : ''} style="width:100%">${it ? ico(id) : SLOTN[sl]}${it ? `<span class="lv">Lv${it.lv}</span>${enhBadge(id)}` : ''}${off ? '<span class="offt">비활성</span>' : ''}</button>${SLOTN[sl]}</div>`; }
     s += '</div>';
     if (menuSel && D.ITEMS[menuSel]) { const id = menuSel, it = D.ITEMS[id]; const worn = menuIdx === null && p.equip[it.slot] === id; s += `<div class="card">${itemInfo(id, menuIdx)}<div class="row2" style="margin-top:7px;flex-wrap:wrap">`;
       if (it.t === 'equip') { if (worn) s += it.slot === 'weapon' ? '<span style="color:#cdbbe8">착용 중 (무기는 다른 무기로 교체해요)</span>' : `<button class="btn sm gray" data-a="un:${it.slot}">벗기</button>`; else s += `<button class="btn sm green" data-a="eq:${id}:${menuIdx === null ? '' : menuIdx}" ${!E.canWear(G, it).ok || !(p.inv[id] > 0) ? 'disabled' : ''}>착용</button>` + (E.canWear(G, it).ok ? '' : `<small style="color:#ff8a8a"> ${E.canWear(G, it).msg}</small>`); }
@@ -361,7 +361,8 @@
     s += row('str', 'STR 힘', '공격력') + row('dex', 'DEX 민첩', '공격력(조금)·방어') + row('int', 'INT 지력', '최대 MP') + row('luk', 'LUK 행운', '치명타·드랍');
     const w = D.ITEMS[p.equip.weapon] || D.ITEMS.sw0; const WT = { sword: '한손검', axe: '도끼', great: '대검', mace: '둔기', spear: '창' };
     s += `<div class="card" style="margin-top:8px;line-height:1.7"><b style="color:#ffd24a">📊 ${esc(p.name)} · Lv.${p.lv} ${p.job ? D.JOBS[p.job].n : '전사'}</b><br>⚔️ 공격력 <b>${fmt(Math.round(st.minDmg))} ~ ${fmt(Math.round(st.maxDmg))}</b> <small style="color:#cdbbe8">(무기 공격력 ${Math.round(st.wAtk)})</small><br>🛡️ 방어력 <b>${st.def}</b> · 치명타 <b>${(st.crit * 100).toFixed(1)}%</b><br>❤️ 최대 HP <b>${fmt(st.maxHp)}</b> · 💧 최대 MP <b>${fmt(st.maxMp)}</b><br>🗡️ 무기 <b>${esc(w.n)}</b> (${WT[w.wt] || '검'}) · 공격 속도 <b>${(1 / st.spd).toFixed(1)}</b>회/초 · 사거리 <b>${st.rng}</b><br>👟 이동 속도 <b>${st.speed}</b> · 장비 보너스 STR <b>+${st.bonus.str}</b> DEX <b>+${st.bonus.dex}</b> 공격 <b>+${st.bonus.atk}</b> 방어 <b>+${st.bonus.def}</b> HP <b>+${st.bonus.hp}</b></div>`;
-    s += `<div class="card" style="font-size:11px;line-height:1.6"><b>🎽 장비 요구 능력치</b> <small style="color:#cdbbe8">(기본 STR/DEX 기준)</small><br>${['weapon', 'helmet', 'armor', 'gloves', 'shoes'].map((sl) => { const id = p.equip[sl], it = id && D.ITEMS[id]; if (!it) return `${SLOTN[sl]}: -`; const rq = E.req(it); return `${SLOTN[sl]}: ${esc(it.n)} (STR ${rq.str}${rq.dex ? ' / DEX ' + rq.dex : ''})`; }).join('<br>')}</div>`;
+    if (st.inactive.length) s += '<div class="card" style="color:#ff8a8a">⚠ 능력치가 모자라 비활성인 장비가 있어요. STR/DEX를 올리면 다시 켜져요.</div>';
+    s += `<div class="card" style="font-size:11px;line-height:1.6"><b>🎽 장비 요구 능력치</b> <small style="color:#cdbbe8">(기본 STR/DEX 기준)</small><br>${['weapon', 'helmet', 'armor', 'gloves', 'shoes'].map((sl) => { const id = p.equip[sl], it = id && D.ITEMS[id]; if (!it) return `${SLOTN[sl]}: -`; const rq = E.req(it), off = !E.canWear(G, it).ok; return `${off ? '<span style="color:#ff8a8a">' : ''}${SLOTN[sl]}: ${esc(it.n)} (STR ${rq.str}${rq.dex ? ' / DEX ' + rq.dex : ''})${off ? ' — 비활성</span>' : ''}`; }).join('<br>')}</div>`;
     s += `<div class="row2"><button class="btn sm green" data-a="auto" ${p.ap < 1 ? 'disabled' : ''}>남은 포인트 전부 STR에</button><button class="btn sm gray" data-a="reset">능력치 초기화(무료)</button></div>`;
     return s;
   }
@@ -446,7 +447,7 @@
           else if (s === 'lowlv') opts.push({ label: `🔒 ${esc(q.n)} <small>(Lv ${q.lv}부터)</small>`, cls: 'gray', dis: true });
         }
       } else if (npc.role === 'inn') {
-        const cost = Math.round(G.p.lv * 4); text = `어서 오세요, 여관 '바위 베개'예요!\n푹 쉬면 HP·MP가 가득 차요.\n이용료는 **${cost} 메소**랍니다.`;
+        const cost = Math.round(G.p.lv * 4); text = `어서 오세요, 여관 '바위 베개'예요!\n푹 쉬면 HP·MP가 가득 차요.\n이용료는 **${cost} 메소**랍니다.\n\n🤫 *손님들 사이에 이런 소문이 돌아요… 개미굴 깊은 곳 **맨 위 발판 끝**, 그리고 불꽃 협곡 **맨 위 오른쪽 발판**에 지도에도 없는 비밀 길이 있대요.*`;
         opts.push({ label: `🛏️ 쉬기 (${cost} 메소)`, cls: 'green', fn: () => { const r = E.innHeal(G); Snd.sfx(r.ok ? 'levelup' : 'deny'); if (r.ok) { fx({ type: 'ring', x: G.p.x, y: G.p.y - 20, r: 40, col: '#9fffb0', size: 5, life: 0.7 }); dlg(npc, '푹 쉬셨나요? 몸이 가벼워졌을 거예요! 😊', [{ label: '고마워요', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } });
       } else if (npc.role === 'shop') {
         text = npc.shop === 'potion' ? '어서 와요! 물약과 귀환 주문서를 팔아요.\n사냥 전엔 물약 챙기는 거 잊지 마세요!' : npc.shop === 'scroll' ? '어서 오세요, 주문서 가게예요 ✨\n여기선 **100% 주문서**만 팔아요.\n**60%**와 **10%** 주문서는 몬스터가 떨어뜨리니 사냥하며 모아 보세요!' : '크하하, 불꽃 튀는 대장간에 어서 와라!\n무기와 방어구가 있다. 레벨에 맞는 걸 골라!';
@@ -543,7 +544,7 @@
       if (cx < 0) { wall(cx - 2, 0); c.fillStyle = '#1a1210'; c.fillRect(-4, cy, 4, VH); } if (cx + VW > m.w) { wall(m.w + 200, m.w); c.fillStyle = '#1a1210'; c.fillRect(m.w, cy, 4, VH); } }
     const vis = (x, r) => x > cx - r && x < cx + VW + r;
     const nb = started ? E.nearby(G) : null; const gy = m.plats[0].y;
-    for (const pt of m.portals) if (vis(pt.x, 80)) Art.drawPortal(c, { x: pt.x, y: gy, label: pt.label, lv: pt.lv, col: pt.col }, time, nb && nb.portal === pt);
+    for (const pt of m.portals) if (vis(pt.x, 80)) { const py = pt.y !== undefined ? pt.y : gy; if (pt.hidden) { const dx = Math.abs(G.p.x - pt.x), dy = Math.abs(G.p.y - py); if (dx > 160 || dy > 90) continue; c.save(); c.globalAlpha = Math.max(0.25, 1 - dx / 200); Art.drawPortal(c, { x: pt.x, y: py, label: dx < 90 ? pt.label : '???', lv: dx < 90 ? '히든 스트리트' : '', col: pt.col }, time, nb && nb.portal === pt); c.restore(); } else Art.drawPortal(c, { x: pt.x, y: py, label: pt.label, lv: pt.lv, col: pt.col }, time, nb && nb.portal === pt); }
     for (const n of m.npcs) if (vis(n.x, 80)) { c.save(); c.translate(n.x, n.y || gy); Art.drawNpc(c, n, time, nb && nb.npc === n); c.restore(); }
     for (const d of G.drops) if (vis(d.x, 30)) Art.drawDrop(c, d, time);
     for (const z of G.zones) { if (z.full) drawFloorZone(c, z); else Art.drawZone(c, z, time); }
@@ -620,8 +621,8 @@
     else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
   }
   // 업데이트 소식: 새 소식 번호가 바뀌면 한 번만 보여 준다 (소식을 고칠 땐 NEWS_ID 도 올릴 것)
-  const NEWS_ID = 'n3';
-  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.', '🔄 교관 발도에게서 <b>직업을 바꿀</b> 수 있어요 (스킬 초기화, 포인트 환급). 다른 직업도 체험해 보세요!', '🔱 스피어맨 <b>드래곤 크러셔</b>가 3연속 찌르기로 바뀌었어요.', '👹 <b>보스 패턴 개편</b> — 발판 위에서도 맞아요! 붉은 <b>바닥!/발판!</b> 표시가 뜨면 안전한 곳으로 이동하세요.'];
+  const NEWS_ID = 'n4';
+  const NEWS = ['🏹 <b>2차 전직</b> 추가 — 파이터(검·양손검) / 페이지(도끼·둔기) / 스피어맨(창). Lv30 + 시련 완료 후 교관 발도에게!', '🔥 <b>불꽃 협곡</b>(Lv29~36)과 보스 <b>자쿰</b>, 전설의 <b>자쿰의 투구</b>. 채석장 오른쪽 주황 포탈로!', '📜 퀘스트 32개로 늘었어요. 둔기·창 무기와 Lv30+ 장비도 얻을 수 있어요.', '💪 장비는 이제 STR/DEX도 필요해요. 오른쪽 위 <b>📊</b>에서 능력치를 확인하세요.', '🧩 스킬 포인트가 딱 맞게 바뀌었어요 (스킬 레벨은 캐릭터 레벨에 따라 열려요). 스킬 초기화는 무료!', '🐾 펫이 있으면 근처 아이템을 대신 주워 줘요.', '🔄 교관 발도에게서 <b>직업을 바꿀</b> 수 있어요 (스킬 초기화, 포인트 환급). 다른 직업도 체험해 보세요!', '🔱 스피어맨 <b>드래곤 크러셔</b>가 3연속 찌르기로 바뀌었어요.', '🕳️ <b>히든 스트리트</b> 2곳! 개미굴 깊은 곳 맨 위 발판 끝 / 불꽃 협곡 맨 위 오른쪽 발판에 숨은 포탈이 있어요 (경험치·드랍 보너스).', '🔊 주문서 붙는/터지는 소리와 사냥터별 새 BGM(불꽃 협곡·자쿰·히든·시련의 탑).', '⚙️ 스탯 초기화해도 장비가 벗겨지지 않고 <b>비활성</b>으로 표시돼요. 스탯을 올리면 다시 켜져요.', '👹 <b>보스 패턴 개편</b> — 발판 위에서도 맞아요! 붉은 <b>바닥!/발판!</b> 표시가 뜨면 안전한 곳으로 이동하세요.'];
   function showNews() {
     let seen = null; try { seen = localStorage.getItem('pw.news'); } catch (e) {} if (seen === NEWS_ID) return;
     try { localStorage.setItem('pw.news', NEWS_ID); } catch (e) {}

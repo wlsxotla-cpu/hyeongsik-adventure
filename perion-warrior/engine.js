@@ -35,8 +35,9 @@
   E.sk = (G, sid) => G.p.skills[sid] || 0;
   E.stats = function (G) {
     const p = G.p; const b = { atk: 0, def: 0, str: 0, dex: 0, hp: 0 };
-    for (const slot in p.equip) { const it = D.ITEMS[p.equip[slot]]; if (!it) continue; b.atk += it.atk || 0; b.def += it.def || 0; b.str += it.str || 0; b.dex += it.dex || 0; b.hp += it.hp || 0; const en = p.enh && p.enh[it.id]; if (en) { b.atk += en.atk || 0; b.def += en.def || 0; } }
-    const w = D.ITEMS[p.equip.weapon] || D.ITEMS.sw0;
+    const inactive = []; // 능력치(STR/DEX)·직업이 안 맞아 꺼진 장비: 낀 채로 두되 효과만 없다 (스탯을 올리면 다시 켜짐)
+    for (const slot in p.equip) { const it = D.ITEMS[p.equip[slot]]; if (!it) continue; if (!E.canWear(G, it).ok) { inactive.push(slot); continue; } b.atk += it.atk || 0; b.def += it.def || 0; b.str += it.str || 0; b.dex += it.dex || 0; b.hp += it.hp || 0; const en = p.enh && p.enh[it.id]; if (en) { b.atk += en.atk || 0; b.def += en.def || 0; } }
+    const w = (D.ITEMS[p.equip.weapon] && !inactive.includes('weapon')) ? D.ITEMS[p.equip.weapon] : (p.equip.weapon ? { atk: 6, spd: 0.5, rng: 50, wt: 'sword' } : D.ITEMS.sw0); // 무기가 꺼지면 맨손
     const str = p.str + b.str, dex = p.dex + b.dex;
     const tough = p.skills.toughness || 0, mast = p.skills.mastery || 0;
     const job = p.job, fm = job === 'fighter' ? (p.skills.fmastery || 0) : 0, pm = job === 'page' ? (p.skills.pmastery || 0) : 0, sm = job === 'spearman' ? (p.skills.smastery || 0) : 0;
@@ -47,7 +48,7 @@
     const def = b.def + (p.buffs.def ? p.buffs.def.val : 0) + (p.buffs.def2 ? p.buffs.def2.val : 0) + Math.floor(dex / 6) + (job === 'page' ? 8 + pm * 3 : 0);
     const maxHp = Math.round((p.baseHp + b.hp) * (1 + 0.04 * tough + (job === 'page' ? 0.08 + pm * 0.02 : 0) + (job === 'spearman' ? 0.1 : 0)) * (1 + (p.buffs.hp2 ? p.buffs.hp2.val : 0)));
     const maxMp = Math.round(p.baseMp + p.int * 2);
-    return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004 + (job === 'spearman' ? 0.03 + sm * 0.015 : 0), speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b };
+    return { maxDmg, minDmg: maxDmg * minRatio, def, maxHp, maxMp, crit: 0.06 + p.luk * 0.004 + (job === 'spearman' ? 0.03 + sm * 0.015 : 0), speed: 142, spd: w.spd || 0.45, rng: w.rng || 58, wt: w.wt || 'sword', str, dex, wAtk, bonus: b, inactive };
   };
   E.calcMon = (id) => D.MON[id];
 
@@ -59,7 +60,8 @@
     let ax = 100;
     if (arrive && typeof arrive === 'object') ax = arrive.x;
     else if (arrive) { const pt = m.portals.find((q) => q.id === arrive); if (pt) ax = pt.x + (pt.x < m.w / 2 ? 50 : -50); }
-    p.x = clamp(ax, 30, m.w - 30); p.y = m.plats[0].y; p.onGround = true; p.plat = m.plats[0]; p.face = p.x < m.w / 2 ? 1 : -1;
+    const apt = (arrive && typeof arrive !== 'object') ? m.portals.find((q) => q.id === arrive) : null; const ay = apt && apt.y !== undefined ? apt.y : m.plats[0].y; if (apt && apt.y !== undefined) ax = apt.x;
+    p.x = clamp(ax, 30, m.w - 30); p.y = ay; p.onGround = true; p.plat = m.plats.find((q) => q.y === ay && p.x >= q.x && p.x <= q.x + q.w) || m.plats[0]; p.face = p.x < m.w / 2 ? 1 : -1;
     m.spawns.forEach((s) => {
       const pl = m.plats[s.p];
       for (let k = 0; k < s.n; k++) { const x = pl.x + 36 + (pl.w - 72) * ((k + 0.5) / s.n); const sl = { m: s.m, p: s.p, x, mon: null, respT: 0 }; G.slots.push(sl); spawnMon(G, sl); }
@@ -196,13 +198,12 @@
   /* ───────── 스탯·스킬 ───────── */
   E.addStat = function (G, k, n) { const p = G.p; n = Math.min(n || 1, p.ap); if (n < 1 || !(k in { str: 1, dex: 1, int: 1, luk: 1 })) return false; p[k] += n; p.ap -= n; return true; };
   E.autoStat = function (G) { const p = G.p; p.str += p.ap; p.ap = 0; };
-  E.resetStats = function (G) { const p = G.p; const used = (p.str - 12) + (p.dex - 5) + (p.int - 4) + (p.luk - 4); p.str = 12; p.dex = 5; p.int = 4; p.luk = 4; p.ap += used; E.checkGear(G); };
+  E.resetStats = function (G) { const p = G.p; const used = (p.str - 12) + (p.dex - 5) + (p.int - 4) + (p.luk - 4); p.str = 12; p.dex = 5; p.int = 4; p.luk = 4; p.ap += used; const n = E.stats(G).inactive.length; if (n) ev(G, { t: 'msg', text: `능력치가 모자라 장비 ${n}개가 비활성화됐어요 (STR/DEX를 올리면 다시 켜져요)` }); const st = E.stats(G); p.hp = Math.min(p.hp, st.maxHp); };
   // 능력치가 모자라 못 입는 장비는 자동으로 벗는다 (스탯 초기화·옛 저장 대비). 무기는 낡은 검으로 교체
   E.checkGear = function (G) {
     const p = G.p, out = [];
-    for (const slot of ['helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[slot], it = id && D.ITEMS[id]; if (it && !E.canWear(G, it).ok) { E.unequip(G, slot); out.push(it.n); } }
     const wid = p.equip.weapon, w = wid && D.ITEMS[wid];
-    if (w && wid !== ((p.job && D.JOBS[p.job].start) || 'sw0') && !E.canWear(G, w).ok) {
+    if (w && p.job && wid !== (D.JOBS[p.job].start || 'sw0') && !D.JOBS[p.job].wts.includes(w.wt)) {
       const fb = (p.job && D.JOBS[p.job].start) || 'sw0'; if (!(p.inv[fb] > 0)) E.addItem(G, fb, 1); const r = E.bagRecs(G, fb); E.equip(G, fb, r.length - 1); out.push(w.n); // 교체되며 원래 무기는 강화 기록과 함께 가방으로
     }
     if (out.length) ev(G, { t: 'msg', text: `능력치가 모자라 장비를 벗었어요: ${out.join(', ')}` });
@@ -267,14 +268,15 @@
     ev(G, { t: 'kill', x: m.x, y: m.y, id: m.id, boss: def.boss });
     ev(G, { t: 'sfx', n: def.boss ? 'bossdie' : 'kill' });
     // 경험치
-    let e = def.exp; const diff = def.lv - p.lv;
+    let e = def.exp * (G.map.expMul || 1); const diff = def.lv - p.lv;
     if (diff < -6) e *= Math.max(0.2, 1 + (diff + 6) * 0.12); else if (diff > 0) e *= 1 + 0.05 * Math.min(6, diff);
     e = Math.max(1, Math.round(e)); gainExp(G, e, m.x, m.y - def.h);
     // 드랍
     const mesos = Math.round(rr(G, def.mesos[0], def.mesos[1]) * (rand(G) < 0.3 ? 0 : 1));
     if (mesos > 0) dropLoot(G, m.x, m.y - 14, { meso: mesos });
-    for (const [id, pr] of def.drops) if (rand(G) < pr * (1 + p.luk * 0.002)) dropLoot(G, m.x, m.y - 14, { id, n: 1 });
-    for (const [id, pr] of def.eq) if (rand(G) < pr * (1 + p.luk * 0.002)) dropLoot(G, m.x, m.y - 14, { id, n: 1 });
+    const dm = G.map.dropMul || 1;
+    for (const [id, pr] of def.drops) if (rand(G) < pr * dm * (1 + p.luk * 0.002)) dropLoot(G, m.x, m.y - 14, { id, n: 1 });
+    for (const [id, pr] of def.eq) if (rand(G) < pr * dm * (1 + p.luk * 0.002)) dropLoot(G, m.x, m.y - 14, { id, n: 1 });
     p.kills[m.id] = (p.kills[m.id] || 0) + 1;
     for (const qid in p.quests) { const q = p.quests[qid]; if (q.st !== 'active') continue; D.QUESTS[qid].goals.forEach((g, i) => { if (g.kill === m.id && q.prog[i] < g.n) { q.prog[i]++; ev(G, { t: 'qprog', q: qid }); } }); }
     m.slot.respT = def.boss ? 90 : rr(G, 7, 12);
@@ -454,7 +456,7 @@
     const p = G.p;
     if (p.dead) return null;
     for (const n of G.map.npcs) if (Math.abs(p.x - n.x) < 46 && Math.abs(p.y - (n.y || G.map.plats[0].y)) < 30) return { type: 'npc', npc: n };
-    for (const pt of G.map.portals) if (Math.abs(p.x - pt.x) < 38 && p.onGround) return { type: 'portal', portal: pt };
+    for (const pt of G.map.portals) if (Math.abs(p.x - pt.x) < 38 && p.onGround && (pt.y === undefined || Math.abs(p.y - pt.y) < 10)) return { type: 'portal', portal: pt };
     return null;
   };
   E.usePortal = function (G, pt) { ev(G, { t: 'sfx', n: 'portal' }); ev(G, { t: 'fade' }); E.loadMap(G, pt.to, pt.tx); };
