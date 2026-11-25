@@ -351,7 +351,7 @@
         m.st = 'wind'; m.vx = 0;
         const r = rand(G);
         if (tree) m.atkn = r < 0.42 ? 'slam' : r < 0.8 ? 'roots' : (G.mons.filter((x) => x.minion && !x.dead).length < 2 ? 'summon' : 'slam');
-        else if (zak) m.atkn = r < 0.28 ? 'slam' : r < 0.52 ? 'rocks' : r < 0.78 ? 'flame' : 'stomp';
+        else if (zak) m.atkn = (phase2 && r < 0.22 && G.mons.filter((x) => x.minion && !x.dead).length < 2) ? 'summon' : r < 0.3 ? 'slam' : r < 0.55 ? 'rocks' : r < 0.8 ? 'flame' : 'stomp';
         else m.atkn = r < 0.34 ? 'slam' : r < 0.7 ? 'rocks' : 'stomp';
         m.t = m.atkn === 'summon' ? 1.0 : m.atkn === 'stomp' ? 0.7 : 0.95; m.wind = m.t; ev(G, { t: 'bossWind', id: m.id, atk: m.atkn, x: m.x });
       }
@@ -369,7 +369,7 @@
           for (let k = 0; k < n; k++) addZone(G, { kind: 'root', x: clamp(p.x + (k - (n - 1) / 2) * 90 + rr(G, -20, 20), 60, G.map.w - 60), y: m.py, r: 36, dur: 0.9 + k * 0.15, dmg: def.atk * 1.4, lv: def.lv });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.0;
         } else if (a === 'summon') {
-          for (const d of [-1, 1]) { const x = clamp(m.x + d * 120, 80, G.map.w - 80); const sl = { m: 'stump', p: 0, x, mon: null, respT: 0, minion: true }; spawnMon(G, sl); const mm = sl.mon; mm.minion = true; mm.hp = mm.maxhp = 120; mm.x0 = 60; mm.x1 = G.map.w - 60; mm.prov = 99; mm.stunT = 0; ev(G, { t: 'hit', x, y: mm.y - 20, fx: 'spawn' }); }
+          for (const d of [-1, 1]) { const x = clamp(m.x + d * 120, 80, G.map.w - 80); const sl = { m: zak ? 'lavamask' : 'stump', p: 0, x, mon: null, respT: 0, minion: true }; spawnMon(G, sl); const mm = sl.mon; mm.minion = true; mm.hp = mm.maxhp = zak ? 700 : 120; mm.x0 = 60; mm.x1 = G.map.w - 60; mm.prov = 99; mm.stunT = 0; ev(G, { t: 'hit', x, y: mm.y - 20, fx: 'spawn' }); }
           m.st = 'rest'; m.t = 0.8;
         } else if (a === 'rocks') {
           const n = phase2 ? 7 : 5;
