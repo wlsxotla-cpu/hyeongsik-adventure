@@ -29,6 +29,10 @@
     const w = portrait ? ih : iw, h = portrait ? iw : ih;
     app.style.width = w + 'px'; app.style.height = h + 'px';
     app.style.transform = portrait ? `translateX(${iw}px) rotate(90deg)` : 'none';
+    // 세로로 들면 화면을 90도 돌려 쓰므로, 안전 영역(상태바·홈 바)도 돌려서 맞춘다: 게임 왼쪽=폰 위쪽, 게임 오른쪽=폰 아래쪽, 게임 아래=폰 왼쪽
+    if (portrait) { const pr = document.createElement('div'); pr.style.cssText = 'position:fixed;visibility:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'; document.body.appendChild(pr); const cs = getComputedStyle(pr); const t = parseFloat(cs.paddingTop) || 0, r = parseFloat(cs.paddingRight) || 0, bt = parseFloat(cs.paddingBottom) || 0, l = parseFloat(cs.paddingLeft) || 0; pr.remove();
+      app.style.setProperty('--sl', t + 'px'); app.style.setProperty('--sr', bt + 'px'); app.style.setProperty('--sb', l + 'px'); }
+    else { app.style.removeProperty('--sl'); app.style.removeProperty('--sr'); app.style.removeProperty('--sb'); }
     view.s = h / VH; view.vw = w / view.s; view.dpr = Math.min(window.devicePixelRatio || 1, 2); view.k = view.dpr * view.s;
     cv.width = Math.round(w * view.dpr); cv.height = Math.round(h * view.dpr); view.w = w; view.h = h; dirty = true;
   }
