@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzz';
+  const BUILD = '20261125zzza';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -562,7 +562,7 @@
     const vis = (x, r) => x > cx - r && x < cx + VW + r;
     const nb = started ? E.nearby(G) : null; const gy = m.plats[0].y;
     for (const pt of m.portals) if (vis(pt.x, 80)) { const py = pt.y !== undefined ? pt.y : gy; if (pt.hidden) { const dx = Math.abs(G.p.x - pt.x), dy = Math.abs(G.p.y - py); if (dx > 160 || dy > 90) continue; c.save(); c.globalAlpha = Math.max(0.25, 1 - dx / 200); Art.drawPortal(c, { x: pt.x, y: py, label: dx < 90 ? pt.label : '???', lv: dx < 90 ? '히든 스트리트' : '', col: pt.col }, time, nb && nb.portal === pt); c.restore(); } else Art.drawPortal(c, { x: pt.x, y: py, label: pt.label, lv: pt.lv, col: pt.col }, time, nb && nb.portal === pt); }
-    for (const n of m.npcs) if (vis(n.x, 80)) { c.save(); c.translate(n.x, n.y || gy); Art.drawNpc(c, n, time, nb && nb.npc === n); c.restore(); }
+    for (const n of m.npcs) if (vis(n.x, 80)) { c.save(); c.translate(n.x, n.y || gy); Art.drawNpc(c, n, time, nb && nb.npc === n, !started); c.restore(); }
     for (const d of G.drops) if (vis(d.x, 30)) Art.drawDrop(c, d, time);
     for (const z of G.zones) { if (z.full) drawFloorZone(c, z); else Art.drawZone(c, z, time); }
     for (const mm of G.mons) { if (!vis(mm.x, 160)) continue; c.save(); c.translate(mm.x, mm.y); Art.drawMon(c, mm, time); c.restore(); }
