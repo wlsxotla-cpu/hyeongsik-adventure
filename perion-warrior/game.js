@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzzd';
+  const BUILD = '20261125zzzf';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -253,6 +253,8 @@
     bindBtn($('bMp'), () => { if (G && started && !paused) E.potion(G, 'mp'); });
     bindBtn($('bCtx'), () => { doContext(); });
     $('bMenu').addEventListener('click', () => { Snd.init(); Snd.sfx('click'); openMenu('inv'); });
+    $('bChat').addEventListener('click', () => { if (!window.Net || Net.status !== 'on') return; const t = prompt('친구에게 보낼 말 (60자 이내)', ''); if (t) Net.say(G, t); });
+    if (window.Net) { Net.onChat = (n, text) => logLine(`💬 ${n}: ${text}`, 'i'); Net.onChange = () => { $('bChat').style.display = Net.status === 'on' ? '' : 'none'; if (typeof menuTab !== 'undefined' && menuTab === 'set' && modal.classList.contains('on') && !modal.querySelector('#dlg')) { try { openMenu('set'); } catch (e) { } } }; }
     $('bStat').addEventListener('click', () => { Snd.init(); Snd.sfx('click'); openMenu('stat'); });
     const km = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', a: 'left', d: 'right', w: 'up', s: 'down' };
     window.addEventListener('keydown', (e) => {
@@ -356,6 +358,9 @@
       else if (k === 'enh') { enhAnim(v, w); return; }
       else if (k === 'learn') { E.learn(G, v); buildSkillBtns(); }
       else if (k === 'qs') { const st = G.p.settings; let cur = quickSkills().slice(); if (cur.includes(v)) cur = cur.filter((x) => x !== v); else { if (cur.length >= 6) cur.shift(); cur.push(v); } st.slots = cur; buildSkillBtns(); }
+      else if (k === 'nethost') { Net.host((ok) => { if (ok) logLine('👥 방을 만들었어요. 코드: ' + Net.code, 'i'); }); }
+      else if (k === 'netjoin') { const code = prompt('친구가 알려 준 방 코드를 입력하세요 (5글자)', ''); if (code) Net.join(code, (ok) => { if (ok) logLine('👥 방에 들어왔어요! (' + Net.code + ')', 'i'); }); }
+      else if (k === 'netleave') { Net.leave(); }
       else if (k === 'qsauto') { G.p.settings.slots = []; buildSkillBtns(); }
       else if (k === 'sreset') { E.resetSkills(G); buildSkillBtns(); updateHud(true); }
       else if (k === 'stat') { E.addStat(G, v, +w || 1); }
@@ -424,9 +429,11 @@
     if (!p.pet) pet = `<div class="card">🐾 <b>펫이 없어요</b><br>퀘스트 <b>'길 잃은 새끼 멧돼지'</b>(촌장 도란, Lv 5~)를 완료하면 펫이 생겨요.<br><small style="color:#cdbbe8">펫이 있으면 HP·MP가 낮아졌을 때 자동으로 물약을 먹여 줘요.</small></div>`;
     else pet = `<div class="card">🐾 <b>${esc(p.pet.n)}</b> 와 함께하는 중!</div>` + tg('auto', '펫 자동 물약', 'HP·MP가 낮아지면 펫이 자동으로 물약을 먹여 줘요') + (st.auto ? pct('autoT', '❤️ 이 이하일 때 HP 물약') + tg('autoMp', 'MP 물약도 자동', '') + (st.autoMp ? pct('autoMpT', '💧 이 이하일 때 MP 물약') : '') : '');
     const how = `<div class="card">🧪 <b>물약 쓰는 법</b><br>화면 <b>오른쪽 위 ❤️(HP)·💧(MP) 버튼</b>을 누르면 가진 물약을 먹어요. 버튼의 숫자는 남은 개수예요.<br>⌨️ 키보드: H(HP) · M(MP)<br><small style="color:#cdbbe8">자동으로 먹는 건 펫이 있어야 해요 (아래 참고)</small></div>`;
+    const nl = (window.Net && Net.status === 'on') ? Net.list() : [];
+    const netCard = !window.Net ? '' : Net.status === 'on' ? `<div class="card">👥 <b>친구와 함께</b> · 방 코드 <b style="font-size:20px;letter-spacing:4px;color:#ffe36a">${Net.code}</b><br><small style="color:#cdbbe8">친구에게 이 코드를 알려 주세요. 같은 맵에 있으면 서로 보이고 💬로 채팅할 수 있어요.</small><br>접속 중: <b>${esc(p.name)}</b>(나)${nl.map((o) => ', ' + esc(o.n || '?') + ' <small style="color:#9fe">(' + esc((D.MAPS[o.m] && D.MAPS[o.m].n) || '?') + ')</small>').join('')}<br><button class="btn sm gray" data-a="netleave">나가기</button></div>` : `<div class="card">👥 <b>친구와 함께 (베타)</b><br><small style="color:#cdbbe8">방 코드를 나누면 친구와 같은 맵에서 서로 캐릭터가 보이고 채팅할 수 있어요. 사냥·드랍·경험치는 각자 따로예요. (인터넷 필요)</small>${Net.status === 'connecting' ? '<br><b style="color:#ffe36a">연결 중…</b>' : `<div class="row2"><button class="btn sm green" data-a="nethost">방 만들기</button><button class="btn sm" data-a="netjoin">코드로 입장</button></div>`}${Net.err ? `<br><small style="color:#ff8a8a">${esc(Net.err)}</small>` : ''}</div>`;
     const ctlRow = (k, lab) => `<div class="tog"><span><b>${lab}</b> <small style="color:#cdbbe8">${st[k] || 0}</small></span><span><button class="btn sm gray" data-a="ctl:${k}:-10">－</button> <button class="btn sm" data-a="ctl:${k}:10">＋</button></span></div>`;
     const ctl = `<div class="card"><b>🕹️ 버튼 위치 조절</b><br><small style="color:#cdbbe8">방향키·버튼이 화면 끝에 붙어 누르기 힘들면 안쪽으로 옮겨요.</small></div>` + ctlRow('padX', '방향키 ▶ 안쪽으로') + ctlRow('padY', '방향키 ▲ 위로') + ctlRow('btnX', '공격·스킬 ◀ 안쪽으로') + ctlRow('btnY', '공격·스킬 ▲ 위로') + `<div class="row2"><button class="btn sm gray" data-a="ctl:reset">위치 초기화</button></div>`;
-    return how + pet + `<div class="card" style="font-size:11px;color:#cdbbe8">빌드 ${BUILD}</div>` + ctl + tg('hq', '🎨 고화질 효과', '입체 명암·날씨·빛 효과. 끄면 더 부드럽게 돌아가요') + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 메이플 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
+    return how + pet + netCard + `<div class="card" style="font-size:11px;color:#cdbbe8">빌드 ${BUILD}</div>` + ctl + tg('hq', '🎨 고화질 효과', '입체 명암·날씨·빛 효과. 끄면 더 부드럽게 돌아가요') + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('ytbgm', '🎵 메이플 원곡 BGM (유튜브)', '마을·바위산·개미굴·채석장에서 유튜브로 원곡을 틀어요. 인터넷이 필요하고, 안 들리면 화면을 한 번 터치해 보세요') +tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요 (멀미나면 꺼 두세요)') +
       `<div class="card">🕹️ <b>조작</b>: ◀▶ 이동 · ▲ 밧줄 오르기/문 들어가기 · ▼ 밧줄 내려가기/발판 아래로(▼+점프) · ⚔️ 공격(꾹) · 보라 버튼 스킬 · ❤️💧 물약<br>⌨️ 키보드: 방향키/Space점프/Z공격/1~5스킬/H·M물약/E대화</div>` +
       `<div class="row2"><button class="btn sm" data-a="save">💾 지금 저장</button><button class="btn sm red" data-a="wipe">🗑 처음부터 다시</button></div>`;
   }
@@ -617,6 +624,7 @@
     if (p.buffs.def || p.buffs.atk) drawAura(c, p);
     if (p.pet && !p.dead) { const pp = petState; c.save(); c.translate(pp.x, pp.y); Art.drawPet(c, time, pp.face, pp.moving, pp.cheer > 0); c.restore(); if (pp.cheer > 0) { c.font = '14px sans-serif'; c.textAlign = 'center'; c.fillText('💖', pp.x, pp.y - 34 - (0.8 - pp.cheer) * 14); } }
     if (p.dead) Art.drawGrave(c, p.x, p.y, time); else { c.save(); c.translate(p.x, p.y); ellShadow(c, p); Art.drawPlayer(c, G, time); c.restore(); }
+    if (window.Net && Net.status === 'on') Net.draw(c, G, time, Art);
     // 떨어지는 불덩이(자쿰)는 떨어질 자리에 붉은 경고 표시
     for (const q of G.proj) if (q.kind === 'fire' && q.warn) { const gy = q.gy; if (q.y < gy) { const k = 0.35 + 0.25 * Math.sin(time * 20); c.save(); c.globalAlpha = k; c.fillStyle = '#ff3a2a'; c.beginPath(); c.ellipse(q.x, gy, 18, 5, 0, 0, TAU); c.fill(); c.globalAlpha = k * 0.8; c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.stroke(); c.restore(); } }
     for (const q of G.proj) if (q.delay === undefined || q.delay <= 0) Art.drawProj(c, q, time);
@@ -657,7 +665,7 @@
     if (started && G && G.p.settings.hq !== false) { if (dt > 0.034) slowT += dt; else slowT = Math.max(0, slowT - dt * 0.5); if (slowT > 6) { slowT = 0; G.p.settings.hq = false; applyHq(); logLine('화면이 느려서 고화질 효과를 껐어요 (설정에서 다시 켤 수 있어요)', 'i'); } }
     if (G) {
       if (started && !paused) {
-        E.step(G, dt); handleEvents();
+        E.step(G, dt); handleEvents(); if (window.Net && Net.status === 'on') Net.tick(G, dt);
         const p = G.p; if (p.climb) p.tut.ladder = 1; if (!p.tut.move && Math.abs(p.x - 330) > 100 && G.mapId === 'perion') p.tut.move = 1; if (G.mapId !== 'perion') p.tut.move = 1;
         if (p.dead) { deathT -= dt; if (deathT <= 0 && !shownDeath) { shownDeath = true; showDeath(); } }
         hudT -= dt; if (hudT <= 0) { hudT = 0.1; updateHud(); updateSkillBtns(); }
@@ -688,8 +696,8 @@
     else { logLine(`다시 만나서 반가워요, ${G.p.name}!`, 'i'); showNews(); }
   }
   // 업데이트 소식: 새 소식 번호가 바뀌면 한 번만 보여 준다 (소식을 고칠 땐 NEWS_ID 도 올릴 것)
-  const NEWS_ID = 'n7';
-  const NEWS = ['🌍 <b>만렙 200!</b> 원작처럼 2차 Lv30 · <b>3차 Lv70</b> · <b>4차 Lv120</b>. 오르비스의 <b>비공정 조종사</b>가 새 도시들로 데려다 줘요: 루디브리엄 · 아쿠아로드 · 리프레 · 무릉 · 마가티아 · 아리안트 · 시간의 신전 · 에델슈타인 · 코스모스 (각 도시마다 사냥터 2곳 · 보스 · 히든 스트리트).', '⚜️ <b>4차 전직</b>(히어로·팔라딘·다크나이트)은 마가티아의 관문지기에게. 3차·4차 스킬이 직업당 5개로 늘었어요.', '⭐ 스킬 <b>퀵슬롯</b>: 공격 스킬은 최대 6개(자동 배치 또는 스킬 탭의 ⭐로 직접 지정), 버프는 ✨ 버튼 한 번에 전부 켜요.', '📜 <b>주문서 확장</b>: 30% 단계, 힘·민첩·체력 주문서, 황금 망치(강화 횟수 +1), 혼돈의 주문서(도박!).', '🕳️ 히든 스트리트, 🚢 오르비스, 🔄 직업 변경, 🐾 펫 줍기는 그대로예요. 설정에서 <b>고화질 효과</b>를 끌 수도 있어요.'];
+  const NEWS_ID = 'n8';
+  const NEWS = ['🌍 <b>만렙 200!</b> 원작처럼 2차 Lv30 · <b>3차 Lv70</b> · <b>4차 Lv120</b>. 오르비스의 <b>비공정 조종사</b>가 새 도시들로 데려다 줘요: 루디브리엄 · 아쿠아로드 · 리프레 · 무릉 · 마가티아 · 아리안트 · 시간의 신전 · 에델슈타인 · 코스모스 (각 도시마다 사냥터 2곳 · 보스 · 히든 스트리트).', '⚜️ <b>4차 전직</b>(히어로·팔라딘·다크나이트)은 마가티아의 관문지기에게. 3차·4차 스킬이 직업당 5개로 늘었어요.', '⭐ 스킬 <b>퀵슬롯</b>: 공격 스킬은 최대 6개(자동 배치 또는 스킬 탭의 ⭐로 직접 지정), 버프는 ✨ 버튼 한 번에 전부 켜요.', '📜 <b>주문서 확장</b>: 30% 단계, 힘·민첩·체력 주문서, 황금 망치(강화 횟수 +1), 혼돈의 주문서(도박!).', '🏛️ <b>경매장</b>(오르비스·각 도시): 다른 모험가의 매물을 사고, 내 장비·주문서를 시세에 올려 팔아요. 싸게 올릴수록 빨리 팔려요 (수수료 5%).', '👥 <b>친구와 함께</b>(베타): 설정에서 방 코드를 만들어 친구와 같은 맵에서 서로 보고 💬 채팅해요. (인터넷 필요 · 사냥은 각자)', '🕳️ 히든 스트리트, 🚢 오르비스, 🔄 직업 변경, 🐾 펫 줍기는 그대로예요. 설정에서 <b>고화질 효과</b>를 끌 수도 있어요.'];
   function showNews() {
     let seen = null; try { seen = localStorage.getItem('pw.news'); } catch (e) {} if (seen === NEWS_ID) return;
     try { localStorage.setItem('pw.news', NEWS_ID); } catch (e) {}
