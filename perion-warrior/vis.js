@@ -114,6 +114,7 @@
       },
     };
   };
+  A._v = { puff, cloudBank, mkLayer, hash, rgba, haze, mount, island };
   A.customBg = function (map, vw, vh) { const th = A.THEMES[map.theme]; const f = BG[map.theme]; if (!f) return null; return { th, custom: f(map, vw, vh, th), layers: [], clouds: [] }; };
 
   /* ───────── 분위기 효과 (눈·불씨·빛줄기·비네트) ───────── */
