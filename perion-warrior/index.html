@@ -66,16 +66,16 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 #fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s}
 /* ───── 조작 ───── */
 #ctl{position:absolute;inset:0;pointer-events:none}
-#pad{position:absolute;left:calc(26px + var(--sl));bottom:calc(22px + var(--sb));width:204px;height:132px;pointer-events:auto;touch-action:none}
+#pad{position:absolute;left:calc(26px + var(--sl) + var(--px,0px));bottom:calc(22px + var(--sb) + var(--py,0px));width:204px;height:132px;pointer-events:auto;touch-action:none}
 #pad .k{position:absolute;width:64px;height:64px;border-radius:18px;background:linear-gradient(#ffffff30,#ffffff10);border:2.5px solid #ffffffaa;color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;text-shadow:0 2px 3px #000;backdrop-filter:blur(2px)}
 #pad .k.on{background:linear-gradient(#ffd96a,#e8932a);color:#3a1d08;transform:scale(.94)}
 #pad [data-k=up]{left:70px;top:0}#pad [data-k=left]{left:0;top:66px}#pad [data-k=down]{left:70px;top:66px}#pad [data-k=right]{left:140px;top:66px}
 .rb{position:absolute;border-radius:50%;border:3px solid #fff;color:#fff;display:flex;align-items:center;justify-content:center;pointer-events:auto;touch-action:none;text-shadow:0 2px 3px #000;overflow:hidden;padding:0}
 .rb .ic{font-size:inherit;position:relative;z-index:1}
 .rb.on{transform:scale(.92);filter:brightness(1.25)}
-#bAtk{right:calc(16px + var(--sr));bottom:calc(14px + var(--sb));width:88px;height:88px;font-size:38px;background:radial-gradient(circle at 35% 30%,#ff9a5a,#d6341e);border-color:#ffe0c0;box-shadow:0 4px 12px #0008,inset 0 -6px 10px #7a1408aa}
-#bJump{right:calc(116px + var(--sr));bottom:calc(14px + var(--sb));width:68px;height:68px;font-size:28px;background:radial-gradient(circle at 35% 30%,#7ad0ff,#2a7ae0);border-color:#d6efff;box-shadow:0 4px 10px #0008,inset 0 -5px 8px #0a3a7aaa}
-#skills{position:absolute;right:calc(14px + var(--sr));bottom:calc(110px + var(--sb));width:190px;display:flex;flex-direction:row-reverse;flex-wrap:wrap;gap:6px;pointer-events:none;justify-content:flex-start}
+#bAtk{right:calc(16px + var(--sr) + var(--bx,0px));bottom:calc(14px + var(--sb) + var(--by,0px));width:88px;height:88px;font-size:38px;background:radial-gradient(circle at 35% 30%,#ff9a5a,#d6341e);border-color:#ffe0c0;box-shadow:0 4px 12px #0008,inset 0 -6px 10px #7a1408aa}
+#bJump{right:calc(116px + var(--sr) + var(--bx,0px));bottom:calc(14px + var(--sb) + var(--by,0px));width:68px;height:68px;font-size:28px;background:radial-gradient(circle at 35% 30%,#7ad0ff,#2a7ae0);border-color:#d6efff;box-shadow:0 4px 10px #0008,inset 0 -5px 8px #0a3a7aaa}
+#skills{position:absolute;right:calc(14px + var(--sr) + var(--bx,0px));bottom:calc(110px + var(--sb) + var(--by,0px));width:190px;display:flex;flex-direction:row-reverse;flex-wrap:wrap;gap:6px;pointer-events:none;justify-content:flex-start}
 #skills .rb{position:relative;width:54px;height:54px;font-size:25px;background:radial-gradient(circle at 35% 30%,#8a78c8,#3a2a78);border-color:#e0d6ff;box-shadow:0 3px 8px #0008}
 #skills .rb.buff{background:radial-gradient(circle at 35% 30%,#6ad0a0,#1a7a52)}
 #skills .rb .cd{position:absolute;left:0;right:0;bottom:0;height:0;background:#000b;z-index:2}
@@ -247,12 +247,12 @@ canvas#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 </div>
 <script>
 // 자동 업데이트 확인: version.txt(캐시 안 씀)와 이 페이지의 빌드가 다르면 새 주소로 다시 열어 최신 파일을 받는다 (홈화면 앱 캐시 대응)
-(function () { try { var B = '20261125zzo'; if (!window.fetch) return; fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) { t = (t || '').trim(); if (/^\d+[a-z]*$/.test(t) && t !== B) { var k = 'pw.upd.' + t; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); location.replace(location.pathname + '?r=' + t); } }).catch(function () {}); } catch (e) {} })();
+(function () { try { var B = '20261125zzp'; if (!window.fetch) return; fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) { t = (t || '').trim(); if (/^\d+[a-z]*$/.test(t) && t !== B) { var k = 'pw.upd.' + t; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); location.replace(location.pathname + '?r=' + t); } }).catch(function () {}); } catch (e) {} })();
 </script>
-<script src="data.js?v=20261125zzo"></script>
-<script src="engine.js?v=20261125zzo"></script>
-<script src="art.js?v=20261125zzo"></script>
-<script src="audio.js?v=20261125zzo"></script>
-<script src="game.js?v=20261125zzo"></script>
+<script src="data.js?v=20261125zzp"></script>
+<script src="engine.js?v=20261125zzp"></script>
+<script src="art.js?v=20261125zzp"></script>
+<script src="audio.js?v=20261125zzp"></script>
+<script src="game.js?v=20261125zzp"></script>
 </body>
 </html>
