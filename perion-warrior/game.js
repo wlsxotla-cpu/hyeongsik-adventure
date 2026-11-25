@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125r';
+  const BUILD = '20261125s';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -244,6 +244,7 @@
     bindBtn($('bMp'), () => { if (G && started && !paused) E.potion(G, 'mp'); });
     bindBtn($('bCtx'), () => { doContext(); });
     $('bMenu').addEventListener('click', () => { Snd.init(); Snd.sfx('click'); openMenu('inv'); });
+    $('bStat').addEventListener('click', () => { Snd.init(); Snd.sfx('click'); openMenu('stat'); });
     const km = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', a: 'left', d: 'right', w: 'up', s: 'down' };
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return; const k = e.key; if (!started) return;
@@ -284,7 +285,7 @@
     if (it.t === 'equip') {
       const cur = G.p.equip[it.slot] && D.ITEMS[G.p.equip[it.slot]]; const en = enhOf(id, idx), inf = E.enhInfo(G, id, idx); const row = (k, lab) => { const v = it[k] || 0, c = cur ? (cur[k] || 0) : 0; if (!v && !c && !(en[k])) return ''; const d = v - c; return `${lab} <b>${v}</b>${en[k] ? ` <span style="color:#7aff9a">(+${en[k]} 강화)</span>` : ''}${cur && cur.id !== id && d ? ` <span style="color:${d > 0 ? '#7aff9a' : '#ff8a8a'}">(${d > 0 ? '▲' : '▼'}${Math.abs(d)})</span>` : ''}<br>`; };
       s += `<div style="color:#bda8e0">${SLOTN[it.slot]}${it.wt ? ' · ' + ({ sword: '한손검', axe: '도끼', great: '대검' })[it.wt] : ''}</div>`;
-      s += `<span style="color:${G.p.lv >= it.lv ? '#cfe' : '#ff8a8a'}">요구 레벨 ${it.lv}</span><br>` + row('atk', '공격력') + row('def', '방어력') + row('str', 'STR') + row('dex', 'DEX') + row('hp', '최대 HP');
+      { const rq = E.req(it), pp = G.p; const c = (ok) => ok ? '#cfe' : '#ff8a8a'; s += `<span style="color:${c(pp.lv >= rq.lv)}">요구 Lv ${rq.lv}</span> · <span style="color:${c(pp.str >= rq.str)}">STR ${rq.str}</span>` + (rq.dex ? ` · <span style="color:${c(pp.dex >= rq.dex)}">DEX ${rq.dex}</span>` : '') + '<br>'; } s += '' + row('atk', '공격력') + row('def', '방어력') + row('str', 'STR') + row('dex', 'DEX') + row('hp', '최대 HP');
       s += `<div style="color:#ffe08a">🔨 강화 +${inf.ok} · 남은 횟수 <b>${inf.left}/${inf.slots}</b></div>`; if (it.wt) s += `공격 속도 <b>${it.spd <= 0.45 ? '빠름' : it.spd <= 0.55 ? '보통' : '느림'}</b> · 사거리 <b>${it.rng}</b><br>`;
     }
     s += `<div style="color:#cdbbe8;margin-top:3px">${esc(it.desc || '')}</div>`; s += `<div class="price">판매가 ${fmt(E.sellPrice(it))} 메소${it.q ? ' (퀘스트 필요 아이템)' : ''}</div>`; return s;
@@ -329,14 +330,14 @@
     for (const sl of ['weapon', 'helmet', 'armor', 'gloves', 'shoes']) { const id = p.equip[sl]; const it = id && D.ITEMS[id]; s += `<div class="c"><button class="slot eq ${it ? '' : 'empty'}" ${it ? `data-a="sel:${id}:e"` : ''} style="width:100%">${it ? ico(id) : SLOTN[sl]}${it ? `<span class="lv">Lv${it.lv}</span>${enhBadge(id)}` : ''}</button>${SLOTN[sl]}</div>`; }
     s += '</div>';
     if (menuSel && D.ITEMS[menuSel]) { const id = menuSel, it = D.ITEMS[id]; const worn = menuIdx === null && p.equip[it.slot] === id; s += `<div class="card">${itemInfo(id, menuIdx)}<div class="row2" style="margin-top:7px;flex-wrap:wrap">`;
-      if (it.t === 'equip') { if (worn) s += it.slot === 'weapon' ? '<span style="color:#cdbbe8">착용 중 (무기는 다른 무기로 교체해요)</span>' : `<button class="btn sm gray" data-a="un:${it.slot}">벗기</button>`; else s += `<button class="btn sm green" data-a="eq:${id}:${menuIdx === null ? '' : menuIdx}" ${p.lv < it.lv || !(p.inv[id] > 0) ? 'disabled' : ''}>착용</button>`; }
+      if (it.t === 'equip') { if (worn) s += it.slot === 'weapon' ? '<span style="color:#cdbbe8">착용 중 (무기는 다른 무기로 교체해요)</span>' : `<button class="btn sm gray" data-a="un:${it.slot}">벗기</button>`; else s += `<button class="btn sm green" data-a="eq:${id}:${menuIdx === null ? '' : menuIdx}" ${!E.canWear(G, it).ok || !(p.inv[id] > 0) ? 'disabled' : ''}>착용</button>` + (E.canWear(G, it).ok ? '' : `<small style="color:#ff8a8a"> ${E.canWear(G, it).msg}</small>`); }
       if (it.t === 'use') s += `<button class="btn sm green" data-a="use:${id}">사용</button>`;
       if (it.t === 'scroll') { const tg = E.scrollTargets(G, id); s += tg.length ? tg.map((t) => `<button class="btn sm green" data-a="enh:${id}:${t.key}" ${t.left <= 0 && it.kind !== 'restore' ? 'disabled' : ''}>${t.bag ? '🎒 가방' : '착용'} ${SLOTN[t.slot]}: ${esc(D.ITEMS[t.id].n)}${t.ok ? ` <span style="color:${Art.enhColor(t.ok)}">+${t.ok}</span>` : ''} (${t.left}/${t.slots}) 에 사용</button>`).join('') : '<span style="color:#ffb86a">사용할 수 있는 장비를 착용하세요</span>'; }
       s += '<button class="btn sm gray" data-a="sel:' + id + (menuIdx === null ? '' : ':' + menuIdx) + '">닫기</button></div></div>'; }
     const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]); const order = { equip: 0, scroll: 1, use: 2, etc: 3 };
     ids.sort((a, b) => order[D.ITEMS[a].t] - order[D.ITEMS[b].t] || (D.ITEMS[a].lv || 0) - (D.ITEMS[b].lv || 0));
     if (!ids.length) s += '<div class="card" style="text-align:center;color:#cdbbe8">가방이 비었어요. 몬스터를 처치해 아이템을 모아 보세요!</div>';
-    s += '<div class="grid">' + ids.map((id) => { const it = D.ITEMS[id]; if (it.t === 'equip') return E.bagRecs(G, id).map((r, k) => `<button class="slot ${menuSel === id && menuIdx === k ? 'sel' : ''}" data-a="sel:${id}:${k}">${ico(id)}${enhBadge(id, k)}<span class="lv ${p.lv < it.lv ? 'bad' : ''}">Lv${it.lv}</span></button>`).join(''); return `<button class="slot ${menuSel === id ? 'sel' : ''}" data-a="sel:${id}">${ico(id)}<small>${p.inv[id] > 1 ? p.inv[id] : ''}</small></button>`; }).join('') + '</div>';
+    s += '<div class="grid">' + ids.map((id) => { const it = D.ITEMS[id]; if (it.t === 'equip') return E.bagRecs(G, id).map((r, k) => `<button class="slot ${menuSel === id && menuIdx === k ? 'sel' : ''}" data-a="sel:${id}:${k}">${ico(id)}${enhBadge(id, k)}<span class="lv ${E.canWear(G, it).ok ? '' : 'bad'}">Lv${it.lv}</span></button>`).join(''); return `<button class="slot ${menuSel === id ? 'sel' : ''}" data-a="sel:${id}">${ico(id)}<small>${p.inv[id] > 1 ? p.inv[id] : ''}</small></button>`; }).join('') + '</div>';
     return s;
   }
   function tabSkill() {
@@ -348,7 +349,9 @@
     const p = G.p, st = E.stats(G); let s = `<div class="card">남은 능력치 포인트 <b style="font-size:17px">${p.ap}</b> <small style="color:#cdbbe8">(레벨업마다 +5) · 전사는 <b>STR</b>이 제일 중요해요!</small></div>`;
     const row = (k, n, d) => `<div class="st"><span><b style="color:#fff">${n}</b> <small style="color:#cdbbe8">${d}</small></span><b>${p[k]}${st[k] !== undefined && st[k] !== p[k] ? `<small style="color:#7aff9a">(+${st[k] - p[k]})</small>` : ''}</b><button class="btn sm" data-a="stat:${k}:1" ${p.ap < 1 ? 'disabled' : ''}>＋</button><button class="btn sm" data-a="stat:${k}:5" ${p.ap < 5 ? 'disabled' : ''}>＋5</button></div>`;
     s += row('str', 'STR 힘', '공격력') + row('dex', 'DEX 민첩', '공격력(조금)·방어') + row('int', 'INT 지력', '최대 MP') + row('luk', 'LUK 행운', '치명타·드랍');
-    s += `<div class="card" style="margin-top:8px">⚔️ 공격력 <b>${Math.round(st.minDmg)} ~ ${Math.round(st.maxDmg)}</b> · 🛡️ 방어력 <b>${st.def}</b><br>❤️ 최대 HP <b>${st.maxHp}</b> · 💧 최대 MP <b>${st.maxMp}</b> · 치명타 <b>${(st.crit * 100).toFixed(1)}%</b></div>`;
+    const w = D.ITEMS[p.equip.weapon] || D.ITEMS.sw0; const WT = { sword: '한손검', axe: '도끼', great: '대검' };
+    s += `<div class="card" style="margin-top:8px;line-height:1.7"><b style="color:#ffd24a">📊 ${esc(p.name)} · Lv.${p.lv} 전사</b><br>⚔️ 공격력 <b>${fmt(Math.round(st.minDmg))} ~ ${fmt(Math.round(st.maxDmg))}</b> <small style="color:#cdbbe8">(무기 공격력 ${Math.round(st.wAtk)})</small><br>🛡️ 방어력 <b>${st.def}</b> · 치명타 <b>${(st.crit * 100).toFixed(1)}%</b><br>❤️ 최대 HP <b>${fmt(st.maxHp)}</b> · 💧 최대 MP <b>${fmt(st.maxMp)}</b><br>🗡️ 무기 <b>${esc(w.n)}</b> (${WT[w.wt] || '검'}) · 공격 속도 <b>${(1 / st.spd).toFixed(1)}</b>회/초 · 사거리 <b>${st.rng}</b><br>👟 이동 속도 <b>${st.speed}</b> · 장비 보너스 STR <b>+${st.bonus.str}</b> DEX <b>+${st.bonus.dex}</b> 공격 <b>+${st.bonus.atk}</b> 방어 <b>+${st.bonus.def}</b> HP <b>+${st.bonus.hp}</b></div>`;
+    s += `<div class="card" style="font-size:11px;line-height:1.6"><b>🎽 장비 요구 능력치</b> <small style="color:#cdbbe8">(기본 STR/DEX 기준)</small><br>${['weapon', 'helmet', 'armor', 'gloves', 'shoes'].map((sl) => { const id = p.equip[sl], it = id && D.ITEMS[id]; if (!it) return `${SLOTN[sl]}: -`; const rq = E.req(it); return `${SLOTN[sl]}: ${esc(it.n)} (STR ${rq.str}${rq.dex ? ' / DEX ' + rq.dex : ''})`; }).join('<br>')}</div>`;
     s += `<div class="row2"><button class="btn sm green" data-a="auto" ${p.ap < 1 ? 'disabled' : ''}>남은 포인트 전부 STR에</button><button class="btn sm gray" data-a="reset">능력치 초기화(무료)</button></div>`;
     return s;
   }
@@ -465,8 +468,8 @@
     const draw = () => {
       const p = G.p; const sc = modal.querySelector('.list') ? modal.querySelector('.list').scrollTop : 0; let list = '';
       if (tab === 'buy') {
-        list = S.items.map((id) => { const it = D.ITEMS[id]; const low = it.t === 'equip' && p.lv < it.lv; const can = p.meso >= it.price; const own = p.inv[id] || 0;
-          return `<div class="it"><div class="slot ${low ? 'empty' : ''}">${ico(id)}</div><div class="t"><b>${esc(it.n)}</b>${it.t === 'equip' ? ` <small style="color:${low ? '#ff8a8a' : '#9fe'}">Lv ${it.lv}${low ? ' 필요' : ''}</small>` : ''}${own ? ` <small style="color:#cdbbe8">(보유 ${own})</small>` : ''}<br>${it.t === 'equip' ? [it.atk ? `공격 ${it.atk}` : '', it.def ? `방어 ${it.def}` : '', it.str ? `STR+${it.str}` : '', it.hp ? `HP+${it.hp}` : ''].filter(Boolean).join(' · ') : esc(it.desc)}</div><div style="text-align:right"><div class="price">💰 ${fmt(it.price)}</div><button class="btn sm green" data-a="buy:${id}:1" ${can ? '' : 'disabled'}>구매</button>${it.t === 'use' && it.price * 10 <= p.meso ? `<button class="btn sm" data-a="buy:${id}:10">x10</button>` : ''}</div></div>`; }).join('');
+        list = S.items.map((id) => { const it = D.ITEMS[id]; const low = it.t === 'equip' && !E.canWear(G, it).ok; const can = p.meso >= it.price; const own = p.inv[id] || 0;
+          return `<div class="it"><div class="slot ${low ? 'empty' : ''}">${ico(id)}</div><div class="t"><b>${esc(it.n)}</b>${it.t === 'equip' ? ` <small style="color:${low ? '#ff8a8a' : '#9fe'}">Lv ${it.lv}${(() => { const rq = E.req(it); return ' · STR ' + rq.str + (rq.dex ? ' · DEX ' + rq.dex : ''); })()}${low ? ' 필요' : ''}</small>` : ''}${own ? ` <small style="color:#cdbbe8">(보유 ${own})</small>` : ''}<br>${it.t === 'equip' ? [it.atk ? `공격 ${it.atk}` : '', it.def ? `방어 ${it.def}` : '', it.str ? `STR+${it.str}` : '', it.hp ? `HP+${it.hp}` : ''].filter(Boolean).join(' · ') : esc(it.desc)}</div><div style="text-align:right"><div class="price">💰 ${fmt(it.price)}</div><button class="btn sm green" data-a="buy:${id}:1" ${can ? '' : 'disabled'}>구매</button>${it.t === 'use' && it.price * 10 <= p.meso ? `<button class="btn sm" data-a="buy:${id}:10">x10</button>` : ''}</div></div>`; }).join('');
       } else {
         const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]).sort((a, b) => ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[a].t] - ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[b].t]);
         list = `<div class="row2" style="margin-bottom:7px"><button class="btn sm green" data-a="sellall">🧺 기타 아이템 전부 팔기</button></div>` + (ids.length ? '' : '<div class="card" style="text-align:center">팔 물건이 없어요</div>') + ids.map((id) => { const it = D.ITEMS[id], n = p.inv[id], wi = it.t === 'equip' ? E.worstIdx(E.bagRecs(G, id)) : null; return `<div class="it"><div class="slot">${ico(id)}${enhBadge(id, wi)}</div><div class="t"><b>${esc(gname(id, wi))}</b> <small style="color:#cdbbe8">x${n}</small>${it.q ? ' <small style="color:#ffb86a">퀘스트</small>' : ''}<br><span class="price">개당 💰 ${fmt(E.sellPrice(it))}</span></div><div>${it.q ? '' : `<button class="btn sm" data-a="sell:${id}:1">1개</button>${n > 1 ? `<button class="btn sm" data-a="sell:${id}:${n}">전부</button>` : ''}`}</div></div>`; }).join('');

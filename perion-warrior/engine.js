@@ -116,9 +116,18 @@
   function pushBag(G, id, rec) { const p = G.p; if (!p.bag) p.bag = {}; const n = inv(p, id); const a = p.bag[id] || (p.bag[id] = []); while (a.length < n - 1) a.push(freshRec()); if (a.length > n - 1) a.length = n - 1; a.push(rec); }
   E.bestIdx = (list) => { let b = 0; for (let k = 1; k < list.length; k++) if (recVal(list[k]) > recVal(list[b])) b = k; return b; };
   E.worstIdx = (list) => { let b = 0; for (let k = 1; k < list.length; k++) if (recVal(list[k]) < recVal(list[b])) b = k; return b; };
+  // 장비 착용 조건: 레벨 + 기본 STR/DEX (메이플처럼). 아이템에 reqStr/reqDex 가 있으면 그 값, 없으면 레벨로 계산
+  E.req = (it) => { const sl = it.slot; return { lv: it.lv, str: it.reqStr != null ? it.reqStr : Math.round(it.lv * (sl === 'weapon' ? 1.25 : 1.0)), dex: it.reqDex != null ? it.reqDex : Math.round(it.lv * (sl === 'weapon' ? 0.4 : 0.3)) }; };
+  E.canWear = function (G, it) {
+    const p = G.p, r = E.req(it);
+    if (p.lv < r.lv) return { ok: false, msg: `Lv ${r.lv} 이상부터 착용할 수 있어요` };
+    if (p.str < r.str) return { ok: false, msg: `STR ${r.str} 이상 필요해요 (지금 ${p.str})` };
+    if (p.dex < r.dex) return { ok: false, msg: `DEX ${r.dex} 이상 필요해요 (지금 ${p.dex})` };
+    return { ok: true };
+  };
   E.equip = function (G, id, idx) {
     const p = G.p, it = D.ITEMS[id]; if (!it || it.t !== 'equip' || inv(p, id) < 1) return { ok: false, msg: '장비가 없어요' };
-    if (p.lv < it.lv) return { ok: false, msg: `Lv ${it.lv} 이상부터 착용할 수 있어요` };
+    const cw = E.canWear(G, it); if (!cw.ok) return cw;
     const list = E.bagRecs(G, id); if (idx == null || idx < 0 || idx >= list.length) idx = E.bestIdx(list); const rec = list.splice(idx, 1)[0];
     const old = p.equip[it.slot]; if (!p.enh) p.enh = {}; const oldRec = old ? (p.enh[old] || freshRec()) : null; if (old) delete p.enh[old];
     E.addItem(G, id, -1); if (old) { E.addItem(G, old, 1); pushBag(G, old, oldRec); }
@@ -196,7 +205,7 @@
     const st = E.stats(G);
     let dmg = rawAtk * rr(G, 0.88, 1.12) * (1 - mitig(st.def, mlv));
     dmg = Math.max(1, Math.round(dmg));
-    p.hp -= dmg; p.inv_t = 1.0; p.hitFlash = 0.25;
+    p.hp -= dmg; p.inv_t = 1.0; p.hitFlash = 0.25; p.atkCd = 0;
     if (kb !== 0) { const dir = p.x < srcX ? -1 : 1; p.vx = dir * 170; p.vy = -200; p.knock = 0.22; p.onGround = false; p.climb = null; p.atk = null; }
     ev(G, { t: 'dmg', x: p.x, y: p.y - 40, amt: dmg, who: 'player' }); ev(G, { t: 'sfx', n: 'hurt' }); G.shake = Math.max(G.shake, 6);
     if (p.hp <= 0) { p.hp = 0; p.dead = true; p.atk = null; ev(G, { t: 'death' }); }
@@ -256,7 +265,7 @@
   // 스킬/공격 시작
   function startAttack(G, sid) {
     const p = G.p, st = E.stats(G);
-    if (p.dead || p.climb || p.atk || p.atkCd > 0 || p.knock > 0) return false;
+    if (p.dead || p.climb || p.atk || p.atkCd > 0) return false;
     let a;
     if (!sid) {
       p.comboT > 0 ? p.combo = (p.combo + 1) % 3 : p.combo = 0; p.comboT = 0.9;
@@ -411,7 +420,9 @@
       if (did) ev(G, { t: 'petDrink' });
     }
     // 스킬 큐
-    while (inp.skills.length) { const s = inp.skills.shift(); if (!p.dead) startAttack(G, s); }
+    // 스킬 입력은 0.7초 동안 보관: 공격 모션·피격 중에 눌러도 끝나는 즉시 나감
+    while (inp.skills.length) { const s = inp.skills.shift(); if (!p.dead) p.skBuf = { sid: s, t: 0.7 }; }
+    if (p.skBuf) { p.skBuf.t -= dt; const sb = p.skBuf; if (p.dead || sb.t <= 0) p.skBuf = null; else if (!p.atk && p.atkCd <= 0 && !p.climb) { p.skBuf = null; startAttack(G, sb.sid); } }
     if (!p.dead) {
       if (inp.attack && !p.atk) startAttack(G, null);
       if (p.atk) { p.atk.t += dt; if (!p.atk.done && p.atk.t >= p.atk.hit) resolveAttack(G); if (p.atk && p.atk.t >= p.atk.dur) p.atk = null; }
