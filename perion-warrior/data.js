@@ -30,7 +30,6 @@
   add('scW10', { n: '무기 공격력 주문서 10%', t: 'scroll', kind: 'weapon', rate: 0.1, mark: '공', icon: '📜', col: '#ff8a2a', price: 1500, desc: '착용 중인 무기의 공격력을 크게 올려요. 성공 확률 10%. 보스에게서 얻을 수 있어요.' });
   add('scA60', { n: '방어구 방어력 주문서 60%', t: 'scroll', kind: 'armor', rate: 0.6, mark: '방', icon: '📜', col: '#3e7bfa', price: 700, desc: '착용 중인 투구·갑옷·장갑·신발의 방어력을 올려요. 성공 확률 60%.' });
   add('scA10', { n: '방어구 방어력 주문서 10%', t: 'scroll', kind: 'armor', rate: 0.1, mark: '방', icon: '📜', col: '#8a5cff', price: 1500, desc: '착용 중인 방어구의 방어력을 크게 올려요. 성공 확률 10%. 보스에게서 얻을 수 있어요.' });
-  add('scRe', { n: '복구 주문서', t: 'scroll', kind: 'restore', rate: 0.7, mark: '복', icon: '📜', col: '#2fb36a', price: 5000, desc: '착용 중인 장비의 강화 가능 횟수를 1 되돌려요. 성공 확률 70%.' });
 
   // 기타(팔기·퀘스트)
   const etc = (id, n, icon, price, col) => add(id, { n, t: 'etc', icon, price, col: col || '#8b8f9c', desc: '잡다한 전리품. 상점에 팔 수 있다.' });
@@ -136,8 +135,8 @@
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 62000, atk: 185, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
   D.MON = M;
   // 주문서 드랍
-  for (const id in M) { const m = M[id]; if (m.boss) continue; if (m.lv >= 3) m.drops.push(['scW100', 0.02], ['scA100', 0.02]); if (m.lv >= 8) m.drops.push(['scW60', 0.035], ['scA60', 0.035]); if (m.lv >= 14) m.drops.push(['scW10', 0.01], ['scA10', 0.01], ['scRe', 0.006]); }
-  M.bosstree.drops.push(['scW10', 1], ['scA10', 0.6]); M.bossgolem.drops.push(['scW10', 1], ['scA10', 1], ['scRe', 1]);
+  for (const id in M) { const m = M[id]; if (m.boss) continue; if (m.lv >= 3) m.drops.push(['scW100', 0.02], ['scA100', 0.02]); if (m.lv >= 8) m.drops.push(['scW60', 0.035], ['scA60', 0.035]); if (m.lv >= 14) m.drops.push(['scW10', 0.01], ['scA10', 0.01]); }
+  M.bosstree.drops.push(['scW10', 1], ['scA10', 0.6]); M.bossgolem.drops.push(['scW10', 1], ['scA10', 1]);
 
   /* ───────── 맵 ───────── */
   const maps = {};
@@ -299,7 +298,7 @@
       ask: '바위왕 골렘을 쓰러뜨렸다니, 대단하다! 하지만 전사의 길에는 끝이 없지.\n마을 오른쪽 끝의 **시련의 탑**은 점프 실력을 시험하는 곳이다. 몬스터는 없지만 발판이 좁고 높다.\n꼭대기 **고대 상자**에서 **고대 골렘의 인장**을 가져오면 전설의 투구를 내주겠다! (떨어져도 다치지 않으니 걱정 마라)',
       doing: '시련의 탑은 마을 맨 오른쪽 문 근처의 포탈이다. 발판 끝에서 점프하고, 위층으로 계속 올라가라!',
       done: '해냈구나! 이 투구는 고대 골렘의 힘이 깃든 전설의 투구다. 강화 횟수가 10회나 되니 아껴서 써라!',
-      goals: [{ item: 'relic', n: 1 }], reward: { exp: 12000, meso: 20000, items: [['hmz', 1], ['scRe', 2], ['scW10', 1]] } },
+      goals: [{ item: 'relic', n: 1 }], reward: { exp: 12000, meso: 20000, items: [['hmz', 1], ['scW10', 1]] } },
   };
   D.QUEST_ORDER = ['q1', 'q2', 'qp', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9'];
 

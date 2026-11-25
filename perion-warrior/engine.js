@@ -22,7 +22,7 @@
     const G = { rng: mulberry32(seed || (Date.now() & 0xffffffff)), t: 0, acc: 0, events: [], mons: [], drops: [], proj: [], zones: [], slots: [], map: null, mapId: null,
       input: { left: false, right: false, up: false, down: false, attack: false, jump: 0, up_e: 0, skills: [], pot: null }, p: null, boss: null, shake: 0, potCd: 0, inTown: false, bgTime: 0 };
     const base = E.newPlayer(name);
-    if (save) { for (const k of PERSIST) if (save[k] !== undefined) base[k] = JSON.parse(JSON.stringify(save[k])); base.settings = Object.assign({ auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: true }, base.settings); }
+    if (save) { for (const k of PERSIST) if (save[k] !== undefined) base[k] = JSON.parse(JSON.stringify(save[k])); if (base.inv && base.inv.scRe) { base.meso += 2000 * base.inv.scRe; delete base.inv.scRe; } for (const id of Object.keys(base.inv || {})) if (!D.ITEMS[id]) delete base.inv[id]; for (const id of Object.keys(base.enh || {})) if (!D.ITEMS[id]) delete base.enh[id]; for (const sl in base.equip || {}) if (base.equip[sl] && !D.ITEMS[base.equip[sl]]) base.equip[sl] = sl === 'weapon' ? 'sw0' : null; base.settings = Object.assign({ auto: true, autoT: 0.35, autoMp: true, autoMpT: 0.2, sound: true, music: true, shake: true }, base.settings); }
     Object.assign(base, { x: 100, y: 400, vx: 0, vy: 0, face: 1, onGround: true, plat: null, climb: null, ladderCd: 0, coyote: 0, jumpBuf: 0, dropT: 0, dropPlat: null, inv_t: 0, atkCd: 0, atk: null, knock: 0, dead: false, buffs: {}, skCd: {}, combo: 0, comboT: 0, regenT: 0, walkT: 0, hitFlash: 0 });
     G.p = base;
     E.loadMap(G, (save && save.mapId) || 'perion', save ? { x: 520 } : { x: 330 });

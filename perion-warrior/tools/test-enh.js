@@ -1,7 +1,7 @@
 const E = require('../engine.js'), D = require('../data.js');
 let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++; };
 const G = E.newGame('e', 4); const p = G.p;
-p.inv.scW60 = 50; p.inv.scA60 = 20; p.inv.scW100 = 0; p.inv.scW10 = 1; p.inv.scRe = 3; p.inv.sw1 = 1; p.lv = 10;
+p.inv.scW60 = 50; p.inv.scA60 = 20; p.inv.scW100 = 0; p.inv.scW10 = 1; p.inv.sw1 = 1; p.lv = 10;
 E.equip(G, 'sw1');
 const base = E.stats(G).maxDmg;
 let succ = 0, tries = 0;
@@ -11,7 +11,7 @@ ok(E.enhSlots(D.ITEMS.ar1) === 10 && E.enhSlots(D.ITEMS.hm1) === 5 && E.enhSlots
 ok(!E.enhance(G, 'scW60', 'weapon').ok, '횟수 소진 후 거부');
 ok(p.inv.scW60 === 50 - tries, '주문서 소모 ' + p.inv.scW60);
 const after = E.stats(G).maxDmg; ok(succ === 0 ? after === base : after > base, '성공 시 공격력 증가 ' + base.toFixed(1) + '→' + after.toFixed(1));
-const r2 = E.enhance(G, 'scRe', 'weapon'); ok(r2.ok, '복구 주문서 사용 가능');
+ok(!D.ITEMS.scRe, '복구 주문서 삭제됨');
 ok(E.enhance(G, 'scA60', 'weapon').ok === false, '방어구 주문서는 무기에 못 씀');
 ok(E.scrollTargets(G, 'scA60').every((t) => t.slot !== 'weapon'), '방어구 대상 목록에 무기 없음');
 // 방어구
