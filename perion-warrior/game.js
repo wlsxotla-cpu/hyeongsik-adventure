@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zza';
+  const BUILD = '20261125zzb';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -288,7 +288,7 @@
       { const rq = E.req(it), pp = G.p; const c = (ok) => ok ? '#cfe' : '#ff8a8a'; s += `<span style="color:${c(pp.lv >= rq.lv)}">요구 Lv ${rq.lv}</span> · <span style="color:${c(pp.str >= rq.str)}">STR ${rq.str}</span>` + (rq.dex ? ` · <span style="color:${c(pp.dex >= rq.dex)}">DEX ${rq.dex}</span>` : '') + '<br>'; } s += '' + row('atk', '공격력') + row('def', '방어력') + row('str', 'STR') + row('dex', 'DEX') + row('hp', '최대 HP');
       s += `<div style="color:#ffe08a">🔨 강화 +${inf.ok} · 남은 횟수 <b>${inf.left}/${inf.slots}</b></div>`; if (it.wt) s += `공격 속도 <b>${it.spd <= 0.45 ? '빠름' : it.spd <= 0.55 ? '보통' : '느림'}</b> · 사거리 <b>${it.rng}</b><br>`;
     }
-    s += `<div style="color:#cdbbe8;margin-top:3px">${esc(it.desc || '')}</div>`; s += `<div class="price">판매가 ${fmt(E.sellPrice(it))} 메소${it.q ? ' (퀘스트 필요 아이템)' : ''}</div>`; return s;
+    s += `<div style="color:#cdbbe8;margin-top:3px">${esc(it.desc || '')}</div>`; s += `<div class="price">판매가 ${fmt(E.sellPrice(it))} 메소${E.lockedQty(G, id) ? ' (진행 중 퀘스트용 ' + E.lockedQty(G, id) + '개 제외)' : ''}</div>`; return s;
   }
 
   /* ───────── 메뉴 ───────── */
@@ -480,7 +480,7 @@
           return `<div class="it"><div class="slot ${low ? 'empty' : ''}">${ico(id)}</div><div class="t"><b>${esc(it.n)}</b>${it.t === 'equip' ? ` <small style="color:${low ? '#ff8a8a' : '#9fe'}">Lv ${it.lv}${(() => { const rq = E.req(it); return ' · STR ' + rq.str + (rq.dex ? ' · DEX ' + rq.dex : ''); })()}${low ? ' 필요' : ''}</small>` : ''}${own ? ` <small style="color:#cdbbe8">(보유 ${own})</small>` : ''}<br>${it.t === 'equip' ? [it.atk ? `공격 ${it.atk}` : '', it.def ? `방어 ${it.def}` : '', it.str ? `STR+${it.str}` : '', it.hp ? `HP+${it.hp}` : ''].filter(Boolean).join(' · ') : esc(it.desc)}</div><div style="text-align:right"><div class="price">💰 ${fmt(it.price)}</div><button class="btn sm green" data-a="buy:${id}:1" ${can ? '' : 'disabled'}>구매</button>${it.t === 'use' && it.price * 10 <= p.meso ? `<button class="btn sm" data-a="buy:${id}:10">x10</button>` : ''}</div></div>`; }).join('');
       } else {
         const ids = Object.keys(p.inv).filter((i) => D.ITEMS[i]).sort((a, b) => ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[a].t] - ({ etc: 0, equip: 1, scroll: 2, use: 3 })[D.ITEMS[b].t]);
-        list = `<div class="row2" style="margin-bottom:7px"><button class="btn sm green" data-a="sellall">🧺 기타 아이템 전부 팔기</button></div>` + (ids.length ? '' : '<div class="card" style="text-align:center">팔 물건이 없어요</div>') + ids.map((id) => { const it = D.ITEMS[id], n = p.inv[id], wi = it.t === 'equip' ? E.worstIdx(E.bagRecs(G, id)) : null; return `<div class="it"><div class="slot">${ico(id)}${enhBadge(id, wi)}</div><div class="t"><b>${esc(gname(id, wi))}</b> <small style="color:#cdbbe8">x${n}</small>${it.q ? ' <small style="color:#ffb86a">퀘스트</small>' : ''}<br><span class="price">개당 💰 ${fmt(E.sellPrice(it))}</span></div><div>${it.q ? '' : `<button class="btn sm" data-a="sell:${id}:1">1개</button>${n > 1 ? `<button class="btn sm" data-a="sell:${id}:${n}">전부</button>` : ''}`}</div></div>`; }).join('');
+        list = `<div class="row2" style="margin-bottom:7px"><button class="btn sm green" data-a="sellall">🧺 기타 아이템 전부 팔기</button></div>` + (ids.length ? '' : '<div class="card" style="text-align:center">팔 물건이 없어요</div>') + ids.map((id) => { const it = D.ITEMS[id], n = p.inv[id], wi = it.t === 'equip' ? E.worstIdx(E.bagRecs(G, id)) : null; return `<div class="it"><div class="slot">${ico(id)}${enhBadge(id, wi)}</div><div class="t"><b>${esc(gname(id, wi))}</b> <small style="color:#cdbbe8">x${n}</small>${E.lockedQty(G, id) ? ` <small style="color:#ffb86a">퀘스트용 ${E.lockedQty(G, id)}개 제외</small>` : ''}<br><span class="price">개당 💰 ${fmt(E.sellPrice(it))}</span></div><div>${E.sellable(G, id) < 1 ? '' : `<button class="btn sm" data-a="sell:${id}:1">1개</button>${E.sellable(G, id) > 1 ? `<button class="btn sm" data-a="sell:${id}:${E.sellable(G, id)}">전부</button>` : ''}`}</div></div>`; }).join('');
       }
       const ex = modal.querySelector('#shop');
       if (ex) { ex.querySelector('.mesoH').textContent = `💰 ${fmt(p.meso)} 메소`; ex.querySelectorAll('.tabs2 button').forEach((b) => { b.className = 'btn sm ' + (b.dataset.a === 't:' + tab ? '' : 'gray'); }); const l2 = ex.querySelector('.list'); l2.innerHTML = list; if (shopTab !== tab) l2.scrollTop = 0; }

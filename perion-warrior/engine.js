@@ -183,11 +183,14 @@
     ev(G, { t: 'scroll', ok: win, x: p.x, y: p.y }); ev(G, { t: 'sfx', n: win ? 'questdone' : 'deny' });
     return { ok: true, success: win, bonus, msg: win ? `강화 성공! ${it.n} ${sc.kind === 'weapon' ? '공격력' : '방어력'} +${bonus}` : `강화 실패… (${it.n}, 남은 횟수 ${inf.left - 1})` };
   };
+  // 진행 중인 퀘스트가 요구하는 개수만큼은 못 팔고, 남는 건 팔 수 있다 (퀘스트 아이템도 포함)
+  E.lockedQty = (G, id) => { let n = 0; for (const qid in G.p.quests) { if (G.p.quests[qid].st !== 'active') continue; for (const g of D.QUESTS[qid].goals) if (g.item === id) n += g.n; } return n; };
+  E.sellable = (G, id) => Math.max(0, inv(G.p, id) - E.lockedQty(G, id));
   E.sell = function (G, id, n) {
-    const p = G.p, it = D.ITEMS[id]; n = Math.min(n || 1, inv(p, id)); if (n < 1 || it.q) return { ok: false, msg: it && it.q ? '퀘스트에 필요한 물건이에요' : '팔 수 없어요' };
+    const p = G.p, it = D.ITEMS[id]; const can = E.sellable(G, id); n = Math.min(n || 1, can); if (n < 1) return { ok: false, msg: it && E.lockedQty(G, id) > 0 ? '진행 중인 퀘스트에 필요한 물건이에요' : '팔 수 없어요' };
     p.meso += E.sellPrice(it) * n; if (it.t === 'equip') { const l = E.bagRecs(G, id); for (let k = 0; k < n; k++) l.splice(E.worstIdx(l), 1); } E.addItem(G, id, -n); if (inv(p, id) < 1 && p.bag) delete p.bag[id]; ev(G, { t: 'sfx', n: 'buy' }); return { ok: true };
   };
-  E.sellAllEtc = function (G) { let gain = 0; const p = G.p; for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (it.t === 'etc' && !it.q && !questNeeds(G, id)) { gain += it.price * p.inv[id]; delete p.inv[id]; } } p.meso += gain; if (gain) ev(G, { t: 'sfx', n: 'buy' }); return gain; };
+  E.sellAllEtc = function (G) { let gain = 0; const p = G.p; for (const id of Object.keys(p.inv)) { const it = D.ITEMS[id]; if (it.t === 'etc') { const k = E.sellable(G, id); if (k > 0 && it.price > 0) { gain += it.price * k; p.inv[id] -= k; if (p.inv[id] <= 0) delete p.inv[id]; } } } p.meso += gain; if (gain) ev(G, { t: 'sfx', n: 'buy' }); return gain; };
   function questNeeds(G, id) { for (const qid in G.p.quests) { if (G.p.quests[qid].st !== 'active') continue; for (const g of D.QUESTS[qid].goals) if (g.item === id) return true; } return false; }
 
   /* ───────── 스탯·스킬 ───────── */
