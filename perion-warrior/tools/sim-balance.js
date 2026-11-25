@@ -22,3 +22,5 @@ console.log('직업/장비 세트별 몬스터 처치 시간(초): [세트A 레�
 for (const r of D.REGIONS) { const rid = r.id; const rows = [];
   for (const job of ['fighter', 'page', 'spearman']) { const L0 = r.lv[0]; const G1 = mkPlayer(job, L0 + 2, 'a', rid), G2 = mkPlayer(job, r.lv[1], 'b', rid); const surv = (G, mid) => { const st = E.stats(G), m = D.MON[mid]; const dmg = m.atk * (1 - st.def / (st.def + 20 + 3.5 * m.lv)); return Math.round(st.maxHp / dmg); }; rows.push(`${job.slice(0, 2)} ${ttk(G1, rid + '0', 120).toFixed(1)}→${ttk(G2, rid + '5', 120).toFixed(1)}s 버팀 ${surv(G1, rid + '0')}→${surv(G2, rid + '5')}회`); }
   console.log(r.id.padEnd(8), 'Lv', String(r.lv[0]).padStart(3), '-', String(r.lv[1]).padEnd(3), rows.join(' | ')); }
+console.log('\n보스 처치 시간(초, 맞지 않고 계속 때릴 때 · 세트B 장비, 지역 최고 레벨):');
+for (const r of D.REGIONS) { const rows = []; for (const job of ['fighter', 'page', 'spearman']) { const G = mkPlayer(job, r.lv[1], 'b', r.id); rows.push(`${job.slice(0, 2)} ${ttk(G, r.id + 'b', 900).toFixed(0)}s`); } console.log(r.id.padEnd(8), rows.join(' | ')); }

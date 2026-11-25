@@ -723,6 +723,8 @@
   };
   function npcName(id) { for (const mid in D.MAPS) { const t = D.MAPS[mid].npcs.find((n) => n.id === id); if (t) return t.n; } return id; }
   E.npcName = npcName;
+  // 레벨에 맞는 추천 사냥터 (맵 이름의 'Lv a~b' 표기로 계산)
+  E.suggestMaps = (G) => { const lv = G.p.lv, out = []; for (const id in D.MAPS) { const m = D.MAPS[id]; if (m.town || m.boss || m.ship || m.sub === '히든 스트리트' || m.id === 'trial') continue; const r = /Lv (\d+)~(\d+)/.exec(m.lvTxt || ''); if (!r) continue; const a = +r[1], b = +r[2]; if (lv >= a - 2 && lv <= b + 2) out.push({ id, n: m.n, a, b, mid: Math.abs(lv - (a + b) / 2) }); } return out.sort((x, y) => x.mid - y.mid).slice(0, 3); };
   E.npcMap = (id) => { for (const mid in D.MAPS) if (D.MAPS[mid].npcs.some((n) => n.id === id)) return D.MAPS[mid].n; return ''; };
   function npcMap(id) { for (const mid in D.MAPS) if (D.MAPS[mid].npcs.some((n) => n.id === id)) return D.MAPS[mid].n; return ''; }
 
