@@ -201,8 +201,8 @@
       { id: 'potion', n: '잡화상 포포', x: 1010, role: 'shop', shop: 'potion', look: 'merchant', quests: ['qpo1'] },
       { id: 'scribe', n: '주문서상 루나', x: 865, role: 'shop', shop: 'scroll', look: 'scribe', quests: ['qsc1'] },
       { id: 'smith', n: '대장장이 바르크', x: 1250, y: 330, role: 'shop', shop: 'smith', look: 'smith', quests: ['qs1', 'qs2', 'qs3'] },
-      { id: 'miner', n: '광부 반장 곡', x: 1480, role: 'quest', look: 'miner', quests: ['q3', 'qm2', 'q6', 'qm3', 'qm4'] },
-      { id: 'captain', n: '경비대장 레온', x: 1900, role: 'quest', look: 'captain', quests: ['q4', 'q5', 'qc2', 'q7', 'qc3', 'q8', 'qc4', 'qz'] },
+      { id: 'miner', n: '광부 반장 곡', x: 1480, role: 'quest', look: 'miner', quests: ['q3', 'qm2', 'q6', 'qm3', 'qm4', 'qh3'] },
+      { id: 'captain', n: '경비대장 레온', x: 1900, role: 'quest', look: 'captain', quests: ['q4', 'q5', 'qc2', 'q7', 'qc3', 'q8', 'qc4', 'qz', 'qh1', 'qh2', 'qh4'] },
       { id: 'master', n: '전사 교관 발도', x: 2180, y: 330, role: 'master', look: 'master', quests: ['q9'] },
     ],
   };
@@ -437,8 +437,28 @@
       doing: '마을 맨 오른쪽 끝 주황색 포탈이 불꽃의 제단이다. 하늘에서 떨어지는 불덩이와 땅에서 솟는 바위를 조심해라! 물약을 넉넉히!',
       done: '자쿰을 쓰러뜨리다니… 네가 페리온 최강의 전사다! 약속한 투구를 받아라. 불꽃의 왕관이 너를 지켜줄 것이다.',
       goals: [{ kill: 'zakum', n: 1 }, { item: 'zeye', n: 1 }], reward: { exp: 60000, meso: 80000, items: [['hmk', 1], ['scW10', 2], ['scA10', 2], ['hp4', 20], ['mp3', 20]] } },
+    qh1: { n: '돌 골렘 대청소', npc: 'captain', lv: 30, pre: 'qc4',
+      ask: '채석장에 돌 골렘이 다시 늘었다. **돌 골렘 40마리**를 처치해라. 이제 전직한 너에게 어울리는 임무다!',
+      doing: '돌 골렘은 채석장 곳곳에 있다. 단단하니 스킬을 아끼지 마라.',
+      done: '훌륭하다! 보급품과 주문서를 받아라.',
+      goals: [{ kill: 'stonegolem', n: 40 }], reward: { exp: 30000, meso: 30000, items: [['scW10', 2], ['scA10', 2], ['hp4', 15]] } },
+    qh2: { n: '불 멧돼지 대청소', npc: 'captain', lv: 32, pre: 'qh1',
+      ask: '불 멧돼지 무리가 또 번식했다. **불 멧돼지 50마리**를 처치해라!',
+      doing: '불 멧돼지는 돌진 전에 멈칫한다. 그때 점프로 피해라.',
+      done: '지치지도 않는군! 이건 수고비다.',
+      goals: [{ kill: 'fireboar', n: 50 }], reward: { exp: 40000, meso: 40000, items: [['hp4', 20], ['mp3', 20], ['scW60', 5]] } },
+    qh3: { n: '골렘 핵 대량 납품', npc: 'miner', lv: 33, pre: 'qm4',
+      ask: '연구가 대성공이야! 이번엔 **골렘 핵 20개**가 필요해. 값은 후하게 쳐 줄게.',
+      doing: '골렘 핵은 돌 골렘과 불 골렘이 떨어뜨려.',
+      done: '이거면 충분해! 약속한 대금이야.',
+      goals: [{ item: 'golemcore', n: 20 }], reward: { exp: 50000, meso: 60000, items: [['scW10', 3], ['scA10', 3]] } },
+    qh4: { n: '불꽃 눈 수집가', npc: 'captain', lv: 34, pre: 'qz',
+      ask: '자쿰의 불꽃 눈을 모으려는 학자가 있다. **자쿰의 불꽃 눈 3개**를 가져와라! 자쿰은 90초마다 다시 나타난다.',
+      doing: '자쿰은 불꽃의 제단에서 다시 나타난다. 매번 불꽃 눈을 떨어뜨린다.',
+      done: '대단한 수집량이군! 학자도 기뻐할 거다. 후한 사례다.',
+      goals: [{ item: 'zeye', n: 3 }], reward: { exp: 100000, meso: 100000, items: [['scW10', 5], ['scA10', 5], ['hp4', 30], ['mp3', 30]] } },
   };
-  D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qc4', 'q9', 'qz'];
+  D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qc4', 'q9', 'qz', 'qh1', 'qh2', 'qh3', 'qh4'];
 
   root.DATA = D;
   if (typeof module !== 'undefined' && module.exports) module.exports = D;
