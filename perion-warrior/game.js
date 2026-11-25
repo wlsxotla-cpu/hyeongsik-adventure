@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzc';
+  const BUILD = '20261125zzd';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -444,7 +444,7 @@
         const cadv = E.canAdvance(G);
         if (G.p.job) text = `${D.JOBS[G.p.job].icon} 이제 어엿한 **${D.JOBS[G.p.job].n}**이로군. 계속 강해져라, 페리온의 영웅!`;
         else if (cadv.ok) { text = '때가 됐군. 레벨 30, 그리고 시련까지 통과했다.\n\n**2차 전직**을 할 수 있다. 하나를 고르면 **되돌릴 수 없으니** 신중히 골라라!\n\n' + Object.keys(D.JOBS).map((j) => `${D.JOBS[j].icon} **${D.JOBS[j].n}** — ${D.JOBS[j].desc}\n  ▸ 쓰는 무기: ${D.JOBS[j].wtn} · 기본 보너스: ${D.JOBS[j].bonus}`).join('\n\n');
-          for (const j of Object.keys(D.JOBS)) opts.push({ label: `${D.JOBS[j].icon} ${D.JOBS[j].n} 되기`, cls: 'green', fn: () => dlg(npc, `정말 **${D.JOBS[j].n}**(으)로 전직하겠나?\n선택하면 바꿀 수 없다.`, [{ label: '✅ 전직한다', cls: 'green', fn: () => { const r = E.advance(G, j); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`2차 전직! ${D.JOBS[j].n}`); dlg(npc, `좋다! 오늘부터 너는 **${D.JOBS[j].n}**이다.\n스킬 탭에서 새 스킬을 배워라. (SP +6, 능력치 +5)`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }, { label: '← 다시 생각', cls: 'gray', fn: home }]) });
+          for (const j of Object.keys(D.JOBS)) opts.push({ label: `${D.JOBS[j].icon} ${D.JOBS[j].n} 되기`, cls: 'green', fn: () => dlg(npc, `정말 **${D.JOBS[j].n}**(으)로 전직하겠나?\n선택하면 바꿀 수 없다.`, [{ label: '✅ 전직한다', cls: 'green', fn: () => { const r = E.advance(G, j); if (r.ok) { handleEvents(); buildSkillBtns(); updateHud(true); save(); toastBanner(`2차 전직! ${D.JOBS[j].n}`); dlg(npc, `좋다! 오늘부터 너는 **${D.JOBS[j].n}**이다.\n스킬 탭에서 새 스킬을 배워라. (SP +3, 능력치 +5)`, [{ label: '고맙습니다!', fn: close }]); } else dlg(npc, r.msg, [{ label: '알겠어요', fn: home }]); } }, { label: '← 다시 생각', cls: 'gray', fn: home }]) });
         } else text = `나는 전사 교관 발도다.\n\n⚔️ **2차 전직**(파이터·페이지·스피어맨)은 Lv ${D.JOB_LV} + 「고대 골렘의 시련」 완료 후에 가능하다. (${cadv.msg})\n\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.`;
         if (false) text = `나는 전사 교관 발도다.\n전사의 길은 **STR**과 장비가 전부라고 할 수 있지.\n\n📘 스킬은 메뉴의 **스킬** 탭에서 올려라.\n· Lv 1 파워 스트라이크 · Lv 6 슬래시 블러스트\n· Lv 10 아이언 바디 · Lv 14 분노의 함성 · Lv 20 대지 가르기\n\n⚔️ 2차 전직(파이터·페이지·스피어맨)은 Lv 30 이후 준비 중이다. 기대해라!`;
       }
@@ -553,6 +553,7 @@
 
   /* ───────── 메인 루프 ───────── */
   let lw = 0, lh = 0;
+  if (/[?&]debug/.test(location.search)) window.__pw = { G: () => G, E: E, openMenu: (t) => openMenu(t), onMap: () => onMap(), interact: () => doContext() }; // 점검용 (?debug 주소에서만)
   function frame(now) {
     if (window.innerWidth !== lw || window.innerHeight !== lh || !view.s) { lw = window.innerWidth; lh = window.innerHeight; if (lw > 0 && lh > 0) layout(); else return; }
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now; time += dt;

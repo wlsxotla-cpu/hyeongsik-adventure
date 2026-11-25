@@ -338,7 +338,7 @@
   function addProj(G, o) { G.proj.push(Object.assign({ life: 4, w: 14, h: 14, vx: 0, vy: 0, grav: 0, dmg: 10, lv: 10, hit: false, t: 0 }, o)); }
   function addZone(G, o) { G.zones.push(Object.assign({ t: 0, dur: 0.9, r: 40, dmg: 10, lv: 10, fired: false }, o)); }
   function bossAI(G, m, dt) {
-    const p = G.p, def = m.def, tree = def.ai === 'bosstree';
+    const p = G.p, def = m.def, tree = def.ai === 'bosstree', zak = def.ai === 'bosszakum';
     const phase2 = m.hp < m.maxhp * (tree ? 0.5 : 0.45);
     if (phase2 && !m.p2) { m.p2 = true; ev(G, { t: 'msg', text: `${def.n}이(가) 분노했다!` }); G.shake = 12; ev(G, { t: 'sfx', n: 'roar' }); }
     const sp = def.speed * (phase2 ? 1.5 : 1);
@@ -351,6 +351,7 @@
         m.st = 'wind'; m.vx = 0;
         const r = rand(G);
         if (tree) m.atkn = r < 0.42 ? 'slam' : r < 0.8 ? 'roots' : (G.mons.filter((x) => x.minion && !x.dead).length < 2 ? 'summon' : 'slam');
+        else if (zak) m.atkn = r < 0.28 ? 'slam' : r < 0.52 ? 'rocks' : r < 0.78 ? 'flame' : 'stomp';
         else m.atkn = r < 0.34 ? 'slam' : r < 0.7 ? 'rocks' : 'stomp';
         m.t = m.atkn === 'summon' ? 1.0 : m.atkn === 'stomp' ? 0.7 : 0.95; m.wind = m.t; ev(G, { t: 'bossWind', id: m.id, atk: m.atkn, x: m.x });
       }
@@ -374,6 +375,9 @@
           const n = phase2 ? 7 : 5;
           for (let k = 0; k < n; k++) addZone(G, { kind: 'rock', x: clamp(k === 0 ? p.x : p.x + rr(G, -280, 280), 60, G.map.w - 60), y: m.py, r: 38, dur: 0.85 + k * 0.17, dmg: def.atk * 1.3, lv: def.lv });
           ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.0;
+        } else if (a === 'flame') {
+          const n = phase2 ? 9 : 6; for (let k = 0; k < n; k++) addProj(G, { kind: 'fire', x: clamp(k === 0 ? p.x : p.x + rr(G, -340, 340), 60, G.map.w - 60), y: m.py - 420, vx: 0, vy: 60, grav: 900, w: 22, h: 22, dmg: def.atk * 1.1, lv: def.lv, life: 4, delay: k * 0.2 });
+          ev(G, { t: 'sfx', n: 'roar' }); m.st = 'rest'; m.t = 1.1;
         } else if (a === 'stomp') {
           m.vy = -620; m.vx = clamp((p.x - m.x) / 0.9, -330, 330); m.st = 'air'; m.stomp = true; ev(G, { t: 'sfx', n: 'swing' });
         }

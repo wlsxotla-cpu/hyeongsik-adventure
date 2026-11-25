@@ -20,6 +20,6 @@ const g4=E.newGame('l',9); E.gainExp(g4,D.expToNext(1)+1); ok(g4.p.lv===2&&g4.p.
 // 전체 퀘스트 연계 + 펫
 const g5=E.newGame('c',11); g5.p.lv=30; let order=D.QUEST_ORDER; for(const q of order){ if(E.qState(g5,q)!=='avail'){ok(false,'quest '+q+' not avail: '+E.qState(g5,q));break;} E.qAccept(g5,q); D.QUESTS[q].goals.forEach((gl,i)=>{ if(gl.kill) g5.p.quests[q].prog[i]=gl.n; else E.addItem(g5,gl.item,gl.n); }); ok(E.qComplete(g5,q),'complete '+q); }
 ok(!!g5.p.pet&&g5.p.pet.n==='멧돌이','pet granted');
-g5.p.inv={hp1:3}; g5.p.hp=5; g5.p.settings.auto=true; for(let i=0;i<120;i++)E.step(g5,1/60); ok(g5.p.hp>5&&g5.p.inv.hp1<3,'pet auto potion');
+g5.p.inv={hp1:3}; g5.p.hp=5; g5.p.settings.auto=true; for(let i=0;i<120;i++)E.step(g5,1/60); ok(g5.p.hp>5&&(g5.p.inv.hp1||0)<3,'pet auto potion');
 const g6=E.newGame('n',2); g6.p.inv={hp1:3}; g6.p.hp=5; for(let i=0;i<120;i++)E.step(g6,1/60); ok(g6.p.inv.hp1===3,'no pet -> no auto potion');
 console.log(fails?('FAILS '+fails):'ALL OK'); process.exit(fails?1:0);

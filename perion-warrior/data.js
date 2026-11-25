@@ -48,6 +48,7 @@
   etc('treeheart', '고목의 심장', '💚', 900, '#4cc46a');
   etc('goldcore', '바위왕의 핵', '💎', 3000, '#ffd24a');
   etc('relic', '고대 골렘의 인장', '🗿', 0, '#ffd24a'); I.relic.desc = '시련의 탑 꼭대기 고대 상자에 잠들어 있던 인장.'; I.relic.q = true;
+  etc('zeye', '자쿰의 불꽃 눈', '🔥', 0, '#ff7a2a'); I.zeye.desc = '자쿰의 이마에서 타오르던 불꽃 눈. 경비대장 레온이 찾는 증표.';
   I.stonefrag.q = true; I.axefrag.q = true; I.treeheart.q = true; I.goldcore.q = true;
 
   // 장비. slot: weapon/helmet/armor/gloves/shoes
@@ -85,6 +86,7 @@
   eq('hm3', '강철 투구', 'helmet', 15, { def: 12, price: 3800, col: '#8fb6e6', hp: 40, desc: '푸른 강철 투구' });
   eq('hm4', '기사 투구', 'helmet', 22, { def: 18, price: 11000, col: '#f1d37a', hp: 90, str: 2, desc: '붉은 깃털 장식 투구' });
   eq('hmz', '고대 골렘의 투구', 'helmet', 28, { def: 30, atk: 4, str: 6, dex: 6, hp: 300, slots: 10, price: 60000, col: '#d9b84a', desc: '시련의 탑을 정복한 자에게만 허락된 전설의 투구. 강화 가능 횟수 10회!' });
+  eq('hmk', '자쿰의 투구', 'helmet', 30, { def: 42, atk: 6, str: 8, dex: 8, hp: 450, slots: 10, price: 150000, col: '#ff7a2a', desc: '불꽃의 제단을 지키던 자쿰의 투구. 불타는 왕관이 달려 있다. 강화 가능 횟수 10회!' });
   // 갑옷
   eq('ar0', '천 옷', 'armor', 1, { def: 4, price: 80, col: '#c9b48a', desc: '모험가 기본 옷' });
   eq('ar1', '가죽 갑옷', 'armor', 5, { def: 9, price: 800, col: '#9b6a3f', desc: '가볍고 질긴 가죽 갑옷' });
@@ -170,11 +172,12 @@
   mon('firegolem', '불 골렘', 28, 'golem', { hue: 'fire', hp: 3100, atk: 108, def: 84, speed: 40, w: 50, h: 58, ai: 'shoot', aggro: 260, drops: [['golemcore', 0.45], ['ember', 0.4], ['hp4', 0.06], ['mp3', 0.05]], eq: [['ax4', 0.005], ['ar4', 0.006], ['hm4', 0.006]] });
   // 보스
   mon('bosstree', '고목 대장', 14, 'bosstree', { boss: true, ai: 'bosstree', hp: 14000, atk: 92, def: 30, exp: 700, speed: 30, w: 86, h: 110, aggro: 520, mesos: [900, 1500], drops: [['treeheart', 1], ['hp3', 1], ['hp3', 0.7], ['wood', 1]], eq: [['sw2', 0.35], ['ax2', 0.3], ['hm3', 0.3]] });
+  mon('zakum', '자쿰', 32, 'zakum', { boss: true, ai: 'bosszakum', hp: 150000, atk: 230, def: 105, exp: 12000, speed: 28, w: 120, h: 140, aggro: 700, mesos: [16000, 24000], drops: [['zeye', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['hmk', 0.2], ['sw4', 0.3], ['gs3', 0.3], ['ar4', 0.3], ['ax4', 0.2], ['mc4', 0.2], ['sp4', 0.2]] });
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 62000, atk: 185, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
   D.MON = M;
   // 주문서 드랍
   for (const id in M) { const m = M[id]; if (m.boss) continue; if (m.lv >= 3) m.drops.push(['scW100', 0.02], ['scA100', 0.02]); if (m.lv >= 8) m.drops.push(['scW60', 0.035], ['scA60', 0.035]); if (m.lv >= 14) m.drops.push(['scW10', 0.01], ['scA10', 0.01]); }
-  M.bosstree.drops.push(['scW10', 1], ['scA10', 0.6]); M.bossgolem.drops.push(['scW10', 1], ['scA10', 1]);
+  M.bosstree.drops.push(['scW10', 1], ['scA10', 0.6]); M.bossgolem.drops.push(['scW10', 1], ['scA10', 1]); M.zakum.drops.push(['scW10', 1], ['scA10', 1], ['scW60', 1]);
 
   /* ───────── 맵 ───────── */
   const maps = {};
@@ -189,6 +192,7 @@
       { id: 'toRock', x: 70, to: 'rock1', tx: 'back', label: '바위산 초입', lv: 'Lv 1~6', col: '#7ac' },
       { id: 'toAnt', x: 1650, to: 'ant1', tx: 'back', label: '개미굴', lv: 'Lv 12~19', col: '#c87' },
       { id: 'toQuarry', x: 2530, to: 'quarry', tx: 'back', label: '버려진 채석장', lv: 'Lv 20~28', col: '#da6' },
+      { id: 'toZakum', x: 2520, to: 'zakum', tx: 'back', label: '자쿰의 제단', lv: 'Lv 30+ 보스', col: '#f96' },
       { id: 'toTrial', x: 2420, to: 'trial', tx: 'back', label: '시련의 탑 (점프맵)', lv: 'Lv 26+', col: '#fd8' },
     ],
     npcs: [
@@ -198,7 +202,7 @@
       { id: 'scribe', n: '주문서상 루나', x: 865, role: 'shop', shop: 'scroll', look: 'scribe', quests: ['qsc1'] },
       { id: 'smith', n: '대장장이 바르크', x: 1250, y: 330, role: 'shop', shop: 'smith', look: 'smith', quests: ['qs1', 'qs2', 'qs3'] },
       { id: 'miner', n: '광부 반장 곡', x: 1480, role: 'quest', look: 'miner', quests: ['q3', 'qm2', 'q6', 'qm3', 'qm4'] },
-      { id: 'captain', n: '경비대장 레온', x: 1900, role: 'quest', look: 'captain', quests: ['q4', 'q5', 'qc2', 'q7', 'qc3', 'q8', 'qc4'] },
+      { id: 'captain', n: '경비대장 레온', x: 1900, role: 'quest', look: 'captain', quests: ['q4', 'q5', 'qc2', 'q7', 'qc3', 'q8', 'qc4', 'qz'] },
       { id: 'master', n: '전사 교관 발도', x: 2180, y: 330, role: 'master', look: 'master', quests: ['q9'] },
     ],
   };
@@ -256,6 +260,14 @@
     ladders: [{ x: 900, y1: 432, y2: 500 }, { x: 2000, y1: 432, y2: 500 }],
     spawns: [{ m: 'stonemask', p: 0, n: 3 }, { m: 'fireboar', p: 0, n: 3 }, { m: 'stonegolem', p: 0, n: 2 }, { m: 'stonemask', p: 2, n: 2 }, { m: 'fireboar', p: 4, n: 2 }, { m: 'stonemask', p: 5, n: 2 }, { m: 'stonegolem', p: 7, n: 2 }, { m: 'fireboar', p: 8, n: 2 }, { m: 'stonegolem', p: 9, n: 1 }, { m: 'stonemask', p: 10, n: 2 }, { m: 'stonegolem', p: 11, n: 2 }, { m: 'firegolem', p: 13, n: 1 }],
     portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toQuarry', label: '페리온 마을' }, { id: 'next', x: 2740, to: 'bossgolem', tx: 'back', label: '골렘 사원', lv: 'Lv 26+ 보스', col: '#c9c' }],
+    npcs: [],
+  };
+  maps.zakum = {
+    id: 'zakum', n: '자쿰의 제단', sub: '보스', lvTxt: 'Lv 30+ 보스', w: 1900, h: 460, theme: 'temple', bgm: 'boss', boss: 'zakum', bossX: 1300,
+    plats: [P(0, 400, 1900, 1), P(160, 330, 260), P(1480, 330, 260), P(820, 262, 260)],
+    ladders: [{ x: 940, y1: 262, y2: 400 }],
+    spawns: [],
+    portals: [{ id: 'back', x: 60, to: 'perion', tx: 'toZakum', label: '페리온 마을' }],
     npcs: [],
   };
   maps.bossgolem = {
@@ -420,8 +432,13 @@
       doing: '불 골렘은 멀리서 불꽃을 쏜다. 거리를 좁혀 싸워라.',
       done: '역시 페리온의 영웅이다! 약속한 전설의 무기를 받아라.',
       goals: [{ kill: 'firegolem', n: 30 }], reward: { exp: 24000, meso: 25000, items: [['mc4', 1],['sp4', 1],['hp4', 20],['mp3', 20]] } },
+    qz: { n: '불꽃의 제단, 자쿰', npc: 'captain', lv: 30, pre: 'q9',
+      ask: '페리온 최후의 위협이다. 마을 맨 오른쪽 **불꽃의 제단**에 \'자쿰\'이 깨어났다. 팔이 여럿 달린 거대한 석상으로, 땅을 쪼개고 불덩이를 쏟아낸다.\n**자쿰을 처치**하고 이마의 **자쿰의 불꽃 눈**을 가져와라! 전설의 **자쿰의 투구**를 내주겠다.',
+      doing: '마을 맨 오른쪽 끝 주황색 포탈이 불꽃의 제단이다. 하늘에서 떨어지는 불덩이와 땅에서 솟는 바위를 조심해라! 물약을 넉넉히!',
+      done: '자쿰을 쓰러뜨리다니… 네가 페리온 최강의 전사다! 약속한 투구를 받아라. 불꽃의 왕관이 너를 지켜줄 것이다.',
+      goals: [{ kill: 'zakum', n: 1 }, { item: 'zeye', n: 1 }], reward: { exp: 60000, meso: 80000, items: [['hmk', 1], ['scW10', 2], ['scA10', 2], ['hp4', 20], ['mp3', 20]] } },
   };
-  D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qc4', 'q9'];
+  D.QUEST_ORDER = ['q1', 'qa', 'q2', 'qb', 'qp', 'qi1', 'qs1', 'q3', 'qpo1', 'qm2', 'q4', 'qs2', 'q5', 'qsc1', 'q6', 'qc2', 'qm3', 'q7', 'qs3', 'qc3', 'q8', 'qm4', 'qc4', 'q9', 'qz'];
 
   root.DATA = D;
   if (typeof module !== 'undefined' && module.exports) module.exports = D;
