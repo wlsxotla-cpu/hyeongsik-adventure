@@ -97,7 +97,7 @@
     const p = G.p; const ev = G.events; G.events = [];
     for (const e of ev) {
       switch (e.t) {
-        case 'sfx': Snd.sfx(e.n); if (e.n === 'jump') p.tut.jump = 1; if (e.n === 'skill') p.tut.skill = 1; break;
+        case 'sfx': Snd.sfx(e.n); if (e.n === 'potion') p.tut.potion = 1; if (e.n === 'jump') p.tut.jump = 1; if (e.n === 'skill') p.tut.skill = 1; break;
         case 'swing': { p.tut.atk = 1; const st = E.stats(G), a = p.atk; if (!a) break; const cx = p.x + e.face * 6, cy = p.y - 24;
           if (e.kind === 'power') fx({ type: 'beam', x: cx, y: cy + 2, face: e.face, r: a.rng * 1.15, col: '#ffb066', life: 0.3, delay: 0 });
           else if (e.kind === 'quake') { fx({ type: 'ring', x: p.x, y: p.y - 2, r: 40, flat: 0.25, col: '#ffcc66', size: 5, life: 0.5 }); }
@@ -182,6 +182,7 @@
     if (G.mapId !== 'perion' && !t.atk) return '⚔️ 공격 버튼! 꾹 누르면 연속 공격';
     if (G.mapId !== 'perion' && t.atk && !t.skill && p.mp >= 5 && p.lv <= 3) return '💥 보라색 스킬 버튼으로 강한 공격 (MP 소모)';
     if (G.mapId !== 'perion' && !t.ladder && p.lv <= 2 && G.map.ladders.length && Math.abs(p.x - G.map.ladders[0].x) < 70) return '▲▼ 로 밧줄을 탈 수 있어요 (점프로 내리기)';
+    { const st2 = E.stats(G); if (!p.pet && !t.potion && p.hp < st2.maxHp * 0.5 && (p.inv.hp1 || p.inv.hp2 || p.inv.hp3 || p.inv.hp4)) return '❤️ 오른쪽 위 하트 버튼을 눌러 HP 물약을 먹어요!'; }
     return null;
   }
   function drawMini() {
@@ -355,7 +356,8 @@
     let pet;
     if (!p.pet) pet = `<div class="card">🐾 <b>펫이 없어요</b><br>퀘스트 <b>'길 잃은 새끼 멧돼지'</b>(촌장 도란, Lv 5~)를 완료하면 펫이 생겨요.<br><small style="color:#cdbbe8">펫이 있으면 HP·MP가 낮아졌을 때 자동으로 물약을 먹여 줘요.</small></div>`;
     else pet = `<div class="card">🐾 <b>${esc(p.pet.n)}</b> 와 함께하는 중!</div>` + tg('auto', '펫 자동 물약', 'HP·MP가 낮아지면 펫이 자동으로 물약을 먹여 줘요') + (st.auto ? pct('autoT', '❤️ 이 이하일 때 HP 물약') + tg('autoMp', 'MP 물약도 자동', '') + (st.autoMp ? pct('autoMpT', '💧 이 이하일 때 MP 물약') : '') : '');
-    return pet + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요') +
+    const how = `<div class="card">🧪 <b>물약 쓰는 법</b><br>화면 <b>오른쪽 위 ❤️(HP)·💧(MP) 버튼</b>을 누르면 가진 물약을 먹어요. 버튼의 숫자는 남은 개수예요.<br>⌨️ 키보드: H(HP) · M(MP)<br><small style="color:#cdbbe8">자동으로 먹는 건 펫이 있어야 해요 (아래 참고)</small></div>`;
+    return how + pet + tg('sound', '효과음', '') + tg('music', '배경음악', '') + tg('shake', '화면 흔들림', '타격·보스 공격 때 화면이 흔들려요') +
       `<div class="card">🕹️ <b>조작</b>: ◀▶ 이동 · ▲ 밧줄 오르기/문 들어가기 · ▼ 밧줄 내려가기/발판 아래로(▼+점프) · ⚔️ 공격(꾹) · 보라 버튼 스킬 · ❤️💧 물약<br>⌨️ 키보드: 방향키/Space점프/Z공격/1~5스킬/H·M물약/E대화</div>` +
       `<div class="row2"><button class="btn sm" data-a="save">💾 지금 저장</button><button class="btn sm red" data-a="wipe">🗑 처음부터 다시</button></div>`;
   }
