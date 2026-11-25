@@ -23,7 +23,7 @@
     const ddy = ty - petState.y; petState.y += Math.max(-300 * dt, Math.min(300 * dt, ddy)); if (ddy < -3) petState.y = Math.max(ty, petState.y);
   }
 
-  const BUILD = '20261125zzb';
+  const BUILD = '20261125zzc';
   /* ───────── 화면 크기 / 세로 보정 ───────── */
   function layout() {
     const iw = window.innerWidth, ih = window.innerHeight, portrait = ih > iw * 1.02;
@@ -409,7 +409,9 @@
 
   /* ───────── NPC 대화 / 퀘스트 / 상점 ───────── */
   function npcPortrait(npc) { const c = modal.querySelector('canvas'); if (!c) return; const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); g.save(); g.translate(c.width / 2, c.height - 22); g.scale(3.3, 3.3); Art.drawNpc(g, Object.assign({}, npc, { mark: null }), time, false, true); g.restore(); }
+  let lastDlgOpts = [];
   function dlg(npc, text, opts) {
+    lastDlgOpts = opts; // 클릭한 버튼 번호는 항상 지금 보이는 대화창의 버튼 목록 기준 (전직 확인창에서 엉뚱한 직업이 뜨던 버그 수정)
     modal.innerHTML = `<div class="panel" id="dlg"><h3><span>💬 ${esc(npc.n)}</span><button class="x" data-a="close">✕</button></h3><div class="body"><canvas width="168" height="200"></canvas><div class="txt" style="flex:1"><div>${bold(text)}</div><div class="opts">${opts.map((o, i) => `<button class="btn ${o.cls || ''}" data-a="o:${i}" ${o.dis ? 'disabled' : ''}>${o.label}</button>`).join('')}</div></div></div></div>`;
     npcPortrait(npc);
   }
@@ -468,7 +470,7 @@
       opts.push({ label: '← 돌아가기', cls: 'gray', fn: home }); ctxO.opts = opts; dlg(npc, text, opts);
     };
     const close = () => closeModal();
-    modalClick = (a) => { if (a === 'close') { closeModal(); return; } if (a.startsWith('o:')) { const o = ctxO.opts[+a.slice(2)]; if (o && o.fn) o.fn(); } };
+    modalClick = (a) => { if (a === 'close') { closeModal(); return; } if (a.startsWith('o:')) { const o = lastDlgOpts[+a.slice(2)]; if (o && o.fn) o.fn(); } };
     home();
   }
   function shop(npc) {
