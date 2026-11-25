@@ -172,7 +172,7 @@
   mon('firegolem', '불 골렘', 28, 'golem', { hue: 'fire', hp: 3100, atk: 108, def: 84, speed: 40, w: 50, h: 58, ai: 'shoot', aggro: 260, drops: [['golemcore', 0.45], ['ember', 0.4], ['hp4', 0.06], ['mp3', 0.05]], eq: [['ax4', 0.005], ['ar4', 0.006], ['hm4', 0.006]] });
   // 보스
   mon('bosstree', '고목 대장', 14, 'bosstree', { boss: true, ai: 'bosstree', hp: 14000, atk: 92, def: 30, exp: 700, speed: 30, w: 86, h: 110, aggro: 520, mesos: [900, 1500], drops: [['treeheart', 1], ['hp3', 1], ['hp3', 0.7], ['wood', 1]], eq: [['sw2', 0.35], ['ax2', 0.3], ['hm3', 0.3]] });
-  mon('zakum', '자쿰', 32, 'zakum', { boss: true, ai: 'bosszakum', hp: 150000, atk: 230, def: 105, exp: 12000, speed: 28, w: 120, h: 140, aggro: 700, mesos: [16000, 24000], drops: [['zeye', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['hmk', 0.2], ['sw4', 0.3], ['gs3', 0.3], ['ar4', 0.3], ['ax4', 0.2], ['mc4', 0.2], ['sp4', 0.2]] });
+  mon('zakum', '자쿰', 32, 'zakum', { boss: true, ai: 'bosszakum', hp: 110000, atk: 230, def: 105, exp: 12000, speed: 28, w: 120, h: 140, aggro: 700, mesos: [16000, 24000], drops: [['zeye', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['hmk', 0.2], ['sw4', 0.3], ['gs3', 0.3], ['ar4', 0.3], ['ax4', 0.2], ['mc4', 0.2], ['sp4', 0.2]] });
   mon('bossgolem', '바위왕 골렘', 30, 'bossgolem', { boss: true, ai: 'bossgolem', hp: 62000, atk: 185, def: 90, exp: 5200, speed: 30, w: 100, h: 126, aggro: 600, mesos: [9000, 14000], drops: [['goldcore', 1], ['hp4', 1], ['hp4', 0.8], ['mp3', 1]], eq: [['sw4', 0.3], ['gs3', 0.25], ['ar4', 0.3], ['ax4', 0.25]] });
   D.MON = M;
   // 주문서 드랍
